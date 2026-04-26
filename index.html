@@ -417,6 +417,18 @@
       margin: 8px 0 0;
     }
 
+    .role-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .role-list strong {
+      color: var(--text);
+    }
+
     .hidden {
       display: none !important;
     }
@@ -1229,6 +1241,21 @@
 
         <section class="panel-section">
           <div class="section-title">
+            <h2>时间官职责</h2>
+            <small>会议整体 + 单个环节</small>
+          </div>
+          <ul class="role-list">
+            <li><strong>会前确认：</strong>确认议程、各环节时长、绿黄红提示规则、超时处理方式。</li>
+            <li><strong>整体控时：</strong>关注整场例会是否按议程推进，必要时提醒主持人压缩或调整后续环节。</li>
+            <li><strong>环节控时：</strong>为即兴、备稿、点评、主持串场、工作坊等分别计时。</li>
+            <li><strong>信号提示：</strong>按规则给出演讲者绿牌、黄牌、红牌或对应颜色提示。</li>
+            <li><strong>超时提醒：</strong>到达红牌后继续观察超时情况，并按会议规则响铃或提醒。</li>
+            <li><strong>记录汇报：</strong>记录每位发言者用时，判断合格、偏短或超时，并在总结环节报告。</li>
+          </ul>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-title">
             <h2>演讲者信息</h2>
             <small>结束时写入记录</small>
           </div>
@@ -1260,6 +1287,7 @@
               <h2>自定义时间规则</h2>
               <small>保存到当前浏览器</small>
             </div>
+            <p class="helper" style="margin-top: -4px; margin-bottom: 12px;">这里用于新增或编辑规则。只是查看的话，可以点击底部“关闭并返回”。保存成功后面板会自动收起。</p>
 
             <div class="field-grid one">
               <div>
@@ -1316,7 +1344,7 @@
                 <input id="overtimeAlert" type="number" min="0" value="15" />
               </div>
               <div>
-                <label>颜色</label>
+                <label>规则类型</label>
                 <select id="customTag">
                   <option value="custom">自定义</option>
                   <option value="speech">演讲</option>
@@ -1331,6 +1359,7 @@
 
             <div class="inline-actions" style="margin-top: 14px;">
               <button class="mini-btn" id="saveRuleBtn">保存并应用</button>
+              <button class="mini-btn" id="closeCustomBtn">关闭并返回</button>
               <button class="mini-btn" id="clearRuleFormBtn">清空表单</button>
               <button class="mini-btn" id="deleteCurrentCustomRuleBtn">删除当前自定义规则</button>
             </div>
@@ -1566,6 +1595,7 @@
       saveRuleBtn: $("saveRuleBtn"),
       clearRuleFormBtn: $("clearRuleFormBtn"),
       deleteCurrentCustomRuleBtn: $("deleteCurrentCustomRuleBtn"),
+      closeCustomBtn: $("closeCustomBtn"),
       recordsBody: $("recordsBody"),
       generateReportBtn: $("generateReportBtn"),
       copyReportBtn: $("copyReportBtn"),
@@ -1678,6 +1708,22 @@
       return `倒计时：总 ${formatTime(rule.total)}，剩 ${formatTime(rule.green)} / ${formatTime(rule.yellow)} / ${formatTime(rule.red)}`;
     }
 
+    function getTagLabel(tag) {
+      const labels = {
+        custom: "自定义",
+        speech: "演讲",
+        evaluation: "点评",
+        workshop: "工作坊",
+        hosting: "主持"
+      };
+      return labels[tag] || "自定义";
+    }
+
+    function setCustomPanelOpen(isOpen) {
+      els.customPanel.classList.toggle("open", isOpen);
+      els.toggleCustomBtn.textContent = isOpen ? "关闭自定义规则" : "新增 / 编辑自定义规则";
+    }
+
     function renderRules() {
       const rules = getAllRules();
       els.ruleList.innerHTML = "";
@@ -1686,7 +1732,7 @@
       for (const rule of rules) {
         const btn = document.createElement("button");
         btn.className = `rule-btn ${rule.source === "custom" ? "custom" : ""} ${rule.id === activeRule.id ? "active" : ""}`;
-        btn.innerHTML = `<strong>${escapeHtml(rule.name)}</strong><span>${escapeHtml(getRuleShort(rule))}</span>`;
+        btn.innerHTML = `<strong>${escapeHtml(rule.name)}</strong><span>${escapeHtml(getTagLabel(rule.tag))}｜${escapeHtml(getRuleShort(rule))}</span>`;
         btn.addEventListener("click", () => applyRule(rule.id));
         els.ruleList.appendChild(btn);
       }
@@ -1824,7 +1870,8 @@
       resetTimer(false);
       renderRules();
       updateRuleDisplay();
-      showToast("规则已保存并应用");
+      setCustomPanelOpen(false);
+      showToast("规则已保存并应用，已返回规则列表");
     }
 
     function deleteCurrentCustomRule() {
@@ -2275,12 +2322,13 @@
       els.resetBtn.addEventListener("click", () => resetTimer(true));
 
       els.toggleCustomBtn.addEventListener("click", () => {
-        els.customPanel.classList.toggle("open");
+        setCustomPanelOpen(!els.customPanel.classList.contains("open"));
       });
 
       els.customMode.addEventListener("change", updateCustomModeHint);
       els.saveRuleBtn.addEventListener("click", saveRuleFromForm);
       els.clearRuleFormBtn.addEventListener("click", clearRuleForm);
+      els.closeCustomBtn.addEventListener("click", () => setCustomPanelOpen(false));
       els.deleteCurrentCustomRuleBtn.addEventListener("click", deleteCurrentCustomRule);
 
       els.generateReportBtn.addEventListener("click", () => {
