@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>头马时间官控制台</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(15, 23, 42, 0.82);
+      --panel-2: rgba(30, 41, 59, 0.9);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --line: rgba(148, 163, 184, 0.25);
+      --white-soft: rgba(248, 250, 252, 0.92);
+      --blue: #38bdf8;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --orange: #f97316;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.14), transparent 32%),
+        linear-gradient(135deg, #020617 0%, #0f172a 48%, #111827 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    body {
+      padding: 20px;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 12px;
+      background: rgba(15, 23, 42, 0.62);
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(56, 189, 248, 0.72);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .brand p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(310px, 390px) minmax(360px, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-section {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-section:last-child {
+      border-bottom: 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+
+    .section-title small {
+      color: var(--muted);
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field-grid.one {
+      grid-template-columns: 1fr;
+    }
+
+    .preset-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .rule-btn {
+      min-height: 62px;
+      padding: 11px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.72);
+      color: var(--text);
+      text-align: left;
+    }
+
+    .rule-btn strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .rule-btn span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .rule-btn.active {
+      border-color: rgba(56, 189, 248, 0.8);
+      background: rgba(14, 165, 233, 0.18);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12) inset;
+    }
+
+    .rule-btn.custom {
+      border-style: dashed;
+    }
+
+    .timer-panel {
+      min-height: 560px;
+      transition: background 0.22s ease, border-color 0.22s ease;
+    }
+
+    .timer-panel.state-idle {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.82));
+    }
+
+    .timer-panel.state-before {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.84));
+    }
+
+    .timer-panel.state-green {
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.92), rgba(21, 128, 61, 0.9));
+      border-color: rgba(187, 247, 208, 0.45);
+    }
+
+    .timer-panel.state-yellow {
+      background: linear-gradient(180deg, rgba(234, 179, 8, 0.96), rgba(161, 98, 7, 0.92));
+      border-color: rgba(254, 240, 138, 0.54);
+    }
+
+    .timer-panel.state-red {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.96), rgba(153, 27, 27, 0.94));
+      border-color: rgba(254, 202, 202, 0.58);
+    }
+
+    .timer-panel.state-overtime {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.98), rgba(127, 29, 29, 0.96));
+      border-color: rgba(254, 202, 202, 0.68);
+      animation: pulseRed 1.2s infinite;
+    }
+
+    @keyframes pulseRed {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.18); }
+    }
+
+    .timer-main {
+      padding: clamp(20px, 3.2vw, 34px);
+      display: flex;
+      flex-direction: column;
+      min-height: 560px;
+    }
+
+    .now-info {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .now-info h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .now-info p {
+      margin: 7px 0 0;
+      color: rgba(248, 250, 252, 0.78);
+      font-size: 14px;
+    }
+
+    .status-chip {
+      white-space: nowrap;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      color: var(--white-soft);
+      font-weight: 700;
+      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    .time-display-wrap {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    .time-display {
+      font-size: clamp(78px, 16vw, 188px);
+      font-weight: 900;
+      line-height: 0.88;
+      letter-spacing: -0.08em;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
+    }
+
+    .time-subtitle {
+      margin-top: 18px;
+      font-size: clamp(18px, 3vw, 32px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .rule-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .summary-item {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      min-height: 70px;
+    }
+
+    .summary-item span {
+      display: block;
+      font-size: 12px;
+      color: rgba(248, 250, 252, 0.76);
+      margin-bottom: 6px;
+    }
+
+    .summary-item strong {
+      display: block;
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .btn {
+      border-radius: 16px;
+      padding: 13px 14px;
+      background: rgba(255, 255, 255, 0.16);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-weight: 800;
+    }
+
+    .btn.primary {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .btn.danger {
+      background: rgba(127, 29, 29, 0.85);
+      color: #fff;
+    }
+
+    .btn.soft {
+      background: rgba(15, 23, 42, 0.62);
+    }
+
+    .btn.blue {
+      background: rgba(14, 165, 233, 0.88);
+      color: #f8fafc;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.11);
+      color: var(--text);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .custom-panel {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--line);
+    }
+
+    .custom-panel.open {
+      display: block;
+    }
+
+    .time-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .time-inputs input {
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin: 8px 0 0;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    td {
+      color: rgba(248, 250, 252, 0.92);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .badge.ok { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+    .badge.short { background: rgba(234, 179, 8, 0.18); color: #fde68a; }
+    .badge.over { background: rgba(239, 68, 68, 0.2); color: #fecaca; }
+
+    .report-box {
+      min-height: 132px;
+      resize: vertical;
+      line-height: 1.6;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.92);
+      color: #f8fafc;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      z-index: 1000;
+      font-size: 14px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .stage-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      display: none;
+      color: #fff;
+      padding: clamp(20px, 5vw, 54px);
+    }
+
+    .stage-overlay.open {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage-overlay.state-idle,
+    .stage-overlay.state-before {
+      background: #020617;
+    }
+
+    .stage-overlay.state-green {
+      background: #16a34a;
+    }
+
+    .stage-overlay.state-yellow {
+      background: #ca8a04;
+    }
+
+    .stage-overlay.state-red,
+    .stage-overlay.state-overtime {
+      background: #dc2626;
+    }
+
+    .stage-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+    }
+
+    .stage-title {
+      font-size: clamp(28px, 5vw, 64px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .stage-rule {
+      margin-top: 10px;
+      font-size: clamp(16px, 2.2vw, 28px);
+      opacity: 0.78;
+    }
+
+    .stage-close {
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-weight: 800;
+    }
+
+    .stage-time-wrap {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
+    .stage-time {
+      font-size: clamp(100px, 24vw, 300px);
+      line-height: 0.86;
+      font-weight: 950;
+      letter-spacing: -0.1em;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+    }
+
+    .stage-status {
+      margin-top: 28px;
+      font-size: clamp(24px, 5vw, 72px);
+      font-weight: 900;
+    }
+
+    .stage-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: clamp(14px, 2vw, 24px);
+      opacity: 0.84;
+    }
+
+    @media (max-width: 960px) {
+      body { padding: 14px; }
+      .topbar { flex-direction: column; }
+      .top-actions { justify-content: flex-start; }
+      .layout { grid-template-columns: 1fr; }
+      .timer-main { min-height: 480px; }
+    }
+
+    @media (max-width: 640px) {
+      .field-grid, .preset-list, .rule-summary, .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .timer-main {
+        min-height: 430px;
+      }
+
+      .time-display {
+        font-size: clamp(70px, 23vw, 120px);
+      }
+
+      .now-info {
+        flex-direction: column;
+      }
+
+      .status-chip {
+        align-self: flex-start;
+      }
+    }
+
+    /* Responsive refinements: desktop + tablet + phone */
+    @media (hover: none) and (pointer: coarse) {
+      button, .btn, .mini-btn, .rule-btn {
+        min-height: 44px;
+      }
+
+      input, select, textarea {
+        font-size: 16px;
+      }
+    }
+
+    @media (min-width: 961px) {
+      .timer-panel {
+        position: sticky;
+        top: 20px;
+      }
+    }
+
+    @media (max-width: 960px) {
+      body {
+        padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      }
+
+      .timer-panel {
+        order: -1;
+      }
+
+      .top-actions {
+        width: 100%;
+      }
+
+      .top-actions .btn {
+        flex: 1 1 120px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .brand h1 {
+        font-size: clamp(26px, 8vw, 38px);
+      }
+
+      .brand p {
+        font-size: 13px;
+      }
+
+      .panel-section {
+        padding: 14px;
+      }
+
+      .timer-main {
+        min-height: min(520px, calc(100svh - 128px));
+        padding: 18px;
+      }
+
+      .time-display-wrap {
+        padding: 10px 0;
+      }
+
+      .time-display {
+        font-size: clamp(76px, 25vw, 150px);
+        letter-spacing: -0.09em;
+      }
+
+      .time-subtitle {
+        margin-top: 12px;
+      }
+
+      .rule-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .summary-item {
+        min-height: 58px;
+        padding: 10px;
+      }
+
+      .summary-item strong {
+        font-size: 16px;
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .controls .btn:first-child,
+      .controls .btn:nth-child(4) {
+        grid-column: 1 / -1;
+      }
+
+      .btn {
+        padding: 14px 12px;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .preset-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .rule-btn {
+        min-height: 72px;
+      }
+
+      .section-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .section-title .inline-actions {
+        width: 100%;
+      }
+
+      .section-title .inline-actions .mini-btn {
+        flex: 1 1 130px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      body {
+        padding: 10px;
+      }
+
+      .topbar {
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .layout {
+        gap: 12px;
+      }
+
+      .panel {
+        border-radius: 18px;
+      }
+
+      .timer-main {
+        min-height: min(500px, calc(100svh - 120px));
+        padding: 14px;
+      }
+
+      .now-info {
+        margin-bottom: 8px;
+      }
+
+      .now-info h2 {
+        font-size: 20px;
+      }
+
+      .now-info p {
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .status-chip {
+        font-size: 13px;
+        padding: 7px 10px;
+      }
+
+      .time-display {
+        font-size: clamp(72px, 26vw, 116px);
+      }
+
+      .time-subtitle {
+        font-size: clamp(18px, 6vw, 26px);
+      }
+
+      .preset-list {
+        grid-template-columns: 1fr;
+      }
+
+      .rule-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 12px 0;
+      }
+
+      .summary-item span {
+        font-size: 11px;
+      }
+
+      .summary-item strong {
+        font-size: 15px;
+      }
+
+      th, td {
+        padding: 10px 8px;
+        font-size: 13px;
+      }
+
+      .report-box {
+        min-height: 160px;
+      }
+    }
+
+    @media (max-width: 760px) and (orientation: landscape) {
+      body {
+        padding: 8px;
+      }
+
+      .topbar {
+        display: none;
+      }
+
+      .timer-panel {
+        min-height: calc(100svh - 16px);
+      }
+
+      .timer-main {
+        min-height: calc(100svh - 16px);
+        padding: 14px;
+      }
+
+      .now-info {
+        margin-bottom: 8px;
+      }
+
+      .time-display {
+        font-size: clamp(82px, 22vw, 176px);
+      }
+
+      .rule-summary {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin: 10px 0;
+      }
+
+      .controls {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .controls .btn:first-child,
+      .controls .btn:nth-child(4) {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .stage-overlay {
+        padding: max(16px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      }
+
+      .stage-top {
+        gap: 10px;
+      }
+
+      .stage-title {
+        font-size: clamp(24px, 8vw, 44px);
+      }
+
+      .stage-rule {
+        font-size: clamp(14px, 4vw, 22px);
+      }
+
+      .stage-close {
+        padding: 9px 11px;
+        font-size: 13px;
+      }
+
+      .stage-time {
+        font-size: clamp(92px, 31vw, 210px);
+      }
+
+      .stage-status {
+        margin-top: 16px;
+        font-size: clamp(24px, 8vw, 52px);
+      }
+
+      .stage-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 760px) and (orientation: landscape) {
+      .stage-overlay {
+        padding: 12px 16px;
+      }
+
+      .stage-title {
+        font-size: clamp(22px, 5vw, 42px);
+      }
+
+      .stage-rule {
+        margin-top: 4px;
+      }
+
+      .stage-time {
+        font-size: clamp(96px, 27vw, 230px);
+      }
+
+      .stage-status {
+        margin-top: 10px;
+        font-size: clamp(24px, 6vw, 52px);
+      }
+
+      .stage-bottom {
+        flex-direction: row;
+      }
+    }
+
+    /* Toastmasters official-inspired visual theme */
+    :root {
+      --tm-navy: #004165;
+      --tm-blue: #005f8f;
+      --tm-red: #772432;
+      --tm-gold: #f2df74;
+      --tm-cream: #f7f3ea;
+      --tm-paper: #fffdf7;
+      --tm-ink: #263238;
+      --tm-muted: #667085;
+      --bg: #f7f3ea;
+      --panel: rgba(255, 253, 247, 0.96);
+      --panel-2: rgba(245, 239, 226, 0.94);
+      --text: #263238;
+      --muted: #667085;
+      --line: rgba(0, 65, 101, 0.16);
+      --white-soft: rgba(255, 255, 255, 0.96);
+      --blue: #004165;
+      --green: #16803c;
+      --yellow: #d29a00;
+      --red: #772432;
+      --orange: #b45309;
+      --shadow: 0 20px 54px rgba(0, 65, 101, 0.14);
+    }
+
+    html, body {
+      background:
+        radial-gradient(circle at top left, rgba(242, 223, 116, 0.46), transparent 34%),
+        radial-gradient(circle at top right, rgba(119, 36, 50, 0.12), transparent 28%),
+        linear-gradient(135deg, #f7f3ea 0%, #fffdf7 46%, #eef4f7 100%);
+      color: var(--text);
+    }
+
+    .brand {
+      position: relative;
+      padding-left: 18px;
+      border-left: 7px solid var(--tm-red);
+    }
+
+    .brand::before {
+      content: "TOASTMASTERS INTERNATIONAL";
+      display: inline-flex;
+      margin-bottom: 9px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--tm-navy);
+      color: #fffdf7;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    .brand h1 {
+      color: var(--tm-navy);
+    }
+
+    .brand p {
+      color: var(--tm-muted);
+    }
+
+    .panel {
+      background: var(--panel);
+      border-color: var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-section {
+      border-bottom-color: rgba(0, 65, 101, 0.12);
+    }
+
+    .section-title h2 {
+      color: var(--tm-navy);
+    }
+
+    .section-title small,
+    label,
+    .helper {
+      color: var(--tm-muted);
+    }
+
+    input, select, textarea {
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--tm-ink);
+      border-color: rgba(0, 65, 101, 0.18);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(0, 65, 101, 0.7);
+      box-shadow: 0 0 0 3px rgba(0, 65, 101, 0.12);
+    }
+
+    .rule-btn {
+      background: #fffdf7;
+      color: var(--tm-ink);
+      border-color: rgba(0, 65, 101, 0.16);
+      box-shadow: 0 8px 20px rgba(0, 65, 101, 0.06);
+    }
+
+    .rule-btn span {
+      color: var(--tm-muted);
+    }
+
+    .rule-btn.active {
+      border-color: var(--tm-red);
+      background: linear-gradient(135deg, rgba(119, 36, 50, 0.08), rgba(242, 223, 116, 0.2));
+      box-shadow: 0 0 0 3px rgba(119, 36, 50, 0.08) inset, 0 12px 28px rgba(119, 36, 50, 0.12);
+    }
+
+    .custom-panel {
+      background: rgba(247, 243, 234, 0.82);
+      border-color: rgba(0, 65, 101, 0.16);
+    }
+
+    .timer-panel.state-idle,
+    .timer-panel.state-before {
+      background:
+        linear-gradient(180deg, rgba(0, 65, 101, 0.96), rgba(0, 95, 143, 0.92)),
+        radial-gradient(circle at top right, rgba(242, 223, 116, 0.32), transparent 40%);
+      border-color: rgba(0, 65, 101, 0.28);
+      color: #fffdf7;
+    }
+
+    .timer-panel.state-green {
+      background: linear-gradient(180deg, rgba(22, 128, 60, 0.96), rgba(11, 94, 43, 0.94));
+      border-color: rgba(187, 247, 208, 0.48);
+      color: #fffdf7;
+    }
+
+    .timer-panel.state-yellow {
+      background: linear-gradient(180deg, rgba(242, 223, 116, 0.98), rgba(210, 154, 0, 0.94));
+      border-color: rgba(120, 86, 0, 0.22);
+      color: #1f2937;
+    }
+
+    .timer-panel.state-red,
+    .timer-panel.state-overtime {
+      background: linear-gradient(180deg, rgba(119, 36, 50, 0.98), rgba(86, 21, 34, 0.96));
+      border-color: rgba(255, 210, 218, 0.42);
+      color: #fffdf7;
+    }
+
+    .now-info p {
+      color: rgba(255, 253, 247, 0.82);
+    }
+
+    .timer-panel.state-yellow .now-info p {
+      color: rgba(31, 41, 55, 0.74);
+    }
+
+    .status-chip {
+      background: rgba(255, 253, 247, 0.18);
+      color: currentColor;
+      border-color: rgba(255, 253, 247, 0.28);
+    }
+
+    .timer-panel.state-yellow .status-chip,
+    .timer-panel.state-yellow .summary-item {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(31, 41, 55, 0.16);
+    }
+
+    .summary-item {
+      background: rgba(255, 253, 247, 0.16);
+      border-color: rgba(255, 253, 247, 0.2);
+    }
+
+    .summary-item span {
+      color: rgba(255, 253, 247, 0.76);
+    }
+
+    .timer-panel.state-yellow .summary-item span {
+      color: rgba(31, 41, 55, 0.66);
+    }
+
+    .btn {
+      background: rgba(0, 65, 101, 0.1);
+      color: var(--tm-navy);
+      border-color: rgba(0, 65, 101, 0.16);
+    }
+
+    .timer-panel .btn {
+      background: rgba(255, 253, 247, 0.16);
+      color: currentColor;
+      border-color: rgba(255, 253, 247, 0.22);
+    }
+
+    .btn.primary,
+    .timer-panel .btn.primary {
+      background: #fffdf7;
+      color: var(--tm-navy);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+    }
+
+    .btn.danger,
+    .timer-panel .btn.danger {
+      background: var(--tm-red);
+      color: #fffdf7;
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .btn.soft,
+    .mini-btn {
+      background: #fffdf7;
+      color: var(--tm-navy);
+      border-color: rgba(0, 65, 101, 0.18);
+      box-shadow: 0 8px 18px rgba(0, 65, 101, 0.08);
+    }
+
+    .mini-btn:hover,
+    .rule-btn:hover,
+    .btn.soft:hover {
+      border-color: rgba(119, 36, 50, 0.42);
+    }
+
+    th {
+      color: var(--tm-blue);
+      background: rgba(0, 65, 101, 0.04);
+    }
+
+    td {
+      color: var(--tm-ink);
+    }
+
+    th, td {
+      border-bottom-color: rgba(0, 65, 101, 0.12);
+    }
+
+    .badge.ok { background: rgba(22, 128, 60, 0.13); color: #116632; }
+    .badge.short { background: rgba(242, 223, 116, 0.42); color: #7a5500; }
+    .badge.over { background: rgba(119, 36, 50, 0.13); color: var(--tm-red); }
+
+    .toast {
+      background: var(--tm-navy);
+      color: #fffdf7;
+      border-color: rgba(242, 223, 116, 0.35);
+    }
+
+    .stage-overlay.state-idle,
+    .stage-overlay.state-before {
+      background: linear-gradient(135deg, var(--tm-navy), var(--tm-blue));
+    }
+
+    .stage-overlay.state-green {
+      background: #16803c;
+    }
+
+    .stage-overlay.state-yellow {
+      background: var(--tm-gold);
+      color: #1f2937;
+    }
+
+    .stage-overlay.state-red,
+    .stage-overlay.state-overtime {
+      background: var(--tm-red);
+    }
+
+    .stage-close {
+      background: rgba(255, 253, 247, 0.18);
+      color: currentColor;
+      border-color: rgba(255, 253, 247, 0.28);
+    }
+
+    .stage-overlay.state-yellow .stage-close {
+      background: rgba(255, 255, 255, 0.34);
+      border-color: rgba(31, 41, 55, 0.18);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>头马时间官控制台</h1>
+        <p>计时、举牌提示、超时铃声、记录统计、时间官报告。</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn soft" id="toggleStageBtn">舞台模式</button>
+        <button class="btn soft" id="beepTestBtn">测试铃声</button>
+        <button class="btn soft" id="resetAllBtn">恢复默认</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel">
+        <section class="panel-section">
+          <div class="section-title">
+            <h2>会议信息</h2>
+            <small>可选</small>
+          </div>
+          <div class="field-grid">
+            <div>
+              <label for="meetingTitle">会议 / 活动</label>
+              <input id="meetingTitle" value="Toastmasters 例会" />
+            </div>
+            <div>
+              <label for="timekeeperName">时间官</label>
+              <input id="timekeeperName" placeholder="例如：文星" />
+            </div>
+            <div>
+              <label for="meetingTheme">主题</label>
+              <input id="meetingTheme" placeholder="例如：超级个体" />
+            </div>
+            <div>
+              <label for="meetingDate">日期</label>
+              <input id="meetingDate" type="date" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-title">
+            <h2>演讲者信息</h2>
+            <small>结束时写入记录</small>
+          </div>
+          <div class="field-grid">
+            <div>
+              <label for="speakerName">姓名</label>
+              <input id="speakerName" placeholder="例如：Alex" />
+            </div>
+            <div>
+              <label for="speechTitle">题目</label>
+              <input id="speechTitle" placeholder="可留空" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-title">
+            <h2>选择时间规则</h2>
+            <small id="ruleCountText"></small>
+          </div>
+          <div class="preset-list" id="ruleList"></div>
+
+          <div class="inline-actions" style="margin-top: 12px;">
+            <button class="mini-btn" id="toggleCustomBtn">新增 / 编辑自定义规则</button>
+          </div>
+
+          <div class="custom-panel" id="customPanel">
+            <div class="section-title" style="margin-bottom: 12px;">
+              <h2>自定义时间规则</h2>
+              <small>保存到当前浏览器</small>
+            </div>
+
+            <div class="field-grid one">
+              <div>
+                <label for="customName">规则名称</label>
+                <input id="customName" placeholder="例如：工作坊分享" />
+              </div>
+              <div>
+                <label for="customMode">计时模式</label>
+                <select id="customMode">
+                  <option value="up">正计时：绿黄红表示到达时间</option>
+                  <option value="down">倒计时：绿黄红表示剩余时间</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-grid" id="totalTimeFields" style="margin-top: 12px;">
+              <div>
+                <label>总时长：分钟</label>
+                <input id="totalMin" type="number" min="0" value="3" />
+              </div>
+              <div>
+                <label>总时长：秒</label>
+                <input id="totalSec" type="number" min="0" max="59" value="0" />
+              </div>
+            </div>
+
+            <div class="field-grid" style="margin-top: 12px;">
+              <div>
+                <label>绿牌：分钟</label>
+                <input id="greenMin" type="number" min="0" value="1" />
+              </div>
+              <div>
+                <label>绿牌：秒</label>
+                <input id="greenSec" type="number" min="0" max="59" value="0" />
+              </div>
+              <div>
+                <label>黄牌：分钟</label>
+                <input id="yellowMin" type="number" min="0" value="1" />
+              </div>
+              <div>
+                <label>黄牌：秒</label>
+                <input id="yellowSec" type="number" min="0" max="59" value="30" />
+              </div>
+              <div>
+                <label>红牌：分钟</label>
+                <input id="redMin" type="number" min="0" value="2" />
+              </div>
+              <div>
+                <label>红牌：秒</label>
+                <input id="redSec" type="number" min="0" max="59" value="0" />
+              </div>
+              <div>
+                <label>超时提醒：秒</label>
+                <input id="overtimeAlert" type="number" min="0" value="15" />
+              </div>
+              <div>
+                <label>颜色</label>
+                <select id="customTag">
+                  <option value="custom">自定义</option>
+                  <option value="speech">演讲</option>
+                  <option value="evaluation">点评</option>
+                  <option value="workshop">工作坊</option>
+                  <option value="hosting">主持</option>
+                </select>
+              </div>
+            </div>
+
+            <p class="helper" id="customHelper">正计时：绿牌、黄牌、红牌填写“从开始后到达多少时间”。例如 5:00 / 6:00 / 7:00。</p>
+
+            <div class="inline-actions" style="margin-top: 14px;">
+              <button class="mini-btn" id="saveRuleBtn">保存并应用</button>
+              <button class="mini-btn" id="clearRuleFormBtn">清空表单</button>
+              <button class="mini-btn" id="deleteCurrentCustomRuleBtn">删除当前自定义规则</button>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="panel timer-panel state-idle" id="timerPanel">
+        <div class="timer-main">
+          <div class="now-info">
+            <div>
+              <h2 id="currentRuleName">即兴演讲</h2>
+              <p id="currentRuleDetail">正计时｜绿 1:00｜黄 1:30｜红 2:00｜超时 15 秒提醒</p>
+            </div>
+            <div class="status-chip" id="statusChip">未开始</div>
+          </div>
+
+          <div class="time-display-wrap">
+            <div>
+              <div class="time-display" id="timeDisplay">00:00</div>
+              <div class="time-subtitle" id="timeSubtitle">准备计时</div>
+            </div>
+          </div>
+
+          <div class="rule-summary" id="ruleSummary"></div>
+
+          <div class="controls">
+            <button class="btn primary" id="startBtn">开始</button>
+            <button class="btn" id="pauseBtn" disabled>暂停</button>
+            <button class="btn" id="resumeBtn" disabled>继续</button>
+            <button class="btn danger" id="stopBtn" disabled>结束并记录</button>
+            <button class="btn" id="resetBtn">重置</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section class="panel" style="margin-top: 18px;">
+      <div class="panel-section">
+        <div class="section-title">
+          <h2>时间记录</h2>
+          <div class="inline-actions">
+            <button class="mini-btn" id="generateReportBtn">生成报告</button>
+            <button class="mini-btn" id="copyReportBtn">复制报告</button>
+            <button class="mini-btn" id="exportCsvBtn">导出 CSV</button>
+            <button class="mini-btn" id="clearRecordsBtn">清空记录</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>姓名</th>
+                <th>题目</th>
+                <th>环节</th>
+                <th>用时</th>
+                <th>结果</th>
+                <th>结束时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="recordsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="section-title">
+          <h2>时间官报告</h2>
+          <small>可直接复制到会议群</small>
+        </div>
+        <textarea id="reportBox" class="report-box" placeholder="点击“生成报告”后显示。"></textarea>
+      </div>
+    </section>
+  </div>
+
+  <div class="stage-overlay state-idle" id="stageOverlay">
+    <div class="stage-top">
+      <div>
+        <div class="stage-title" id="stageSpeaker">未填写演讲者</div>
+        <div class="stage-rule" id="stageRule">即兴演讲</div>
+      </div>
+      <button class="stage-close" id="closeStageBtn">退出舞台模式</button>
+    </div>
+    <div class="stage-time-wrap">
+      <div>
+        <div class="stage-time" id="stageTime">00:00</div>
+        <div class="stage-status" id="stageStatus">准备计时</div>
+      </div>
+    </div>
+    <div class="stage-bottom">
+      <span id="stageMeeting">Toastmasters 例会</span>
+      <span id="stageTimekeeper">时间官</span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已完成</div>
+
+  <script>
+    const STORAGE_KEYS = {
+      customRules: "tm_timekeeper_custom_rules_v1",
+      records: "tm_timekeeper_records_v1",
+      meeting: "tm_timekeeper_meeting_v1"
+    };
+
+    const presetRules = [
+      {
+        id: "table-topic",
+        source: "preset",
+        name: "即兴演讲",
+        mode: "up",
+        green: 60,
+        yellow: 90,
+        red: 120,
+        overtimeAlert: 15,
+        tag: "speech"
+      },
+      {
+        id: "evaluation",
+        source: "preset",
+        name: "点评",
+        mode: "up",
+        green: 120,
+        yellow: 150,
+        red: 180,
+        overtimeAlert: 15,
+        tag: "evaluation"
+      },
+      {
+        id: "prepared-5-7",
+        source: "preset",
+        name: "备稿演讲 5–7",
+        mode: "up",
+        green: 300,
+        yellow: 360,
+        red: 420,
+        overtimeAlert: 30,
+        tag: "speech"
+      },
+      {
+        id: "ice-breaker",
+        source: "preset",
+        name: "Ice Breaker 4–6",
+        mode: "up",
+        green: 240,
+        yellow: 300,
+        red: 360,
+        overtimeAlert: 30,
+        tag: "speech"
+      },
+      {
+        id: "under-3-countdown",
+        source: "preset",
+        name: "3分钟以下倒计时",
+        mode: "down",
+        total: 180,
+        green: 60,
+        yellow: 30,
+        red: 0,
+        overtimeAlert: 15,
+        tag: "hosting"
+      },
+      {
+        id: "three-to-ten-countdown",
+        source: "preset",
+        name: "3–10分钟倒计时",
+        mode: "down",
+        total: 600,
+        green: 120,
+        yellow: 60,
+        red: 0,
+        overtimeAlert: 30,
+        tag: "workshop"
+      }
+    ];
+
+    let customRules = [];
+    let records = [];
+    let activeRule = structuredClone(presetRules[0]);
+    let timer = {
+      running: false,
+      paused: false,
+      startedAt: null,
+      pausedAt: null,
+      pausedMs: 0,
+      intervalId: null,
+      elapsed: 0,
+      lastState: "idle",
+      redBeeped: false,
+      overtimeBeeped: false
+    };
+    let audioContext = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      meetingTitle: $("meetingTitle"),
+      timekeeperName: $("timekeeperName"),
+      meetingTheme: $("meetingTheme"),
+      meetingDate: $("meetingDate"),
+      speakerName: $("speakerName"),
+      speechTitle: $("speechTitle"),
+      ruleList: $("ruleList"),
+      ruleCountText: $("ruleCountText"),
+      timerPanel: $("timerPanel"),
+      currentRuleName: $("currentRuleName"),
+      currentRuleDetail: $("currentRuleDetail"),
+      statusChip: $("statusChip"),
+      timeDisplay: $("timeDisplay"),
+      timeSubtitle: $("timeSubtitle"),
+      ruleSummary: $("ruleSummary"),
+      startBtn: $("startBtn"),
+      pauseBtn: $("pauseBtn"),
+      resumeBtn: $("resumeBtn"),
+      stopBtn: $("stopBtn"),
+      resetBtn: $("resetBtn"),
+      toggleCustomBtn: $("toggleCustomBtn"),
+      customPanel: $("customPanel"),
+      customName: $("customName"),
+      customMode: $("customMode"),
+      totalTimeFields: $("totalTimeFields"),
+      totalMin: $("totalMin"),
+      totalSec: $("totalSec"),
+      greenMin: $("greenMin"),
+      greenSec: $("greenSec"),
+      yellowMin: $("yellowMin"),
+      yellowSec: $("yellowSec"),
+      redMin: $("redMin"),
+      redSec: $("redSec"),
+      overtimeAlert: $("overtimeAlert"),
+      customTag: $("customTag"),
+      customHelper: $("customHelper"),
+      saveRuleBtn: $("saveRuleBtn"),
+      clearRuleFormBtn: $("clearRuleFormBtn"),
+      deleteCurrentCustomRuleBtn: $("deleteCurrentCustomRuleBtn"),
+      recordsBody: $("recordsBody"),
+      generateReportBtn: $("generateReportBtn"),
+      copyReportBtn: $("copyReportBtn"),
+      exportCsvBtn: $("exportCsvBtn"),
+      clearRecordsBtn: $("clearRecordsBtn"),
+      reportBox: $("reportBox"),
+      toggleStageBtn: $("toggleStageBtn"),
+      closeStageBtn: $("closeStageBtn"),
+      stageOverlay: $("stageOverlay"),
+      stageSpeaker: $("stageSpeaker"),
+      stageRule: $("stageRule"),
+      stageTime: $("stageTime"),
+      stageStatus: $("stageStatus"),
+      stageMeeting: $("stageMeeting"),
+      stageTimekeeper: $("stageTimekeeper"),
+      beepTestBtn: $("beepTestBtn"),
+      resetAllBtn: $("resetAllBtn"),
+      toast: $("toast")
+    };
+
+    function structuredCloneSafe(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function loadData() {
+      try {
+        customRules = JSON.parse(localStorage.getItem(STORAGE_KEYS.customRules)) || [];
+      } catch {
+        customRules = [];
+      }
+
+      try {
+        records = JSON.parse(localStorage.getItem(STORAGE_KEYS.records)) || [];
+      } catch {
+        records = [];
+      }
+
+      try {
+        const meeting = JSON.parse(localStorage.getItem(STORAGE_KEYS.meeting)) || {};
+        els.meetingTitle.value = meeting.meetingTitle || "Toastmasters 例会";
+        els.timekeeperName.value = meeting.timekeeperName || "";
+        els.meetingTheme.value = meeting.meetingTheme || "";
+        els.meetingDate.value = meeting.meetingDate || new Date().toISOString().slice(0, 10);
+      } catch {
+        els.meetingDate.value = new Date().toISOString().slice(0, 10);
+      }
+    }
+
+    function saveCustomRules() {
+      localStorage.setItem(STORAGE_KEYS.customRules, JSON.stringify(customRules));
+    }
+
+    function saveRecords() {
+      localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records));
+    }
+
+    function saveMeeting() {
+      const meeting = {
+        meetingTitle: els.meetingTitle.value.trim(),
+        timekeeperName: els.timekeeperName.value.trim(),
+        meetingTheme: els.meetingTheme.value.trim(),
+        meetingDate: els.meetingDate.value
+      };
+      localStorage.setItem(STORAGE_KEYS.meeting, JSON.stringify(meeting));
+      updateStage();
+    }
+
+    function getAllRules() {
+      return [...presetRules, ...customRules];
+    }
+
+    function secondsFrom(minEl, secEl) {
+      const min = Math.max(0, Number(minEl.value || 0));
+      const sec = Math.max(0, Math.min(59, Number(secEl.value || 0)));
+      return Math.round(min * 60 + sec);
+    }
+
+    function writeSeconds(seconds, minEl, secEl) {
+      minEl.value = Math.floor(seconds / 60);
+      secEl.value = seconds % 60;
+    }
+
+    function formatTime(totalSeconds) {
+      const sign = totalSeconds < 0 ? "-" : "";
+      const abs = Math.abs(Math.floor(totalSeconds));
+      const minutes = Math.floor(abs / 60);
+      const seconds = abs % 60;
+      return `${sign}${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function formatCompact(seconds) {
+      const min = Math.floor(seconds / 60);
+      const sec = seconds % 60;
+      if (min > 0 && sec > 0) return `${min}分${sec}秒`;
+      if (min > 0) return `${min}分钟`;
+      return `${sec}秒`;
+    }
+
+    function formatRuleLine(rule) {
+      if (rule.mode === "up") {
+        return `正计时｜绿 ${formatTime(rule.green)}｜黄 ${formatTime(rule.yellow)}｜红 ${formatTime(rule.red)}｜超时 ${rule.overtimeAlert} 秒提醒`;
+      }
+      return `倒计时｜总时长 ${formatTime(rule.total)}｜绿 剩余${formatTime(rule.green)}｜黄 剩余${formatTime(rule.yellow)}｜红 ${rule.red === 0 ? "时间到" : "剩余" + formatTime(rule.red)}｜超时 ${rule.overtimeAlert} 秒提醒`;
+    }
+
+    function getRuleShort(rule) {
+      if (rule.mode === "up") {
+        return `正计时：${formatTime(rule.green)} / ${formatTime(rule.yellow)} / ${formatTime(rule.red)}`;
+      }
+      return `倒计时：总 ${formatTime(rule.total)}，剩 ${formatTime(rule.green)} / ${formatTime(rule.yellow)} / ${formatTime(rule.red)}`;
+    }
+
+    function renderRules() {
+      const rules = getAllRules();
+      els.ruleList.innerHTML = "";
+      els.ruleCountText.textContent = `${rules.length} 条规则`;
+
+      for (const rule of rules) {
+        const btn = document.createElement("button");
+        btn.className = `rule-btn ${rule.source === "custom" ? "custom" : ""} ${rule.id === activeRule.id ? "active" : ""}`;
+        btn.innerHTML = `<strong>${escapeHtml(rule.name)}</strong><span>${escapeHtml(getRuleShort(rule))}</span>`;
+        btn.addEventListener("click", () => applyRule(rule.id));
+        els.ruleList.appendChild(btn);
+      }
+    }
+
+    function renderRuleSummary() {
+      const rule = activeRule;
+      const items = rule.mode === "up"
+        ? [
+            ["模式", "正计时"],
+            ["绿牌", formatTime(rule.green)],
+            ["黄牌", formatTime(rule.yellow)],
+            ["红牌", formatTime(rule.red)]
+          ]
+        : [
+            ["模式", "倒计时"],
+            ["总时长", formatTime(rule.total)],
+            ["绿牌", `剩 ${formatTime(rule.green)}`],
+            ["黄 / 红", `剩 ${formatTime(rule.yellow)} / ${formatTime(rule.red)}`]
+          ];
+
+      els.ruleSummary.innerHTML = items.map(([label, value]) => `
+        <div class="summary-item">
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(value)}</strong>
+        </div>
+      `).join("");
+    }
+
+    function applyRule(ruleId) {
+      if (timer.running) {
+        showToast("请先结束或重置当前计时");
+        return;
+      }
+
+      const rule = getAllRules().find((item) => item.id === ruleId);
+      if (!rule) return;
+      activeRule = structuredCloneSafe(rule);
+      resetTimer(false);
+      renderRules();
+      updateRuleDisplay();
+      fillCustomFormFromRule(activeRule);
+    }
+
+    function updateRuleDisplay() {
+      els.currentRuleName.textContent = activeRule.name;
+      els.currentRuleDetail.textContent = formatRuleLine(activeRule);
+      renderRuleSummary();
+      updateStage();
+    }
+
+    function fillCustomFormFromRule(rule) {
+      els.customName.value = rule.source === "custom" ? rule.name : "";
+      els.customMode.value = rule.mode;
+      els.overtimeAlert.value = rule.overtimeAlert ?? 15;
+      els.customTag.value = rule.tag || "custom";
+
+      if (rule.mode === "down") {
+        writeSeconds(rule.total || 180, els.totalMin, els.totalSec);
+      } else {
+        writeSeconds(3 * 60, els.totalMin, els.totalSec);
+      }
+
+      writeSeconds(rule.green || 0, els.greenMin, els.greenSec);
+      writeSeconds(rule.yellow || 0, els.yellowMin, els.yellowSec);
+      writeSeconds(rule.red || 0, els.redMin, els.redSec);
+      updateCustomModeHint();
+    }
+
+    function updateCustomModeHint() {
+      const isDown = els.customMode.value === "down";
+      els.totalTimeFields.classList.toggle("hidden", !isDown);
+      if (isDown) {
+        els.customHelper.textContent = "倒计时：总时长填写完整时长；绿牌、黄牌、红牌填写“还剩多少时间”。例如总时长 3:00，绿牌剩余 1:00，黄牌剩余 0:30，红牌 0:00。";
+      } else {
+        els.customHelper.textContent = "正计时：绿牌、黄牌、红牌填写“从开始后到达多少时间”。例如 5:00 / 6:00 / 7:00。";
+      }
+    }
+
+    function saveRuleFromForm() {
+      const name = els.customName.value.trim();
+      const mode = els.customMode.value;
+      const green = secondsFrom(els.greenMin, els.greenSec);
+      const yellow = secondsFrom(els.yellowMin, els.yellowSec);
+      const red = secondsFrom(els.redMin, els.redSec);
+      const total = secondsFrom(els.totalMin, els.totalSec);
+      const overtimeAlert = Math.max(0, Number(els.overtimeAlert.value || 0));
+      const tag = els.customTag.value;
+
+      if (!name) {
+        showToast("请填写规则名称");
+        return;
+      }
+
+      if (mode === "up") {
+        if (!(green > 0 && green <= yellow && yellow <= red)) {
+          showToast("正计时需要满足：绿牌 ≤ 黄牌 ≤ 红牌，且绿牌大于 0");
+          return;
+        }
+      }
+
+      if (mode === "down") {
+        if (!(total > 0 && green <= total && green >= yellow && yellow >= red && red >= 0)) {
+          showToast("倒计时需要满足：总时长 ≥ 绿牌剩余 ≥ 黄牌剩余 ≥ 红牌剩余 ≥ 0");
+          return;
+        }
+      }
+
+      const existingCustom = activeRule.source === "custom"
+        ? customRules.find((item) => item.id === activeRule.id)
+        : null;
+
+      const rule = {
+        id: existingCustom ? existingCustom.id : `custom-${Date.now()}`,
+        source: "custom",
+        name,
+        mode,
+        green,
+        yellow,
+        red,
+        overtimeAlert,
+        tag
+      };
+
+      if (mode === "down") rule.total = total;
+
+      if (existingCustom) {
+        customRules = customRules.map((item) => item.id === existingCustom.id ? rule : item);
+      } else {
+        customRules.push(rule);
+      }
+
+      saveCustomRules();
+      activeRule = structuredCloneSafe(rule);
+      resetTimer(false);
+      renderRules();
+      updateRuleDisplay();
+      showToast("规则已保存并应用");
+    }
+
+    function deleteCurrentCustomRule() {
+      if (activeRule.source !== "custom") {
+        showToast("当前不是自定义规则");
+        return;
+      }
+      const name = activeRule.name;
+      customRules = customRules.filter((item) => item.id !== activeRule.id);
+      saveCustomRules();
+      activeRule = structuredCloneSafe(presetRules[0]);
+      resetTimer(false);
+      renderRules();
+      updateRuleDisplay();
+      fillCustomFormFromRule(activeRule);
+      showToast(`已删除：${name}`);
+    }
+
+    function clearRuleForm() {
+      els.customName.value = "";
+      els.customMode.value = "up";
+      els.totalMin.value = 3;
+      els.totalSec.value = 0;
+      els.greenMin.value = 1;
+      els.greenSec.value = 0;
+      els.yellowMin.value = 1;
+      els.yellowSec.value = 30;
+      els.redMin.value = 2;
+      els.redSec.value = 0;
+      els.overtimeAlert.value = 15;
+      els.customTag.value = "custom";
+      updateCustomModeHint();
+    }
+
+    function getElapsedSeconds() {
+      if (!timer.running) return timer.elapsed;
+      const now = timer.paused ? timer.pausedAt : Date.now();
+      return Math.max(0, Math.floor((now - timer.startedAt - timer.pausedMs) / 1000));
+    }
+
+    function getDisplaySeconds(elapsed) {
+      if (activeRule.mode === "up") return elapsed;
+      return Math.max(0, activeRule.total - elapsed);
+    }
+
+    function getOvertimeSeconds(elapsed) {
+      if (activeRule.mode === "up") return Math.max(0, elapsed - activeRule.red);
+      return Math.max(0, elapsed - activeRule.total);
+    }
+
+    function getState(elapsed) {
+      if (!timer.running && elapsed === 0) {
+        return { key: "idle", label: "未开始", subtitle: "准备计时" };
+      }
+
+      if (activeRule.mode === "up") {
+        if (elapsed > activeRule.red) {
+          return { key: "overtime", label: "已超时", subtitle: `超时 +${formatTime(elapsed - activeRule.red)}` };
+        }
+        if (elapsed >= activeRule.red) {
+          return { key: "red", label: "红牌", subtitle: "时间到" };
+        }
+        if (elapsed >= activeRule.yellow) {
+          return { key: "yellow", label: "黄牌", subtitle: "接近上限" };
+        }
+        if (elapsed >= activeRule.green) {
+          return { key: "green", label: "绿牌", subtitle: "已进入合格时间" };
+        }
+        return { key: "before", label: "计时中", subtitle: "未到绿牌" };
+      }
+
+      const remaining = activeRule.total - elapsed;
+      if (remaining < activeRule.red) {
+        return { key: "overtime", label: "已超时", subtitle: `超时 +${formatTime(elapsed - activeRule.total)}` };
+      }
+      if (remaining <= activeRule.red) {
+        return { key: "red", label: "红牌", subtitle: "时间到" };
+      }
+      if (remaining <= activeRule.yellow) {
+        return { key: "yellow", label: "黄牌", subtitle: `剩余 ${formatTime(remaining)}` };
+      }
+      if (remaining <= activeRule.green) {
+        return { key: "green", label: "绿牌", subtitle: `剩余 ${formatTime(remaining)}` };
+      }
+      return { key: "before", label: "计时中", subtitle: `剩余 ${formatTime(remaining)}` };
+    }
+
+    function updateTimerUI() {
+      const elapsed = getElapsedSeconds();
+      timer.elapsed = elapsed;
+      const state = getState(elapsed);
+      const displaySeconds = getDisplaySeconds(elapsed);
+      const overtime = getOvertimeSeconds(elapsed);
+      const display = overtime > 0 ? `+${formatTime(overtime)}` : formatTime(displaySeconds);
+
+      els.timeDisplay.textContent = display;
+      els.timeSubtitle.textContent = state.subtitle;
+      els.statusChip.textContent = state.label;
+
+      setVisualState(state.key);
+      updateStage(state, display);
+      maybeBeep(elapsed, state.key);
+    }
+
+    function setVisualState(stateKey) {
+      const classes = ["state-idle", "state-before", "state-green", "state-yellow", "state-red", "state-overtime"];
+      for (const cls of classes) {
+        els.timerPanel.classList.remove(cls);
+        els.stageOverlay.classList.remove(cls);
+      }
+      els.timerPanel.classList.add(`state-${stateKey}`);
+      els.stageOverlay.classList.add(`state-${stateKey}`);
+      timer.lastState = stateKey;
+    }
+
+    function startTimer() {
+      ensureAudioContext();
+      timer.running = true;
+      timer.paused = false;
+      timer.startedAt = Date.now();
+      timer.pausedAt = null;
+      timer.pausedMs = 0;
+      timer.elapsed = 0;
+      timer.redBeeped = false;
+      timer.overtimeBeeped = false;
+      clearInterval(timer.intervalId);
+      timer.intervalId = setInterval(updateTimerUI, 220);
+      setControls("running");
+      updateTimerUI();
+    }
+
+    function pauseTimer() {
+      if (!timer.running || timer.paused) return;
+      timer.paused = true;
+      timer.pausedAt = Date.now();
+      setControls("paused");
+      updateTimerUI();
+      showToast("已暂停");
+    }
+
+    function resumeTimer() {
+      if (!timer.running || !timer.paused) return;
+      timer.pausedMs += Date.now() - timer.pausedAt;
+      timer.paused = false;
+      timer.pausedAt = null;
+      setControls("running");
+      updateTimerUI();
+    }
+
+    function stopTimer() {
+      if (!timer.running && timer.elapsed === 0) return;
+      timer.elapsed = getElapsedSeconds();
+      timer.running = false;
+      timer.paused = false;
+      clearInterval(timer.intervalId);
+      timer.intervalId = null;
+      addRecord(timer.elapsed);
+      setControls("idle");
+      updateTimerUI();
+      showToast("已结束并写入记录");
+    }
+
+    function resetTimer(show = true) {
+      timer.running = false;
+      timer.paused = false;
+      timer.startedAt = null;
+      timer.pausedAt = null;
+      timer.pausedMs = 0;
+      timer.elapsed = 0;
+      timer.redBeeped = false;
+      timer.overtimeBeeped = false;
+      clearInterval(timer.intervalId);
+      timer.intervalId = null;
+      setControls("idle");
+      updateTimerUI();
+      if (show) showToast("已重置");
+    }
+
+    function setControls(mode) {
+      els.startBtn.disabled = mode !== "idle";
+      els.pauseBtn.disabled = mode !== "running";
+      els.resumeBtn.disabled = mode !== "paused";
+      els.stopBtn.disabled = mode === "idle";
+    }
+
+    function getResult(elapsed) {
+      if (activeRule.mode === "up") {
+        if (elapsed < activeRule.green) return { key: "short", label: "偏短" };
+        if (elapsed > activeRule.red) return { key: "over", label: "超时" };
+        return { key: "ok", label: "合格" };
+      }
+
+      const lowerBound = activeRule.total - activeRule.green;
+      if (elapsed < lowerBound) return { key: "short", label: "偏短" };
+      if (elapsed > activeRule.total) return { key: "over", label: "超时" };
+      return { key: "ok", label: "合格" };
+    }
+
+    function addRecord(elapsed) {
+      const result = getResult(elapsed);
+      const record = {
+        id: `record-${Date.now()}`,
+        speaker: els.speakerName.value.trim() || "未填写",
+        title: els.speechTitle.value.trim(),
+        ruleName: activeRule.name,
+        ruleMode: activeRule.mode,
+        duration: elapsed,
+        displayDuration: formatTime(elapsed),
+        resultKey: result.key,
+        resultLabel: result.label,
+        endedAt: new Date().toLocaleTimeString("zh-CN", { hour12: false })
+      };
+      records.push(record);
+      saveRecords();
+      renderRecords();
+      generateReport();
+    }
+
+    function renderRecords() {
+      if (!records.length) {
+        els.recordsBody.innerHTML = `
+          <tr>
+            <td colspan="8" style="color: var(--muted); padding: 18px 10px;">暂无记录。结束一次计时后，会自动出现在这里。</td>
+          </tr>
+        `;
+        return;
+      }
+
+      els.recordsBody.innerHTML = records.map((record, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(record.speaker)}</td>
+          <td>${escapeHtml(record.title || "—")}</td>
+          <td>${escapeHtml(record.ruleName)}</td>
+          <td>${escapeHtml(record.displayDuration)}</td>
+          <td><span class="badge ${record.resultKey}">${escapeHtml(record.resultLabel)}</span></td>
+          <td>${escapeHtml(record.endedAt || "—")}</td>
+          <td><button class="mini-btn" onclick="deleteRecord('${record.id}')">删除</button></td>
+        </tr>
+      `).join("");
+    }
+
+    window.deleteRecord = function(recordId) {
+      records = records.filter((record) => record.id !== recordId);
+      saveRecords();
+      renderRecords();
+      generateReport();
+      showToast("记录已删除");
+    };
+
+    function generateReport() {
+      const title = els.meetingTitle.value.trim() || "Toastmasters 例会";
+      const theme = els.meetingTheme.value.trim();
+      const date = els.meetingDate.value;
+      const timekeeper = els.timekeeperName.value.trim();
+
+      const lines = [];
+      lines.push("时间官报告");
+      lines.push(`会议：${title}${theme ? "｜主题：" + theme : ""}`);
+      if (date) lines.push(`日期：${date}`);
+      if (timekeeper) lines.push(`时间官：${timekeeper}`);
+      lines.push("");
+
+      if (!records.length) {
+        lines.push("暂无计时记录。");
+      } else {
+        records.forEach((record, index) => {
+          const topic = record.title ? `《${record.title}》` : "";
+          lines.push(`${index + 1}. ${record.speaker}${topic}｜${record.ruleName}｜用时 ${record.displayDuration}｜${record.resultLabel}`);
+        });
+
+        const ok = records.filter((r) => r.resultKey === "ok").length;
+        const short = records.filter((r) => r.resultKey === "short").length;
+        const over = records.filter((r) => r.resultKey === "over").length;
+        lines.push("");
+        lines.push(`统计：合格 ${ok} 人，偏短 ${short} 人，超时 ${over} 人。`);
+      }
+
+      els.reportBox.value = lines.join("\n");
+      return els.reportBox.value;
+    }
+
+    async function copyReport() {
+      const text = generateReport();
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("报告已复制");
+      } catch {
+        els.reportBox.select();
+        document.execCommand("copy");
+        showToast("报告已复制");
+      }
+    }
+
+    function exportCsv() {
+      if (!records.length) {
+        showToast("暂无记录可导出");
+        return;
+      }
+      const headers = ["序号", "姓名", "题目", "环节", "用时", "结果", "结束时间"];
+      const rows = records.map((record, index) => [
+        index + 1,
+        record.speaker,
+        record.title || "",
+        record.ruleName,
+        record.displayDuration,
+        record.resultLabel,
+        record.endedAt || ""
+      ]);
+      const csv = [headers, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+        .join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `timekeeper-records-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("CSV 已导出");
+    }
+
+    function clearRecords() {
+      records = [];
+      saveRecords();
+      renderRecords();
+      generateReport();
+      showToast("记录已清空");
+    }
+
+    function ensureAudioContext() {
+      if (!audioContext) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioContext = new AudioContext();
+      }
+      if (audioContext && audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+    }
+
+    function beep(frequency = 880, duration = 180, count = 1) {
+      ensureAudioContext();
+      if (!audioContext) return;
+
+      for (let i = 0; i < count; i++) {
+        const start = audioContext.currentTime + i * 0.24;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.28, start + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration / 1000);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration / 1000 + 0.02);
+      }
+    }
+
+    function maybeBeep(elapsed, stateKey) {
+      if (!timer.running || timer.paused) return;
+
+      const redPoint = activeRule.mode === "up" ? activeRule.red : activeRule.total - activeRule.red;
+      const overtimePoint = activeRule.mode === "up"
+        ? activeRule.red + activeRule.overtimeAlert
+        : activeRule.total + activeRule.overtimeAlert;
+
+      if (!timer.redBeeped && elapsed >= redPoint) {
+        timer.redBeeped = true;
+        beep(740, 180, 1);
+      }
+
+      if (!timer.overtimeBeeped && activeRule.overtimeAlert > 0 && elapsed >= overtimePoint) {
+        timer.overtimeBeeped = true;
+        beep(980, 170, 3);
+      }
+    }
+
+    function openStageMode() {
+      els.stageOverlay.classList.add("open");
+      updateTimerUI();
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    }
+
+    function closeStageMode() {
+      els.stageOverlay.classList.remove("open");
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function updateStage(state = null, display = null) {
+      const elapsed = timer.elapsed || getElapsedSeconds();
+      const currentState = state || getState(elapsed);
+      const currentDisplay = display || (getOvertimeSeconds(elapsed) > 0 ? `+${formatTime(getOvertimeSeconds(elapsed))}` : formatTime(getDisplaySeconds(elapsed)));
+      const speaker = els.speakerName.value.trim() || "未填写演讲者";
+      const speech = els.speechTitle.value.trim();
+      els.stageSpeaker.textContent = speech ? `${speaker}｜${speech}` : speaker;
+      els.stageRule.textContent = activeRule.name;
+      els.stageTime.textContent = currentDisplay;
+      els.stageStatus.textContent = currentState.subtitle;
+      els.stageMeeting.textContent = els.meetingTitle.value.trim() || "Toastmasters 例会";
+      els.stageTimekeeper.textContent = els.timekeeperName.value.trim() ? `时间官：${els.timekeeperName.value.trim()}` : "时间官";
+    }
+
+    function resetAll() {
+      localStorage.removeItem(STORAGE_KEYS.customRules);
+      localStorage.removeItem(STORAGE_KEYS.records);
+      customRules = [];
+      records = [];
+      activeRule = structuredCloneSafe(presetRules[0]);
+      resetTimer(false);
+      renderRules();
+      renderRecords();
+      updateRuleDisplay();
+      generateReport();
+      showToast("已恢复默认规则，记录已清空");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => {
+        els.toast.classList.remove("show");
+      }, 1900);
+    }
+
+    function bindEvents() {
+      els.startBtn.addEventListener("click", startTimer);
+      els.pauseBtn.addEventListener("click", pauseTimer);
+      els.resumeBtn.addEventListener("click", resumeTimer);
+      els.stopBtn.addEventListener("click", stopTimer);
+      els.resetBtn.addEventListener("click", () => resetTimer(true));
+
+      els.toggleCustomBtn.addEventListener("click", () => {
+        els.customPanel.classList.toggle("open");
+      });
+
+      els.customMode.addEventListener("change", updateCustomModeHint);
+      els.saveRuleBtn.addEventListener("click", saveRuleFromForm);
+      els.clearRuleFormBtn.addEventListener("click", clearRuleForm);
+      els.deleteCurrentCustomRuleBtn.addEventListener("click", deleteCurrentCustomRule);
+
+      els.generateReportBtn.addEventListener("click", () => {
+        generateReport();
+        showToast("报告已生成");
+      });
+      els.copyReportBtn.addEventListener("click", copyReport);
+      els.exportCsvBtn.addEventListener("click", exportCsv);
+      els.clearRecordsBtn.addEventListener("click", clearRecords);
+
+      els.toggleStageBtn.addEventListener("click", openStageMode);
+      els.closeStageBtn.addEventListener("click", closeStageMode);
+      els.beepTestBtn.addEventListener("click", () => beep(880, 160, 2));
+      els.resetAllBtn.addEventListener("click", resetAll);
+
+      [els.meetingTitle, els.timekeeperName, els.meetingTheme, els.meetingDate].forEach((input) => {
+        input.addEventListener("input", saveMeeting);
+        input.addEventListener("change", saveMeeting);
+      });
+
+      [els.speakerName, els.speechTitle].forEach((input) => {
+        input.addEventListener("input", updateStage);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.target && ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return;
+        if (event.code === "Space") {
+          event.preventDefault();
+          if (!timer.running) startTimer();
+          else if (timer.paused) resumeTimer();
+          else pauseTimer();
+        }
+        if (event.key.toLowerCase() === "s") stopTimer();
+        if (event.key.toLowerCase() === "r") resetTimer(true);
+        if (event.key.toLowerCase() === "f") openStageMode();
+        if (event.key === "Escape") closeStageMode();
+      });
+    }
+
+    function init() {
+      if (typeof structuredClone !== "function") {
+        window.structuredClone = structuredCloneSafe;
+      }
+      loadData();
+      activeRule = structuredCloneSafe(presetRules[0]);
+      renderRules();
+      renderRecords();
+      updateRuleDisplay();
+      fillCustomFormFromRule(activeRule);
+      generateReport();
+      bindEvents();
+      updateTimerUI();
+    }
+
+    init();
+  </script>
+</body>
+</html>
