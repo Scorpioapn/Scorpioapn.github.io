@@ -4206,14 +4206,14 @@
       }
     }
 
-    /* Warm Toastmasters console layer: no liquid-glass finish */
+    /* Cool Toastmasters console layer: no liquid-glass finish */
     :root {
-      --warm-bg: #f4eadb;
-      --warm-paper: #fffaf1;
-      --warm-paper-strong: #fffdf8;
-      --warm-line: rgba(90, 64, 34, 0.15);
-      --warm-shadow: 0 14px 32px rgba(74, 53, 27, 0.10);
-      --warm-shadow-soft: 0 8px 22px rgba(74, 53, 27, 0.07);
+      --cool-bg: #edf7fc;
+      --cool-paper: rgba(248, 252, 255, 0.92);
+      --cool-paper-strong: rgba(255, 255, 255, 0.94);
+      --cool-line: rgba(0, 65, 101, 0.18);
+      --cool-shadow: 0 14px 32px rgba(0, 31, 51, 0.14);
+      --cool-shadow-soft: 0 8px 22px rgba(0, 65, 101, 0.10);
     }
 
     *,
@@ -4286,9 +4286,9 @@
     .report-box,
     .live-agenda-card,
     .rule-btn {
-      background: var(--warm-paper-strong) !important;
-      border: 1px solid var(--warm-line) !important;
-      box-shadow: var(--warm-shadow-soft) !important;
+      background: var(--cool-paper-strong) !important;
+      border: 1px solid var(--cool-line) !important;
+      box-shadow: var(--cool-shadow-soft) !important;
     }
 
     .topbar {
@@ -4314,13 +4314,13 @@
     label,
     .helper,
     .compact-note {
-      color: #6d6255 !important;
+      color: #5f6b76 !important;
     }
 
     .mode-tabs {
-      background: #fff8ec !important;
-      border: 1px solid rgba(90, 64, 34, 0.16) !important;
-      box-shadow: var(--warm-shadow-soft) !important;
+      background: var(--cool-paper) !important;
+      border: 1px solid rgba(0, 65, 101, 0.16) !important;
+      box-shadow: var(--cool-shadow-soft) !important;
     }
 
     .mode-tab {
@@ -4330,7 +4330,7 @@
 
     .mode-tab.active {
       background: var(--tm-navy) !important;
-      color: #fffdf8 !important;
+      color: #fff !important;
       border: 0 !important;
       box-shadow: 0 8px 18px rgba(0, 65, 101, 0.20) !important;
     }
@@ -4338,27 +4338,27 @@
     input,
     select,
     textarea {
-      background: #fffdf8 !important;
+      background: #fff !important;
       color: var(--tm-ink) !important;
-      border: 1px solid rgba(90, 64, 34, 0.18) !important;
-      box-shadow: inset 0 1px 2px rgba(74, 53, 27, 0.04) !important;
+      border: 1px solid rgba(0, 65, 101, 0.18) !important;
+      box-shadow: inset 0 1px 2px rgba(0, 65, 101, 0.05) !important;
     }
 
     .btn,
     .mini-btn,
     .stage-close,
     .intro-close-btn {
-      background: #fff8ec !important;
+      background: var(--cool-paper) !important;
       color: var(--tm-navy) !important;
-      border: 1px solid rgba(90, 64, 34, 0.18) !important;
-      box-shadow: 0 5px 12px rgba(74, 53, 27, 0.08) !important;
+      border: 1px solid rgba(0, 65, 101, 0.18) !important;
+      box-shadow: 0 5px 12px rgba(0, 65, 101, 0.10) !important;
       font-weight: 750 !important;
     }
 
     .btn.primary,
     .mini-btn:first-child {
       background: var(--tm-navy) !important;
-      color: #fffdf8 !important;
+      color: #fff !important;
       border-color: var(--tm-navy) !important;
     }
 
@@ -4372,19 +4372,19 @@
     .timer-panel {
       border-radius: 24px !important;
       border: 1px solid rgba(0, 65, 101, 0.18) !important;
-      box-shadow: var(--warm-shadow) !important;
+      box-shadow: var(--cool-shadow) !important;
       overflow: hidden;
     }
 
     .timer-panel.state-idle,
     .timer-panel.state-before {
       background: linear-gradient(180deg, #0d5778 0%, #004165 100%) !important;
-      color: #fffdf8 !important;
+      color: #fff !important;
     }
 
     .timer-panel.state-green {
       background: linear-gradient(180deg, #23864a 0%, #126536 100%) !important;
-      color: #fffdf8 !important;
+      color: #fff !important;
       border-color: rgba(18, 101, 54, 0.28) !important;
     }
 
@@ -4397,7 +4397,7 @@
     .timer-panel.state-red,
     .timer-panel.state-overtime {
       background: linear-gradient(180deg, #8f3140 0%, #772432 100%) !important;
-      color: #fffdf8 !important;
+      color: #fff !important;
       border-color: rgba(119, 36, 50, 0.30) !important;
     }
 
@@ -4508,19 +4508,19 @@
     }
 
     .meeting-stat {
-      background: #fff8ec !important;
-      border: 1px solid rgba(90, 64, 34, 0.16) !important;
+      background: var(--cool-paper) !important;
+      border: 1px solid rgba(0, 65, 101, 0.16) !important;
       border-radius: 18px !important;
-      box-shadow: 0 5px 14px rgba(74, 53, 27, 0.06) !important;
+      box-shadow: 0 5px 14px rgba(0, 65, 101, 0.08) !important;
     }
 
     .meeting-progress-track {
       height: 8px !important;
       margin-top: 0 !important;
-      background: #eadbc6 !important;
+      background: rgba(0, 65, 101, 0.14) !important;
       border: 0 !important;
       border-radius: 999px !important;
-      box-shadow: inset 0 1px 2px rgba(74, 53, 27, 0.08) !important;
+      box-shadow: inset 0 1px 2px rgba(0, 31, 51, 0.10) !important;
     }
 
     .meeting-progress-fill {
