@@ -3656,6 +3656,348 @@
       border-radius: 999px;
       box-shadow: none;
     }
+
+    /* Liquid Glass finish layer */
+    :root {
+      --glass-surface: rgba(255, 255, 255, 0.58);
+      --glass-surface-strong: rgba(255, 255, 255, 0.76);
+      --glass-surface-soft: rgba(255, 255, 255, 0.38);
+      --glass-line: rgba(255, 255, 255, 0.68);
+      --glass-line-dark: rgba(0, 65, 101, 0.13);
+      --glass-highlight: rgba(255, 255, 255, 0.92);
+      --glass-shadow: 0 24px 70px rgba(0, 65, 101, 0.16), 0 2px 10px rgba(0, 0, 0, 0.05);
+      --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.86), inset 0 -1px 0 rgba(0, 65, 101, 0.06);
+    }
+
+    html, body {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(231, 243, 249, 0.92) 38%, rgba(255, 253, 247, 0.96) 100%),
+        linear-gradient(90deg, rgba(0, 65, 101, 0.08), rgba(242, 223, 116, 0.10) 50%, rgba(119, 36, 50, 0.07));
+      background-attachment: fixed;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.54), transparent 34%, rgba(255, 255, 255, 0.28) 66%, transparent),
+        repeating-linear-gradient(135deg, rgba(0, 65, 101, 0.035) 0 1px, transparent 1px 18px);
+      opacity: 0.82;
+    }
+
+    .topbar,
+    .mode-tabs,
+    .panel,
+    .intro-card,
+    .rule-explain-item,
+    .meeting-progress-card,
+    .meeting-stat,
+    .agenda-summary-item,
+    .table-wrap,
+    .report-box,
+    .live-agenda-card,
+    .rule-btn,
+    .summary-item,
+    .agenda-mini,
+    .stage-agenda-mini,
+    .status-chip,
+    .toast {
+      position: relative;
+      border-color: var(--glass-line-dark);
+      box-shadow: var(--glass-shadow), var(--glass-inner);
+      backdrop-filter: blur(28px) saturate(190%) contrast(1.04);
+      -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(1.04);
+    }
+
+    .topbar,
+    .panel,
+    .intro-card,
+    .rule-explain-item,
+    .meeting-progress-card,
+    .meeting-stat,
+    .agenda-summary-item,
+    .table-wrap,
+    .report-box,
+    .live-agenda-card,
+    .rule-btn {
+      background:
+        linear-gradient(145deg, var(--glass-surface-strong), var(--glass-surface) 58%, var(--glass-surface-soft)),
+        rgba(255, 255, 255, 0.48);
+    }
+
+    .topbar {
+      padding: 18px;
+      border: 1px solid var(--glass-line-dark);
+      border-radius: 28px;
+    }
+
+    .panel::before,
+    .mode-tabs::before,
+    .timer-panel::before,
+    .meeting-progress-card::before,
+    .live-agenda-card::before,
+    .rule-btn::before,
+    .intro-card::before,
+    .topbar::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(155deg, var(--glass-highlight), rgba(255, 255, 255, 0.18) 34%, transparent 62%);
+      opacity: 0.54;
+    }
+
+    .panel > *,
+    .mode-tabs > *,
+    .timer-panel > *,
+    .meeting-progress-card > *,
+    .live-agenda-card > *,
+    .rule-btn > *,
+    .intro-card > *,
+    .topbar > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .mode-tabs {
+      background: rgba(255, 255, 255, 0.52);
+      border-color: rgba(255, 255, 255, 0.74);
+      box-shadow: 0 16px 38px rgba(0, 65, 101, 0.12), var(--glass-inner);
+      padding: 5px;
+    }
+
+    .mode-tab {
+      transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .mode-tab.active {
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.30), rgba(0, 65, 101, 0.92)),
+        var(--tm-navy);
+      border: 1px solid rgba(255, 255, 255, 0.40);
+      box-shadow: 0 10px 24px rgba(0, 65, 101, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    }
+
+    .btn,
+    .mini-btn,
+    .stage-close,
+    .intro-close-btn {
+      background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.42)),
+        rgba(255, 255, 255, 0.58);
+      border-color: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 10px 28px rgba(0, 65, 101, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+    }
+
+    .btn:hover:not(:disabled),
+    .mini-btn:hover:not(:disabled),
+    .rule-btn:hover:not(:disabled),
+    .mode-tab:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(0, 65, 101, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+    }
+
+    .btn.primary,
+    .mini-btn:first-child,
+    .timer-panel .btn.primary {
+      background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.30), rgba(0, 65, 101, 0.88)),
+        var(--tm-navy);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.32);
+      box-shadow: 0 16px 34px rgba(0, 65, 101, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    }
+
+    .btn.danger,
+    .danger-mini,
+    .timer-panel .btn.danger {
+      background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.72), rgba(119, 36, 50, 0.10)),
+        rgba(255, 255, 255, 0.56) !important;
+      color: var(--tm-red) !important;
+      border-color: rgba(119, 36, 50, 0.20) !important;
+    }
+
+    input, select, textarea {
+      background: rgba(255, 255, 255, 0.64);
+      border-color: rgba(255, 255, 255, 0.76);
+      box-shadow: inset 0 1px 2px rgba(0, 65, 101, 0.05), 0 1px 0 rgba(255, 255, 255, 0.58);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus,
+    button:focus-visible {
+      outline: 0;
+      border-color: rgba(0, 95, 143, 0.48);
+      box-shadow: 0 0 0 4px rgba(0, 95, 143, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .timer-panel {
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      box-shadow: 0 30px 90px rgba(0, 65, 101, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.30);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
+    }
+
+    .timer-panel.state-idle,
+    .timer-panel.state-before {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.24), rgba(0, 65, 101, 0.86) 46%, rgba(0, 95, 143, 0.78)),
+        var(--tm-navy);
+    }
+
+    .timer-panel.state-green {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(22, 128, 60, 0.88) 48%, rgba(11, 94, 43, 0.84)),
+        #16803c;
+    }
+
+    .timer-panel.state-yellow {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.46), rgba(242, 223, 116, 0.84) 48%, rgba(208, 169, 0, 0.72)),
+        var(--tm-gold);
+    }
+
+    .timer-panel.state-red,
+    .timer-panel.state-overtime {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(119, 36, 50, 0.90) 48%, rgba(86, 21, 34, 0.86)),
+        var(--tm-red);
+    }
+
+    .timer-panel .btn,
+    .status-chip,
+    .agenda-mini,
+    .stage-agenda-mini,
+    .summary-item {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.30);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 26px rgba(0, 0, 0, 0.08);
+    }
+
+    .time-display-wrap {
+      filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.12));
+    }
+
+    .time-display,
+    .stage-time {
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.14);
+    }
+
+    .meeting-progress-track,
+    .agenda-mini-bar,
+    .stage-agenda-mini-bar {
+      background: rgba(255, 255, 255, 0.38);
+      box-shadow: inset 0 1px 2px rgba(0, 65, 101, 0.10);
+    }
+
+    .meeting-progress-fill,
+    .agenda-mini-fill,
+    .stage-agenda-mini-fill {
+      background: linear-gradient(90deg, var(--tm-blue), #37a8d8);
+      box-shadow: 0 0 18px rgba(55, 168, 216, 0.36);
+    }
+
+    .badge {
+      border: 1px solid rgba(255, 255, 255, 0.46);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46);
+    }
+
+    .stage-overlay {
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+    }
+
+    .stage-overlay.state-idle,
+    .stage-overlay.state-before {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(0, 65, 101, 0.92) 48%, rgba(0, 95, 143, 0.88)),
+        var(--tm-navy);
+    }
+
+    .stage-overlay.state-green {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(22, 128, 60, 0.92) 48%, rgba(11, 94, 43, 0.88)),
+        #16803c;
+    }
+
+    .stage-overlay.state-yellow {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.36), rgba(242, 223, 116, 0.92) 48%, rgba(208, 169, 0, 0.80)),
+        var(--tm-gold);
+    }
+
+    .stage-overlay.state-red,
+    .stage-overlay.state-overtime {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(119, 36, 50, 0.94) 48%, rgba(86, 21, 34, 0.90)),
+        var(--tm-red);
+    }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .topbar,
+      .mode-tabs,
+      .panel,
+      .intro-card,
+      .rule-explain-item,
+      .meeting-progress-card,
+      .meeting-stat,
+      .agenda-summary-item,
+      .table-wrap,
+      .report-box,
+      .live-agenda-card,
+      .rule-btn {
+        background: rgba(255, 255, 255, 0.92);
+      }
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      .topbar,
+      .mode-tabs,
+      .panel,
+      .intro-card,
+      .rule-explain-item,
+      .meeting-progress-card,
+      .meeting-stat,
+      .agenda-summary-item,
+      .table-wrap,
+      .report-box,
+      .live-agenda-card,
+      .rule-btn,
+      .btn,
+      .mini-btn,
+      input,
+      select,
+      textarea {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(255, 255, 255, 0.94);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        padding: 14px;
+        border-radius: 22px;
+      }
+
+      .panel,
+      .timer-panel,
+      .intro-card {
+        border-radius: 22px;
+      }
+    }
   </style>
 </head>
 <body>
