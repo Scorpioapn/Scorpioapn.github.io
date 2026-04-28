@@ -4760,6 +4760,7 @@
                 <button class="mini-btn" id="addAgendaBtn">添加环节</button>
                 <button class="mini-btn" id="resetAgendaBtn">恢复默认议程</button>
               </div>
+              <p class="compact-note" id="agendaRuleHint">输入常见环节名称后，会自动匹配默认时长和时间牌规则。</p>
 
               <div class="agenda-summary">
                 <div class="agenda-summary-item">
@@ -5138,7 +5139,7 @@
       {
         id: "under-3-countdown",
         source: "preset",
-        name: "3分钟以下倒计时",
+        name: "3分钟及以下规则",
         mode: "down",
         total: 180,
         green: 60,
@@ -5150,7 +5151,7 @@
       {
         id: "three-to-ten-countdown",
         source: "preset",
-        name: "3–10分钟倒计时",
+        name: "3–10分钟规则",
         mode: "down",
         total: 600,
         green: 120,
@@ -5158,7 +5159,58 @@
         red: 0,
         overtimeAlert: 30,
         tag: "workshop"
+      },
+      {
+        id: "over-ten-countdown",
+        source: "preset",
+        name: "10分钟以上规则",
+        mode: "down",
+        total: 900,
+        green: 300,
+        yellow: 120,
+        red: 0,
+        overtimeAlert: 30,
+        tag: "workshop"
       }
+    ];
+
+    const durationRuleDefaults = {
+      "under-3-countdown": {
+        label: "3分钟及以下规则",
+        green: 60,
+        yellow: 30,
+        red: 0,
+        overtimeAlert: 15
+      },
+      "three-to-ten-countdown": {
+        label: "3–10分钟规则",
+        green: 120,
+        yellow: 60,
+        red: 0,
+        overtimeAlert: 30
+      },
+      "over-ten-countdown": {
+        label: "10分钟以上规则",
+        green: 300,
+        yellow: 120,
+        red: 0,
+        overtimeAlert: 30
+      }
+    };
+
+    const defaultAgendaMappings = [
+      { name: "事务官宣布会议规则", aliases: ["事务官", "宣布会议规则"], plannedMinutes: 1, durationLabel: "1 分钟", ruleId: "under-3-countdown" },
+      { name: "主席致词", aliases: ["主席致辞", "主席"], plannedMinutes: 3, durationLabel: "3 分钟", ruleId: "under-3-countdown" },
+      { name: "总主持开场 / 串场", aliases: ["总主持开场", "主持开场", "串场"], plannedMinutes: 3, durationLabel: "2–3 分钟", ruleId: "under-3-countdown" },
+      { name: "三官宣言", aliases: ["三官"], plannedMinutes: 2, durationLabel: "2 分钟", ruleId: "under-3-countdown" },
+      { name: "即兴演讲", aliases: ["即兴", "table topic", "tabletopic"], plannedMinutes: 2, durationLabel: "2 分钟 / 人", ruleId: "under-3-countdown" },
+      { name: "备稿演讲", aliases: ["备稿", "prepared speech", "prepared"], plannedMinutes: 7, durationLabel: "5–7 分钟", ruleId: "three-to-ten-countdown" },
+      { name: "来宾介绍", aliases: ["来宾"], plannedMinutes: 5, durationLabel: "5 分钟", ruleId: "three-to-ten-countdown" },
+      { name: "即兴点评", aliases: ["即兴评价"], plannedMinutes: 5, durationLabel: "5 分钟", ruleId: "three-to-ten-countdown" },
+      { name: "备稿点评", aliases: ["备稿评价", "个人点评"], plannedMinutes: 3, durationLabel: "3 分钟", ruleId: "under-3-countdown" },
+      { name: "三官报告", aliases: ["三官汇报"], plannedMinutes: 3, durationLabel: "3 分钟", ruleId: "under-3-countdown" },
+      { name: "总点评", aliases: ["总评"], plannedMinutes: 8, durationLabel: "8 分钟", ruleId: "three-to-ten-countdown" },
+      { name: "颁奖 & 真情分享", aliases: ["颁奖", "真情分享", "颁奖和真情分享"], plannedMinutes: 5, durationLabel: "5 分钟", ruleId: "three-to-ten-countdown" }
     ];
 
     let customRules = [];
@@ -5199,6 +5251,7 @@
       meetingProgressFill: $("meetingProgressFill"),
       agendaNameInput: $("agendaNameInput"),
       agendaMinutesInput: $("agendaMinutesInput"),
+      agendaRuleHint: $("agendaRuleHint"),
       addAgendaBtn: $("addAgendaBtn"),
       resetAgendaBtn: $("resetAgendaBtn"),
       agendaCurrentName: $("agendaCurrentName"),
@@ -5538,14 +5591,107 @@
       return agendaItems.find((item) => item.status === "pending") || null;
     }
 
-    function findRecommendedRuleIdForAgenda(name) {
-      const value = String(name || "").toLowerCase();
-      const compact = value.replaceAll(" ", "").replaceAll("-", "");
-      if (value.includes("即兴") || compact.includes("tabletopic")) return "table-topic";
-      if (value.includes("点评") || value.includes("评价") || value.includes("evaluation")) return "evaluation";
-      if (value.includes("备稿") || value.includes("prepared") || value.includes("5–7") || value.includes("5-7")) return "prepared-5-7";
-      if (compact.includes("icebreaker") || value.includes("破冰")) return "ice-breaker";
-      return null;
+    function normalizeAgendaText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[\s/／&＆|｜,，.。:：;；()（）\-–—]+/g, "");
+    }
+
+    function findAgendaMapping(name) {
+      const compact = normalizeAgendaText(name);
+      if (!compact) return null;
+      return defaultAgendaMappings.find((mapping) => {
+        const names = [mapping.name, ...(mapping.aliases || [])];
+        return names.some((candidate) => {
+          const candidateCompact = normalizeAgendaText(candidate);
+          return candidateCompact && (compact.includes(candidateCompact) || candidateCompact.includes(compact));
+        });
+      }) || null;
+    }
+
+    function getRuleIdForMinutes(minutes) {
+      if (minutes <= 3) return "under-3-countdown";
+      if (minutes <= 10) return "three-to-ten-countdown";
+      return "over-ten-countdown";
+    }
+
+    function resolveAgendaDefaults(name, plannedMinutes = null, options = {}) {
+      const mapping = findAgendaMapping(name);
+      const useMappingDuration = options.useMappingDuration ?? plannedMinutes === null;
+      const fallbackMinutes = mapping ? mapping.plannedMinutes : 10;
+      const minutes = Math.max(1, Math.round(Number((useMappingDuration && mapping ? mapping.plannedMinutes : plannedMinutes ?? fallbackMinutes) || 1)));
+      const ruleId = useMappingDuration && mapping ? mapping.ruleId : getRuleIdForMinutes(minutes);
+      const durationLabel = useMappingDuration && mapping ? mapping.durationLabel : `${minutes} 分钟`;
+      return {
+        plannedMinutes: minutes,
+        durationLabel,
+        ruleId,
+        ruleTotal: minutes * 60,
+        mappingName: mapping ? mapping.name : ""
+      };
+    }
+
+    function applyAgendaInputDefaults(defaults) {
+      els.agendaMinutesInput.dataset.ruleId = defaults.ruleId;
+      els.agendaMinutesInput.dataset.ruleTotal = String(defaults.ruleTotal);
+      els.agendaMinutesInput.dataset.durationLabel = defaults.durationLabel;
+      const rule = getAllRules().find((item) => item.id === defaults.ruleId);
+      if (els.agendaRuleHint) {
+        els.agendaRuleHint.textContent = defaults.mappingName
+          ? `已匹配：${defaults.mappingName}｜默认 ${defaults.durationLabel}｜${rule ? rule.name : defaults.ruleId}`
+          : `按 ${defaults.plannedMinutes} 分钟自动匹配：${rule ? rule.name : defaults.ruleId}`;
+      }
+    }
+
+    function syncAgendaDefaultsFromName() {
+      const name = els.agendaNameInput.value.trim();
+      const mapping = findAgendaMapping(name);
+      if (!mapping) {
+        syncAgendaRuleFromMinutes();
+        return;
+      }
+      const defaults = resolveAgendaDefaults(name, null, { useMappingDuration: true });
+      els.agendaMinutesInput.value = defaults.plannedMinutes;
+      applyAgendaInputDefaults(defaults);
+    }
+
+    function syncAgendaRuleFromMinutes() {
+      const name = els.agendaNameInput.value.trim();
+      const plannedMinutes = Math.max(1, Math.round(Number(els.agendaMinutesInput.value || 0)));
+      const defaults = resolveAgendaDefaults(name, plannedMinutes, { useMappingDuration: false });
+      applyAgendaInputDefaults(defaults);
+    }
+
+    function findRecommendedRuleIdForAgenda(name, plannedMinutes = null) {
+      return resolveAgendaDefaults(name, plannedMinutes, { useMappingDuration: plannedMinutes === null }).ruleId;
+    }
+
+    function buildRuleForAgendaItem(item) {
+      if (!item) return null;
+      const defaults = item.ruleId
+        ? {
+            ruleId: item.ruleId,
+            ruleTotal: Number(item.ruleTotal || item.plannedMinutes * 60 || 60),
+            durationLabel: item.durationLabel || `${item.plannedMinutes} 分钟`
+          }
+        : resolveAgendaDefaults(item.name, null, { useMappingDuration: true });
+      const baseRule = getAllRules().find((rule) => rule.id === defaults.ruleId);
+      if (!baseRule) return null;
+      const agendaRule = structuredCloneSafe(baseRule);
+      agendaRule.id = `agenda-${item.id}-${baseRule.id}`;
+      agendaRule.source = "agenda";
+      agendaRule.name = baseRule.mode === "down"
+        ? `${item.name}｜${baseRule.name}`
+        : baseRule.name;
+      if (baseRule.mode === "down") {
+        const durationRule = durationRuleDefaults[baseRule.id] || {};
+        agendaRule.total = Math.max(60, Number(defaults.ruleTotal || item.plannedMinutes * 60 || baseRule.total || 60));
+        agendaRule.green = durationRule.green ?? baseRule.green;
+        agendaRule.yellow = durationRule.yellow ?? baseRule.yellow;
+        agendaRule.red = durationRule.red ?? baseRule.red;
+        agendaRule.overtimeAlert = durationRule.overtimeAlert ?? baseRule.overtimeAlert;
+      }
+      return agendaRule;
     }
 
     function applyRecommendedRuleForAgenda(name) {
@@ -5571,7 +5717,7 @@
         els.liveAgendaMeta.textContent = `已用 ${formatLongTime(actualSeconds)} / 计划 ${formatLongTime(plannedSeconds)}；${remaining >= 0 ? "剩余 " + formatTime(remaining) : "超时 +" + formatTime(Math.abs(remaining))}`;
       } else if (nextItem) {
         els.liveAgendaName.textContent = `下一议程：${nextItem.name}`;
-        els.liveAgendaMeta.textContent = `计划 ${formatLongTime(Number(nextItem.plannedMinutes || 0) * 60)}。点击“开始下一环节”即可启动议程计时。`;
+        els.liveAgendaMeta.textContent = `计划 ${getAgendaPlannedDisplay(nextItem)}。点击“开始下一环节”即可启动议程计时。`;
       } else {
         els.liveAgendaName.textContent = "议程已全部完成";
         els.liveAgendaMeta.textContent = "可以前往会后报告查看整场控时记录。";
@@ -5632,6 +5778,11 @@
       updateLiveAgendaControls();
     }
 
+    function getAgendaPlannedDisplay(item) {
+      const plannedDisplay = item.durationLabel || formatLongTime(Number(item.plannedMinutes || 0) * 60);
+      return plannedDisplay;
+    }
+
     function renderAgenda() {
       if (!els.agendaBody) return;
       const plannedTotalSeconds = agendaItems.reduce((sum, item) => sum + Number(item.plannedMinutes || 0) * 60, 0);
@@ -5671,7 +5822,7 @@
             <td><span class="agenda-status ${item.status || "pending"}">${getAgendaStatusLabel(item)}</span></td>
             <td class="agenda-name-cell">${escapeHtml(item.name)}</td>
             <td>${planWindow}</td>
-            <td>${formatLongTime(Number(item.plannedMinutes || 0) * 60)}</td>
+            <td>${escapeHtml(getAgendaPlannedDisplay(item))}</td>
             <td>${actualSeconds === null ? "—" : formatLongTime(actualSeconds)}</td>
             <td class="agenda-variance ${varianceClass}">${variance === null ? "—" : formatSignedTime(variance)}</td>
             <td>
@@ -5690,6 +5841,11 @@
     function addAgendaItem() {
       const name = els.agendaNameInput.value.trim();
       const plannedMinutes = Math.max(1, Math.round(Number(els.agendaMinutesInput.value || 0)));
+      const defaults = resolveAgendaDefaults(name, plannedMinutes, {
+        useMappingDuration: els.agendaMinutesInput.dataset.durationLabel
+          ? els.agendaMinutesInput.dataset.durationLabel !== `${plannedMinutes} 分钟`
+          : Boolean(findAgendaMapping(name))
+      });
       if (!name) {
         showToast("请填写环节名称");
         return;
@@ -5697,12 +5853,19 @@
       agendaItems.push({
         id: `agenda-${Date.now()}`,
         name,
-        plannedMinutes,
+        plannedMinutes: defaults.plannedMinutes,
+        durationLabel: defaults.durationLabel,
+        ruleId: defaults.ruleId,
+        ruleTotal: defaults.ruleTotal,
         status: "pending",
         actualStart: null,
         actualEnd: null
       });
       els.agendaNameInput.value = "";
+      delete els.agendaMinutesInput.dataset.ruleId;
+      delete els.agendaMinutesInput.dataset.ruleTotal;
+      delete els.agendaMinutesInput.dataset.durationLabel;
+      if (els.agendaRuleHint) els.agendaRuleHint.textContent = "输入常见环节名称后，会自动匹配默认时长和时间牌规则。";
       saveAgenda();
       renderAgenda();
       generateReport();
@@ -5724,7 +5887,18 @@
       renderAgenda();
       generateReport();
 
-      const recommendedRule = targetItem ? applyRecommendedRuleForAgenda(targetItem.name) : null;
+      let recommendedRule = null;
+      if (targetItem && !timer.running && timer.elapsed === 0) {
+        const agendaRule = buildRuleForAgendaItem(targetItem);
+        if (agendaRule) {
+          activeRule = agendaRule;
+          resetTimer(false);
+          renderRules();
+          updateRuleDisplay();
+          fillCustomFormFromRule(activeRule);
+          recommendedRule = agendaRule.name;
+        }
+      }
       if (options.goLive !== false) setMode("live");
       showToast(recommendedRule ? `已开始议程，并切换为「${recommendedRule}」` : "已开始当前议程环节");
     }
@@ -6238,7 +6412,7 @@
         agendaItems.forEach((item, index) => {
           const actualSeconds = item.actualStart ? getAgendaActualSeconds(item) : null;
           const variance = getAgendaVarianceSeconds(item);
-          lines.push(`${index + 1}. ${item.name}｜计划 ${formatLongTime(Number(item.plannedMinutes || 0) * 60)}｜实际 ${actualSeconds === null ? "—" : formatLongTime(actualSeconds)}｜偏差 ${variance === null ? "—" : formatSignedTime(variance)}`);
+          lines.push(`${index + 1}. ${item.name}｜计划 ${getAgendaPlannedDisplay(item)}｜实际 ${actualSeconds === null ? "—" : formatLongTime(actualSeconds)}｜偏差 ${variance === null ? "—" : formatSignedTime(variance)}`);
         });
       }
 
@@ -6493,6 +6667,8 @@
       els.copyReportBtn.addEventListener("click", copyReport);
       els.exportCsvBtn.addEventListener("click", exportCsv);
       els.clearRecordsBtn.addEventListener("click", clearRecords);
+      els.agendaNameInput.addEventListener("input", syncAgendaDefaultsFromName);
+      els.agendaMinutesInput.addEventListener("input", syncAgendaRuleFromMinutes);
       els.addAgendaBtn.addEventListener("click", addAgendaItem);
       els.resetAgendaBtn.addEventListener("click", resetAgendaToDefault);
       els.startNextAgendaBtn.addEventListener("click", startNextAgendaItem);
