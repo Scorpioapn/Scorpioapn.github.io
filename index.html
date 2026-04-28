@@ -4466,6 +4466,116 @@
     .stage-overlay.state-overtime {
       background: linear-gradient(180deg, #8f3140 0%, #772432 100%) !important;
     }
+
+    /* Frame and alignment cleanup */
+    @media (min-width: 961px) {
+      .live-view .timer-panel {
+        position: static !important;
+        top: auto !important;
+      }
+    }
+
+    .live-layout {
+      align-items: stretch !important;
+    }
+
+    .live-view aside.panel,
+    .live-view .timer-panel {
+      align-self: stretch !important;
+      margin-top: 0 !important;
+    }
+
+    .meeting-control > .panel-section {
+      column-gap: 32px !important;
+    }
+
+    .meeting-progress-card {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+    }
+
+    .meeting-status-row {
+      padding: 0 !important;
+    }
+
+    .meeting-stats {
+      gap: 12px !important;
+    }
+
+    .meeting-stat {
+      background: #fff8ec !important;
+      border: 1px solid rgba(90, 64, 34, 0.16) !important;
+      border-radius: 18px !important;
+      box-shadow: 0 5px 14px rgba(74, 53, 27, 0.06) !important;
+    }
+
+    .meeting-progress-track {
+      height: 8px !important;
+      margin-top: 0 !important;
+      background: #eadbc6 !important;
+      border: 0 !important;
+      border-radius: 999px !important;
+      box-shadow: inset 0 1px 2px rgba(74, 53, 27, 0.08) !important;
+    }
+
+    .meeting-progress-fill {
+      border-radius: 999px !important;
+    }
+
+    .field-grid,
+    .preset-list,
+    .meeting-stats,
+    .agenda-summary,
+    .rule-summary {
+      align-items: stretch !important;
+    }
+
+    .live-agenda-card,
+    .rule-btn,
+    .agenda-summary-item,
+    .meeting-stat,
+    .table-wrap,
+    input,
+    select,
+    textarea {
+      border-radius: 18px !important;
+    }
+
+    .topbar,
+    .panel,
+    .timer-panel,
+    .intro-card,
+    .meeting-progress-card {
+      background-clip: padding-box !important;
+    }
+
+    .setup-two-col {
+      align-items: stretch !important;
+    }
+
+    .agenda-form {
+      align-items: end !important;
+    }
+
+    .agenda-form .mini-btn {
+      min-height: 52px !important;
+      height: 52px !important;
+      border-radius: 18px !important;
+      align-self: end !important;
+    }
+
+    @media (max-width: 960px) {
+      .meeting-control > .panel-section {
+        display: block !important;
+      }
+
+      .meeting-progress-card {
+        margin-top: 18px !important;
+      }
+    }
   </style>
 </head>
 <body>
