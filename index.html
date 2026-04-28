@@ -4205,6 +4205,267 @@
         min-height: 42px;
       }
     }
+
+    /* Warm Toastmasters console layer: no liquid-glass finish */
+    :root {
+      --warm-bg: #f4eadb;
+      --warm-paper: #fffaf1;
+      --warm-paper-strong: #fffdf8;
+      --warm-line: rgba(90, 64, 34, 0.15);
+      --warm-shadow: 0 14px 32px rgba(74, 53, 27, 0.10);
+      --warm-shadow-soft: 0 8px 22px rgba(74, 53, 27, 0.07);
+    }
+
+    *,
+    *::before,
+    *::after {
+      letter-spacing: 0 !important;
+    }
+
+    html,
+    body {
+      background:
+        linear-gradient(180deg, #f8efe2 0%, #f5ead9 44%, #efe1cc 100%) !important;
+      color: var(--tm-ink);
+      font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Segoe UI", Arial, sans-serif !important;
+    }
+
+    body::before {
+      display: none !important;
+    }
+
+    .panel::before,
+    .mode-tabs::before,
+    .timer-panel::before,
+    .meeting-progress-card::before,
+    .live-agenda-card::before,
+    .rule-btn::before,
+    .intro-card::before,
+    .topbar::before {
+      display: none !important;
+    }
+
+    .topbar,
+    .mode-tabs,
+    .panel,
+    .intro-card,
+    .rule-explain-item,
+    .meeting-progress-card,
+    .meeting-stat,
+    .agenda-summary-item,
+    .table-wrap,
+    .report-box,
+    .live-agenda-card,
+    .rule-btn,
+    .summary-item,
+    .agenda-mini,
+    .stage-agenda-mini,
+    .status-chip,
+    .toast,
+    .btn,
+    .mini-btn,
+    .stage-close,
+    .intro-close-btn,
+    input,
+    select,
+    textarea {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    .topbar,
+    .panel,
+    .intro-card,
+    .rule-explain-item,
+    .meeting-progress-card,
+    .meeting-stat,
+    .agenda-summary-item,
+    .table-wrap,
+    .report-box,
+    .live-agenda-card,
+    .rule-btn {
+      background: var(--warm-paper-strong) !important;
+      border: 1px solid var(--warm-line) !important;
+      box-shadow: var(--warm-shadow-soft) !important;
+    }
+
+    .topbar {
+      border-radius: 24px !important;
+    }
+
+    .brand::before {
+      color: var(--tm-red) !important;
+      background: transparent !important;
+      border: 0 !important;
+      font-weight: 700 !important;
+    }
+
+    .brand h1 {
+      color: var(--tm-navy) !important;
+      font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Segoe UI", Arial, sans-serif !important;
+      font-weight: 800 !important;
+      letter-spacing: 0 !important;
+    }
+
+    .brand p,
+    .section-title small,
+    label,
+    .helper,
+    .compact-note {
+      color: #6d6255 !important;
+    }
+
+    .mode-tabs {
+      background: #fff8ec !important;
+      border: 1px solid rgba(90, 64, 34, 0.16) !important;
+      box-shadow: var(--warm-shadow-soft) !important;
+    }
+
+    .mode-tab {
+      color: var(--tm-navy) !important;
+      font-weight: 700 !important;
+    }
+
+    .mode-tab.active {
+      background: var(--tm-navy) !important;
+      color: #fffdf8 !important;
+      border: 0 !important;
+      box-shadow: 0 8px 18px rgba(0, 65, 101, 0.20) !important;
+    }
+
+    input,
+    select,
+    textarea {
+      background: #fffdf8 !important;
+      color: var(--tm-ink) !important;
+      border: 1px solid rgba(90, 64, 34, 0.18) !important;
+      box-shadow: inset 0 1px 2px rgba(74, 53, 27, 0.04) !important;
+    }
+
+    .btn,
+    .mini-btn,
+    .stage-close,
+    .intro-close-btn {
+      background: #fff8ec !important;
+      color: var(--tm-navy) !important;
+      border: 1px solid rgba(90, 64, 34, 0.18) !important;
+      box-shadow: 0 5px 12px rgba(74, 53, 27, 0.08) !important;
+      font-weight: 750 !important;
+    }
+
+    .btn.primary,
+    .mini-btn:first-child {
+      background: var(--tm-navy) !important;
+      color: #fffdf8 !important;
+      border-color: var(--tm-navy) !important;
+    }
+
+    .btn.danger,
+    .danger-mini {
+      background: #fff3ee !important;
+      color: var(--tm-red) !important;
+      border-color: rgba(119, 36, 50, 0.22) !important;
+    }
+
+    .timer-panel {
+      border-radius: 24px !important;
+      border: 1px solid rgba(0, 65, 101, 0.18) !important;
+      box-shadow: var(--warm-shadow) !important;
+      overflow: hidden;
+    }
+
+    .timer-panel.state-idle,
+    .timer-panel.state-before {
+      background: linear-gradient(180deg, #0d5778 0%, #004165 100%) !important;
+      color: #fffdf8 !important;
+    }
+
+    .timer-panel.state-green {
+      background: linear-gradient(180deg, #23864a 0%, #126536 100%) !important;
+      color: #fffdf8 !important;
+      border-color: rgba(18, 101, 54, 0.28) !important;
+    }
+
+    .timer-panel.state-yellow {
+      background: linear-gradient(180deg, #f6e58a 0%, #dfbd31 100%) !important;
+      color: #2a2417 !important;
+      border-color: rgba(130, 94, 9, 0.25) !important;
+    }
+
+    .timer-panel.state-red,
+    .timer-panel.state-overtime {
+      background: linear-gradient(180deg, #8f3140 0%, #772432 100%) !important;
+      color: #fffdf8 !important;
+      border-color: rgba(119, 36, 50, 0.30) !important;
+    }
+
+    .timer-panel .btn {
+      background: rgba(255, 250, 241, 0.12) !important;
+      color: currentColor !important;
+      border-color: rgba(255, 250, 241, 0.24) !important;
+      box-shadow: none !important;
+    }
+
+    .timer-panel .btn.primary {
+      background: #fffaf1 !important;
+      color: var(--tm-navy) !important;
+      border-color: #fffaf1 !important;
+    }
+
+    .timer-panel .btn.danger {
+      background: rgba(255, 250, 241, 0.12) !important;
+      color: currentColor !important;
+      border-color: rgba(255, 250, 241, 0.24) !important;
+    }
+
+    .time-display,
+    .stage-time {
+      font-family: "Bahnschrift", "Aptos Display", "Segoe UI Variable Display", "Segoe UI", Arial, sans-serif !important;
+      font-weight: 800 !important;
+      letter-spacing: 0 !important;
+      text-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    .summary-item,
+    .agenda-mini,
+    .stage-agenda-mini,
+    .status-chip {
+      background: rgba(255, 250, 241, 0.13) !important;
+      border: 1px solid rgba(255, 250, 241, 0.22) !important;
+      box-shadow: none !important;
+    }
+
+    .rule-btn.active {
+      background: #fff2c2 !important;
+      border-color: rgba(200, 166, 0, 0.48) !important;
+      box-shadow: inset 0 0 0 1px rgba(200, 166, 0, 0.18) !important;
+    }
+
+    .meeting-progress-fill,
+    .agenda-mini-fill,
+    .stage-agenda-mini-fill {
+      background: linear-gradient(90deg, var(--tm-gold-deep), var(--tm-gold)) !important;
+      box-shadow: none !important;
+    }
+
+    .stage-overlay.state-idle,
+    .stage-overlay.state-before {
+      background: linear-gradient(180deg, #0d5778 0%, #004165 100%) !important;
+    }
+
+    .stage-overlay.state-green {
+      background: linear-gradient(180deg, #23864a 0%, #126536 100%) !important;
+    }
+
+    .stage-overlay.state-yellow {
+      background: linear-gradient(180deg, #f6e58a 0%, #dfbd31 100%) !important;
+      color: #2a2417 !important;
+    }
+
+    .stage-overlay.state-red,
+    .stage-overlay.state-overtime {
+      background: linear-gradient(180deg, #8f3140 0%, #772432 100%) !important;
+    }
   </style>
 </head>
 <body>
