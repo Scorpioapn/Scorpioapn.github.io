@@ -34,9 +34,9 @@
       --apple-radius-sm: 14px;
       --apple-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
       --apple-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.06), 0 24px 54px rgba(0, 0, 0, 0.08);
-      --bg: #001f33;
-      --panel: rgba(255, 255, 255, 0.94);
-      --panel-2: rgba(248, 252, 255, 0.92);
+      --bg: var(--tm-cream);
+      --panel: rgba(255, 253, 247, 0.96);
+      --panel-2: rgba(250, 246, 235, 0.94);
       --text: var(--tm-ink);
       --muted: var(--tm-muted);
       --line: var(--tm-line);
@@ -58,9 +58,9 @@
       margin: 0;
       min-height: 100%;
       background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 30%),
-        radial-gradient(circle at top right, rgba(0, 95, 143, 0.32), transparent 34%),
-        linear-gradient(135deg, #001f33 0%, #004165 48%, #0b5f88 100%);
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.14), transparent 32%),
+        linear-gradient(135deg, #020617 0%, #0f172a 48%, #111827 100%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
     }
@@ -4206,14 +4206,14 @@
       }
     }
 
-    /* Cool Toastmasters console layer: no liquid-glass finish */
+    /* Warm Toastmasters console layer: no liquid-glass finish */
     :root {
-      --cool-bg: #edf7fc;
-      --cool-paper: rgba(248, 252, 255, 0.92);
-      --cool-paper-strong: rgba(255, 255, 255, 0.94);
-      --cool-line: rgba(0, 65, 101, 0.18);
-      --cool-shadow: 0 14px 32px rgba(0, 31, 51, 0.14);
-      --cool-shadow-soft: 0 8px 22px rgba(0, 65, 101, 0.10);
+      --warm-bg: #f4eadb;
+      --warm-paper: #fffaf1;
+      --warm-paper-strong: #fffdf8;
+      --warm-line: rgba(90, 64, 34, 0.15);
+      --warm-shadow: 0 14px 32px rgba(74, 53, 27, 0.10);
+      --warm-shadow-soft: 0 8px 22px rgba(74, 53, 27, 0.07);
     }
 
     *,
@@ -4225,9 +4225,7 @@
     html,
     body {
       background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(0, 95, 143, 0.28), transparent 34%),
-        linear-gradient(135deg, #001f33 0%, #004165 52%, #0b5f88 100%) !important;
+        linear-gradient(180deg, #f8efe2 0%, #f5ead9 44%, #efe1cc 100%) !important;
       color: var(--tm-ink);
       font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Segoe UI", Arial, sans-serif !important;
     }
@@ -4286,26 +4284,9 @@
     .report-box,
     .live-agenda-card,
     .rule-btn {
-      background: var(--cool-paper-strong) !important;
-      border: 1px solid var(--cool-line) !important;
-      box-shadow: var(--cool-shadow-soft) !important;
-    }
-
-    .custom-panel {
-      background: var(--cool-paper-strong) !important;
-      border-color: var(--cool-line) !important;
-      box-shadow: var(--cool-shadow-soft) !important;
-    }
-
-    .intro-page {
-      background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(0, 95, 143, 0.28), transparent 34%),
-        linear-gradient(135deg, #001f33 0%, #004165 52%, #0b5f88 100%) !important;
-    }
-
-    .signal-table {
-      background: #fff !important;
+      background: var(--warm-paper-strong) !important;
+      border: 1px solid var(--warm-line) !important;
+      box-shadow: var(--warm-shadow-soft) !important;
     }
 
     .topbar {
@@ -4331,13 +4312,13 @@
     label,
     .helper,
     .compact-note {
-      color: #5f6b76 !important;
+      color: #6d6255 !important;
     }
 
     .mode-tabs {
-      background: var(--cool-paper) !important;
-      border: 1px solid rgba(0, 65, 101, 0.16) !important;
-      box-shadow: var(--cool-shadow-soft) !important;
+      background: #fff8ec !important;
+      border: 1px solid rgba(90, 64, 34, 0.16) !important;
+      box-shadow: var(--warm-shadow-soft) !important;
     }
 
     .mode-tab {
@@ -4347,7 +4328,7 @@
 
     .mode-tab.active {
       background: var(--tm-navy) !important;
-      color: #fff !important;
+      color: #fffdf8 !important;
       border: 0 !important;
       box-shadow: 0 8px 18px rgba(0, 65, 101, 0.20) !important;
     }
@@ -4355,33 +4336,33 @@
     input,
     select,
     textarea {
-      background: #fff !important;
+      background: #fffdf8 !important;
       color: var(--tm-ink) !important;
-      border: 1px solid rgba(0, 65, 101, 0.18) !important;
-      box-shadow: inset 0 1px 2px rgba(0, 65, 101, 0.05) !important;
+      border: 1px solid rgba(90, 64, 34, 0.18) !important;
+      box-shadow: inset 0 1px 2px rgba(74, 53, 27, 0.04) !important;
     }
 
     .btn,
     .mini-btn,
     .stage-close,
     .intro-close-btn {
-      background: var(--cool-paper) !important;
+      background: #fff8ec !important;
       color: var(--tm-navy) !important;
-      border: 1px solid rgba(0, 65, 101, 0.18) !important;
-      box-shadow: 0 5px 12px rgba(0, 65, 101, 0.10) !important;
+      border: 1px solid rgba(90, 64, 34, 0.18) !important;
+      box-shadow: 0 5px 12px rgba(74, 53, 27, 0.08) !important;
       font-weight: 750 !important;
     }
 
     .btn.primary,
     .mini-btn:first-child {
       background: var(--tm-navy) !important;
-      color: #fff !important;
+      color: #fffdf8 !important;
       border-color: var(--tm-navy) !important;
     }
 
     .btn.danger,
     .danger-mini {
-      background: #fff !important;
+      background: #fff3ee !important;
       color: var(--tm-red) !important;
       border-color: rgba(119, 36, 50, 0.22) !important;
     }
@@ -4389,19 +4370,19 @@
     .timer-panel {
       border-radius: 24px !important;
       border: 1px solid rgba(0, 65, 101, 0.18) !important;
-      box-shadow: var(--cool-shadow) !important;
+      box-shadow: var(--warm-shadow) !important;
       overflow: hidden;
     }
 
     .timer-panel.state-idle,
     .timer-panel.state-before {
       background: linear-gradient(180deg, #0d5778 0%, #004165 100%) !important;
-      color: #fff !important;
+      color: #fffdf8 !important;
     }
 
     .timer-panel.state-green {
       background: linear-gradient(180deg, #23864a 0%, #126536 100%) !important;
-      color: #fff !important;
+      color: #fffdf8 !important;
       border-color: rgba(18, 101, 54, 0.28) !important;
     }
 
@@ -4414,27 +4395,27 @@
     .timer-panel.state-red,
     .timer-panel.state-overtime {
       background: linear-gradient(180deg, #8f3140 0%, #772432 100%) !important;
-      color: #fff !important;
+      color: #fffdf8 !important;
       border-color: rgba(119, 36, 50, 0.30) !important;
     }
 
     .timer-panel .btn {
-      background: rgba(255, 255, 255, 0.14) !important;
+      background: rgba(255, 250, 241, 0.12) !important;
       color: currentColor !important;
-      border-color: rgba(255, 255, 255, 0.26) !important;
+      border-color: rgba(255, 250, 241, 0.24) !important;
       box-shadow: none !important;
     }
 
     .timer-panel .btn.primary {
-      background: #fff !important;
+      background: #fffaf1 !important;
       color: var(--tm-navy) !important;
-      border-color: #fff !important;
+      border-color: #fffaf1 !important;
     }
 
     .timer-panel .btn.danger {
-      background: rgba(255, 255, 255, 0.14) !important;
+      background: rgba(255, 250, 241, 0.12) !important;
       color: currentColor !important;
-      border-color: rgba(255, 255, 255, 0.26) !important;
+      border-color: rgba(255, 250, 241, 0.24) !important;
     }
 
     .time-display,
@@ -4449,8 +4430,8 @@
     .agenda-mini,
     .stage-agenda-mini,
     .status-chip {
-      background: rgba(255, 255, 255, 0.14) !important;
-      border: 1px solid rgba(255, 255, 255, 0.24) !important;
+      background: rgba(255, 250, 241, 0.13) !important;
+      border: 1px solid rgba(255, 250, 241, 0.22) !important;
       box-shadow: none !important;
     }
 
@@ -4525,19 +4506,19 @@
     }
 
     .meeting-stat {
-      background: var(--cool-paper) !important;
-      border: 1px solid rgba(0, 65, 101, 0.16) !important;
+      background: #fff8ec !important;
+      border: 1px solid rgba(90, 64, 34, 0.16) !important;
       border-radius: 18px !important;
-      box-shadow: 0 5px 14px rgba(0, 65, 101, 0.08) !important;
+      box-shadow: 0 5px 14px rgba(74, 53, 27, 0.06) !important;
     }
 
     .meeting-progress-track {
       height: 8px !important;
       margin-top: 0 !important;
-      background: rgba(0, 65, 101, 0.14) !important;
+      background: #eadbc6 !important;
       border: 0 !important;
       border-radius: 999px !important;
-      box-shadow: inset 0 1px 2px rgba(0, 31, 51, 0.10) !important;
+      box-shadow: inset 0 1px 2px rgba(74, 53, 27, 0.08) !important;
     }
 
     .meeting-progress-fill {
