@@ -1921,6 +1921,58 @@
       font-weight: 900;
     }
 
+    .agenda-drag-cell {
+      width: 38px;
+      text-align: center;
+      color: rgba(0, 65, 101, 0.38);
+    }
+
+    .agenda-drag-handle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: inherit;
+      cursor: grab;
+      font-size: 18px;
+      letter-spacing: -2px;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .agenda-drag-handle.locked {
+      cursor: not-allowed;
+      opacity: 0.36;
+    }
+
+    .agenda-row-dragging {
+      opacity: 0.58;
+      background: rgba(242, 223, 116, 0.18);
+    }
+
+    .agenda-row-drop-target {
+      box-shadow: inset 4px 0 0 var(--tm-gold, #f2df74);
+    }
+
+    .agenda-mobile-reorder {
+      display: none;
+      gap: 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .agenda-move-btn {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 999px;
+      line-height: 1;
+    }
+
     @media (max-width: 760px) {
       .agenda-form {
         grid-template-columns: 1fr;
@@ -2046,6 +2098,10 @@
 
       .agenda-mini-subtitle {
         display: none;
+      }
+
+      .agenda-mobile-reorder {
+        display: inline-flex;
       }
     }
 
@@ -4785,6 +4841,7 @@
                 <table class="agenda-table">
                   <thead>
                     <tr>
+                      <th aria-label="排序"></th>
                       <th>#</th>
                       <th>状态</th>
                       <th>环节</th>
@@ -5694,6 +5751,84 @@
       return agendaRule;
     }
 
+    const agendaDragState = {
+      itemId: null
+    };
+
+    function canReorderAgendaItem(item) {
+      return Boolean(item && (item.status || "pending") === "pending");
+    }
+
+    function reorderAgendaItem(sourceId, targetId) {
+      if (!sourceId || !targetId || sourceId === targetId) return false;
+      const sourceIndex = agendaItems.findIndex((item) => item.id === sourceId);
+      const targetIndex = agendaItems.findIndex((item) => item.id === targetId);
+      if (sourceIndex < 0 || targetIndex < 0) return false;
+      const sourceItem = agendaItems[sourceIndex];
+      const targetItem = agendaItems[targetIndex];
+      if (!canReorderAgendaItem(sourceItem) || !canReorderAgendaItem(targetItem)) return false;
+      const [moved] = agendaItems.splice(sourceIndex, 1);
+      agendaItems.splice(targetIndex, 0, moved);
+      saveAgenda();
+      renderAgenda();
+      updateLiveAgendaControls();
+      generateReport();
+      showToast("议程顺序已更新");
+      return true;
+    }
+
+    function moveAgendaItem(itemId, direction) {
+      const currentIndex = agendaItems.findIndex((item) => item.id === itemId);
+      if (currentIndex < 0) return false;
+      const targetIndex = currentIndex + direction;
+      if (targetIndex < 0 || targetIndex >= agendaItems.length) return false;
+      return reorderAgendaItem(itemId, agendaItems[targetIndex].id);
+    }
+
+    function handleAgendaDragStart(event) {
+      const handle = event.target.closest("[data-agenda-drag-handle]");
+      if (!handle) return;
+      const itemId = handle.dataset.agendaId;
+      const item = agendaItems.find((agendaItem) => agendaItem.id === itemId);
+      if (!canReorderAgendaItem(item)) {
+        event.preventDefault();
+        return;
+      }
+      agendaDragState.itemId = itemId;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", itemId);
+      handle.closest("tr")?.classList.add("agenda-row-dragging");
+    }
+
+    function handleAgendaDragOver(event) {
+      if (!agendaDragState.itemId) return;
+      const row = event.target.closest("tr[data-agenda-id]");
+      if (!row) return;
+      const target = agendaItems.find((item) => item.id === row.dataset.agendaId);
+      if (!canReorderAgendaItem(target)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      els.agendaBody.querySelectorAll(".agenda-row-drop-target").forEach((item) => item.classList.remove("agenda-row-drop-target"));
+      row.classList.add("agenda-row-drop-target");
+    }
+
+    function handleAgendaDrop(event) {
+      if (!agendaDragState.itemId) return;
+      const row = event.target.closest("tr[data-agenda-id]");
+      if (!row) return;
+      event.preventDefault();
+      reorderAgendaItem(agendaDragState.itemId, row.dataset.agendaId);
+      handleAgendaDragEnd();
+    }
+
+    function handleAgendaDragEnd() {
+      agendaDragState.itemId = null;
+      if (!els.agendaBody) return;
+      els.agendaBody.querySelectorAll(".agenda-row-dragging, .agenda-row-drop-target").forEach((row) => {
+        row.classList.remove("agenda-row-dragging", "agenda-row-drop-target");
+      });
+    }
+
     function applyRecommendedRuleForAgenda(name) {
       if (timer.running || timer.elapsed > 0) return null;
       const ruleId = findRecommendedRuleIdForAgenda(name);
@@ -5802,7 +5937,7 @@
       els.agendaTotalVariance.className = completedVarianceSeconds > 0 ? "agenda-variance over" : completedVarianceSeconds < 0 ? "agenda-variance early" : "agenda-variance ok";
 
       if (!agendaItems.length) {
-        els.agendaBody.innerHTML = `<tr><td colspan="8" style="color: var(--muted); padding: 18px 10px;">暂无议程。可以添加环节，或点击“恢复默认议程”。</td></tr>`;
+        els.agendaBody.innerHTML = `<tr><td colspan="9" style="color: var(--muted); padding: 18px 10px;">暂无议程。可以添加环节，或点击“恢复默认议程”。</td></tr>`;
         updateAgendaMiniTimer();
         return;
       }
@@ -5815,9 +5950,13 @@
         const planWindow = bounds.start && bounds.end ? `${formatClock(bounds.start)}–${formatClock(bounds.end)}` : "--:--";
         const canStart = item.status !== "active";
         const canFinish = item.status === "active";
+        const isPending = canReorderAgendaItem(item);
 
         return `
-          <tr>
+          <tr data-agenda-id="${escapeHtml(item.id)}" draggable="${isPending ? "true" : "false"}">
+            <td class="agenda-drag-cell">
+              <span class="agenda-drag-handle ${isPending ? "" : "locked"}" data-agenda-drag-handle data-agenda-id="${escapeHtml(item.id)}" draggable="${isPending ? "true" : "false"}" title="${isPending ? "拖动调整顺序" : "进行中或已完成的环节不能排序"}" aria-label="${isPending ? "拖动调整顺序" : "排序已锁定"}">⋮⋮</span>
+            </td>
             <td>${index + 1}</td>
             <td><span class="agenda-status ${item.status || "pending"}">${getAgendaStatusLabel(item)}</span></td>
             <td class="agenda-name-cell">${escapeHtml(item.name)}</td>
@@ -5830,6 +5969,10 @@
                 <button class="mini-btn" data-agenda-action="start" data-agenda-id="${escapeHtml(item.id)}" ${canStart ? "" : "disabled"}>开始</button>
                 <button class="mini-btn" data-agenda-action="finish" data-agenda-id="${escapeHtml(item.id)}" ${canFinish ? "" : "disabled"}>结束</button>
                 <button class="mini-btn danger-mini" data-agenda-action="delete" data-agenda-id="${escapeHtml(item.id)}">删除</button>
+                <span class="agenda-mobile-reorder">
+                  <button class="mini-btn agenda-move-btn" data-agenda-action="move-up" data-agenda-id="${escapeHtml(item.id)}" ${!isPending || index === 0 ? "disabled" : ""} aria-label="上移 ${escapeHtml(item.name)}">↑</button>
+                  <button class="mini-btn agenda-move-btn" data-agenda-action="move-down" data-agenda-id="${escapeHtml(item.id)}" ${!isPending || index === agendaItems.length - 1 ? "disabled" : ""} aria-label="下移 ${escapeHtml(item.name)}">↓</button>
+                </span>
               </div>
             </td>
           </tr>
@@ -6681,7 +6824,13 @@
         if (button.dataset.agendaAction === "start") startAgendaItem(itemId);
         if (button.dataset.agendaAction === "finish") finishAgendaItem(itemId);
         if (button.dataset.agendaAction === "delete") deleteAgendaItem(itemId);
+        if (button.dataset.agendaAction === "move-up") moveAgendaItem(itemId, -1);
+        if (button.dataset.agendaAction === "move-down") moveAgendaItem(itemId, 1);
       });
+      els.agendaBody.addEventListener("dragstart", handleAgendaDragStart);
+      els.agendaBody.addEventListener("dragover", handleAgendaDragOver);
+      els.agendaBody.addEventListener("drop", handleAgendaDrop);
+      els.agendaBody.addEventListener("dragend", handleAgendaDragEnd);
       els.recordsBody.addEventListener("click", (event) => {
         const button = event.target.closest("[data-record-id]");
         if (!button) return;
