@@ -1973,6 +1973,50 @@
       line-height: 1;
     }
 
+    .setup-section-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .setup-section-toggle h2 {
+      margin: 0;
+    }
+
+    .setup-section-title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .setup-section-summary {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .setup-section-chevron {
+      flex: 0 0 auto;
+      color: var(--tm-blue, #005f8f);
+      font-weight: 900;
+      transition: transform 0.18s ease;
+    }
+
+    .setup-section-body {
+      margin-top: 14px;
+    }
+
+    .setup-section.collapsed .setup-section-body {
+      display: none;
+    }
+
     @media (max-width: 760px) {
       .agenda-form {
         grid-template-columns: 1fr;
@@ -4609,7 +4653,11 @@
     }
 
     .setup-two-col {
-      align-items: stretch !important;
+      align-items: start !important;
+    }
+
+    .setup-two-col > .panel {
+      height: auto !important;
     }
 
     .agenda-form {
@@ -4861,11 +4909,15 @@
 
         <div class="setup-two-col">
           <aside class="panel">
-            <section class="panel-section" id="meetingInfoSection">
-              <div class="section-title">
-                <h2>会议信息</h2>
-                <small>用于报告和舞台页</small>
-              </div>
+            <section class="panel-section setup-section" id="meetingInfoSection" data-collapse-section="meeting-info">
+              <button class="setup-section-toggle" type="button" aria-expanded="true">
+                <span class="setup-section-title">
+                  <h2>会议信息</h2>
+                  <span class="setup-section-summary" id="meetingInfoCollapseSummary">用于报告和舞台页</span>
+                </span>
+                <span class="setup-section-chevron" aria-hidden="true">⌃</span>
+              </button>
+              <div class="setup-section-body">
               <div class="field-grid">
                 <div>
                   <label for="meetingTitle">会议 / 活动</label>
@@ -4884,24 +4936,37 @@
                   <input id="meetingDate" type="date" />
                 </div>
               </div>
+              </div>
             </section>
 
-            <section class="panel-section" id="roleIntroSection">
-              <div class="section-title">
-                <h2>时间官介绍</h2>
-                <small>给听众看的说明页</small>
-              </div>
+            <section class="panel-section setup-section" id="roleIntroSection" data-collapse-section="timekeeper-intro">
+              <button class="setup-section-toggle" type="button" aria-expanded="false">
+                <span class="setup-section-title">
+                  <h2>时间官介绍</h2>
+                  <span class="setup-section-summary" id="timekeeperIntroCollapseSummary">给听众看的说明页</span>
+                </span>
+                <span class="setup-section-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="setup-section-body">
               <p class="helper">介绍页会说明即兴演讲、个人点评、备稿演讲在不同时间点的页面提醒状态。</p>
               <div class="inline-actions role-intro-actions">
                 <button class="mini-btn" id="openIntroBtn">打开时间官介绍页</button>
+              </div>
               </div>
             </section>
           </aside>
 
           <aside class="panel" id="ruleSettingsPanel">
-            <section class="panel-section">
+            <section class="panel-section setup-section" data-collapse-section="time-rules">
+              <button class="setup-section-toggle" type="button" aria-expanded="false">
+                <span class="setup-section-title">
+                  <h2>时间规则设置</h2>
+                  <span class="setup-section-summary" id="timeRulesCollapseSummary">7 条规则</span>
+                </span>
+                <span class="setup-section-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="setup-section-body">
               <div class="section-title">
-                <h2>时间规则设置</h2>
                 <small id="ruleCountText"></small>
               </div>
               <div class="preset-list" id="ruleList"></div>
@@ -4991,6 +5056,7 @@
                   <button class="mini-btn" id="clearRuleFormBtn">清空表单</button>
                   <button class="mini-btn" id="deleteCurrentCustomRuleBtn">删除当前自定义规则</button>
                 </div>
+              </div>
               </div>
             </section>
           </aside>
@@ -5287,6 +5353,13 @@
       overtimeBeeped: false
     };
     let audioContext = null;
+    const setupCollapseStorageKey = "tm_timekeeper_setup_collapse_v1";
+    const defaultSetupCollapseState = {
+      "meeting-info": false,
+      "timekeeper-intro": true,
+      "time-rules": true
+    };
+    let setupCollapseState = { ...defaultSetupCollapseState };
 
     const $ = (id) => document.getElementById(id);
 
@@ -5461,6 +5534,54 @@
       localStorage.setItem(STORAGE_KEYS.meeting, JSON.stringify(meeting));
       updateStage();
       updateMeetingOverall();
+      updateCollapseSummaries();
+    }
+
+    function loadSetupCollapseState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(setupCollapseStorageKey)) || {};
+        setupCollapseState = { ...defaultSetupCollapseState, ...saved };
+      } catch {
+        setupCollapseState = { ...defaultSetupCollapseState };
+      }
+    }
+
+    function saveSetupCollapseState() {
+      localStorage.setItem(setupCollapseStorageKey, JSON.stringify(setupCollapseState));
+    }
+
+    function getMeetingInfoSummary() {
+      const meetingName = els.meetingTitle.value.trim() || "Toastmasters 例会";
+      const meetingDate = els.meetingDate.value || "未填写日期";
+      return `${meetingName}｜${meetingDate}`;
+    }
+
+    function updateCollapseSummaries() {
+      const meetingSummary = document.getElementById("meetingInfoCollapseSummary");
+      const introSummary = document.getElementById("timekeeperIntroCollapseSummary");
+      const ruleSummary = document.getElementById("timeRulesCollapseSummary");
+      if (meetingSummary) meetingSummary.textContent = getMeetingInfoSummary();
+      if (introSummary) introSummary.textContent = "给听众看的说明页";
+      if (ruleSummary) ruleSummary.textContent = `${getAllRules().length} 条规则`;
+    }
+
+    function applySetupCollapseState() {
+      document.querySelectorAll("[data-collapse-section]").forEach((section) => {
+        const key = section.dataset.collapseSection;
+        const collapsed = Boolean(setupCollapseState[key]);
+        section.classList.toggle("collapsed", collapsed);
+        const toggle = section.querySelector(".setup-section-toggle");
+        const chevron = section.querySelector(".setup-section-chevron");
+        if (toggle) toggle.setAttribute("aria-expanded", String(!collapsed));
+        if (chevron) chevron.textContent = collapsed ? "⌄" : "⌃";
+      });
+      updateCollapseSummaries();
+    }
+
+    function toggleSetupSection(key) {
+      setupCollapseState[key] = !setupCollapseState[key];
+      saveSetupCollapseState();
+      applySetupCollapseState();
     }
 
     function getAllRules() {
@@ -6142,6 +6263,7 @@
         liveBtn.addEventListener("click", () => applyRule(rule.id));
         els.liveRuleList.appendChild(liveBtn);
       }
+      updateCollapseSummaries();
     }
 
     function renderRuleSummary() {
@@ -6831,6 +6953,11 @@
       els.agendaBody.addEventListener("dragover", handleAgendaDragOver);
       els.agendaBody.addEventListener("drop", handleAgendaDrop);
       els.agendaBody.addEventListener("dragend", handleAgendaDragEnd);
+      document.querySelectorAll("[data-collapse-section]").forEach((section) => {
+        const toggle = section.querySelector(".setup-section-toggle");
+        if (!toggle) return;
+        toggle.addEventListener("click", () => toggleSetupSection(section.dataset.collapseSection));
+      });
       els.recordsBody.addEventListener("click", (event) => {
         const button = event.target.closest("[data-record-id]");
         if (!button) return;
@@ -6854,6 +6981,8 @@
         input.addEventListener("input", saveMeeting);
         input.addEventListener("change", saveMeeting);
       });
+      els.meetingTitle.addEventListener("input", updateCollapseSummaries);
+      els.meetingDate.addEventListener("input", updateCollapseSummaries);
 
       [els.speakerName, els.speechTitle].forEach((input) => {
         input.addEventListener("input", updateStage);
@@ -6882,6 +7011,8 @@
         window.structuredClone = structuredCloneSafe;
       }
       loadData();
+      loadSetupCollapseState();
+      applySetupCollapseState();
       setMode(localStorage.getItem("tm_timekeeper_ui_mode_v1") || "live");
       activeRule = structuredCloneSafe(presetRules[0]);
       renderRules();
