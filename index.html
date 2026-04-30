@@ -587,14 +587,14 @@
     }
 
     .move-row {
-      display: none;
+      display: flex;
       gap: 6px;
       margin-top: 8px;
     }
 
     .icon-button {
-      width: 42px;
-      height: 42px;
+      width: 38px;
+      height: 38px;
       display: inline-grid;
       place-items: center;
       border-radius: 16px;
@@ -602,6 +602,11 @@
       background: var(--md-surface);
       box-shadow: var(--shadow-1);
       font-weight: 900;
+    }
+
+    .icon-button.danger {
+      color: var(--md-red);
+      background: #fff4f1;
     }
 
     .compact-actions {
@@ -649,6 +654,43 @@
       font-size: 12px;
       line-height: 1.35;
     }
+
+    .context-fields {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .field-helper {
+      margin: -2px 0 0;
+      color: var(--md-on-surface-variant);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .record-preview,
+    .agenda-rule-note {
+      margin: 0;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: var(--md-surface);
+      box-shadow: var(--shadow-1);
+      color: var(--md-on-surface-variant);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 750;
+    }
+
+    .record-preview strong,
+    .agenda-rule-note strong {
+      color: var(--md-primary);
+    }
+
+    .legacy-rule-surface[hidden] {
+      display: none;
+    }
+
 
     .records-table {
       width: 100%;
@@ -1024,7 +1066,7 @@
     <aside class="agenda-rail" aria-label="议程切片器">
       <div class="rail-brand" aria-hidden="true">TM</div>
       <nav class="rail-list" id="agendaRail"></nav>
-      <button class="rail-action" id="openSettingsBtn" aria-label="打开设置">+</button>
+      <button class="rail-action" id="quickAddBtn" aria-label="新增环节">+</button>
     </aside>
 
     <main class="main-shell">
@@ -1076,6 +1118,18 @@
               <strong id="ruleTitle">即兴演讲 · 2 分钟/人</strong>
               <span id="ruleDetail">根据环节时长自动推导绿黄红牌和超时铃声。</span>
             </div>
+            <div class="context-fields">
+              <div class="field">
+                <label for="speakerName">发言人</label>
+                <input id="speakerName" placeholder="例如：Alex" />
+              </div>
+              <div class="field">
+                <label for="speechTitle">演讲题目（可选）</label>
+                <input id="speechTitle" placeholder="例如：破冰之旅" />
+                <p class="field-helper">结束并记录后，会和发言人一起保存到会后报告。</p>
+              </div>
+              <p class="record-preview" id="recordPreview">本次记录：未填写发言人</p>
+            </div>
           </section>
 
           <section class="surface">
@@ -1087,17 +1141,12 @@
               <label for="agendaNameInput">新增环节</label>
               <input id="agendaNameInput" placeholder="例如：备稿演讲" />
             </div>
-            <div class="field two">
-              <div>
-                <label for="agendaMinutesInput">分钟</label>
-                <input id="agendaMinutesInput" type="number" min="1" value="2" />
-              </div>
-              <div>
-                <label for="speakerName">发言人</label>
-                <input id="speakerName" placeholder="可选" />
-              </div>
+            <div class="field">
+              <label for="agendaMinutesInput">分钟</label>
+              <input id="agendaMinutesInput" type="number" min="1" value="2" />
             </div>
             <p class="empty-text" id="agendaHint">输入环节名称后会自动匹配默认时长。</p>
+            <p class="agenda-rule-note"><strong>规则说明：</strong>新增环节会先按名称匹配默认时长；手动修改分钟数后，立即按三档时长重算绿牌、黄牌、红牌和超时铃声。</p>
             <div class="compact-actions">
               <button class="mini-button filled" id="addAgendaBtn">添加环节</button>
               <button class="mini-button" id="resetAgendaBtn">恢复默认议程</button>
@@ -1146,6 +1195,14 @@
               <button class="mini-button danger" id="resetAllBtn">恢复默认</button>
             </div>
           </section>
+
+          <section class="surface legacy-rule-surface" id="legacyRuleSurface" hidden>
+            <div class="panel-title">
+              <h2>旧版规则数据</h2>
+              <span id="legacyRuleCount">0 条</span>
+            </div>
+            <p class="empty-text">检测到旧版自定义规则。新版默认使用智能规则，这些旧数据已保留，不会自动删除。</p>
+          </section>
         </aside>
       </div>
     </main>
@@ -1183,45 +1240,6 @@
       <div class="field">
         <label for="reportBox">时间官报告</label>
         <textarea id="reportBox"></textarea>
-      </div>
-    </section>
-  </div>
-
-  <div class="modal-backdrop" id="settingsModal" aria-hidden="true">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="modal-head">
-        <h2 id="settingsTitle">低频设置</h2>
-        <button class="icon-button" id="closeSettingsBtn" aria-label="关闭">×</button>
-      </div>
-      <div class="settings-grid">
-        <div class="surface">
-          <div class="panel-title">
-            <h2>会议主题</h2>
-            <span>用于报告</span>
-          </div>
-          <div class="field">
-            <label for="meetingTheme">主题</label>
-            <input id="meetingTheme" placeholder="可留空" />
-          </div>
-          <div class="field">
-            <label for="speechTitle">当前题目</label>
-            <input id="speechTitle" placeholder="可留空" />
-          </div>
-        </div>
-        <div class="surface">
-          <div class="panel-title">
-            <h2>旧规则数据</h2>
-            <span id="customRuleCount">0 条</span>
-          </div>
-          <p class="empty-text">保留原有 <code>tm_timekeeper_custom_rules_v1</code> 数据。新版根据议程时长自动推导规则，旧自定义规则不会被删除。</p>
-        </div>
-        <div class="surface full">
-          <div class="panel-title">
-            <h2>时间官提示</h2>
-            <span>零配置</span>
-          </div>
-          <p class="empty-text">新增环节时，系统会先按名称模糊匹配默认时长；手动修改分钟数后，会立即按 3 分钟以内、3-10 分钟、10 分钟以上三档重新推导绿牌、黄牌、红牌与超时铃声。</p>
-        </div>
       </div>
     </section>
   </div>
@@ -1326,10 +1344,10 @@
       agendaHint: $("agendaHint"),
       speakerName: $("speakerName"),
       speechTitle: $("speechTitle"),
+      recordPreview: $("recordPreview"),
       agendaList: $("agendaList"),
       agendaCount: $("agendaCount"),
       meetingTitle: $("meetingTitle"),
-      meetingTheme: $("meetingTheme"),
       meetingDate: $("meetingDate"),
       timekeeperName: $("timekeeperName"),
       meetingStartTime: $("meetingStartTime"),
@@ -1356,10 +1374,9 @@
       exportCsvBtn: $("exportCsvBtn"),
       clearRecordsBtn: $("clearRecordsBtn"),
       reportBox: $("reportBox"),
-      openSettingsBtn: $("openSettingsBtn"),
-      closeSettingsBtn: $("closeSettingsBtn"),
-      settingsModal: $("settingsModal"),
-      customRuleCount: $("customRuleCount"),
+      quickAddBtn: $("quickAddBtn"),
+      legacyRuleSurface: $("legacyRuleSurface"),
+      legacyRuleCount: $("legacyRuleCount"),
       resetAllBtn: $("resetAllBtn"),
       stageOverlay: $("stageOverlay"),
       stageSpeaker: $("stageSpeaker"),
@@ -1395,7 +1412,6 @@
     function saveMeeting() {
       const meeting = {
         meetingTitle: els.meetingTitle.value.trim(),
-        meetingTheme: els.meetingTheme.value.trim(),
         timekeeperName: els.timekeeperName.value.trim(),
         meetingDate: els.meetingDate.value,
         meetingStartTime: els.meetingStartTime.value,
@@ -1545,7 +1561,6 @@
 
       const meeting = readJson(STORAGE_KEYS.meeting, {});
       els.meetingTitle.value = meeting.meetingTitle || "Toastmasters 例会";
-      els.meetingTheme.value = meeting.meetingTheme || "";
       els.timekeeperName.value = meeting.timekeeperName || "";
       els.meetingDate.value = meeting.meetingDate || new Date().toISOString().slice(0, 10);
       els.meetingStartTime.value = meeting.meetingStartTime || "19:30";
@@ -1564,7 +1579,8 @@
       els.meetingSummary.textContent = title;
       els.stageMeeting.textContent = title;
       els.stageTimekeeper.textContent = els.timekeeperName.value.trim() || "时间官";
-      els.customRuleCount.textContent = `${state.customRules.length} 条`;
+      els.legacyRuleSurface.hidden = state.customRules.length === 0;
+      els.legacyRuleCount.textContent = `${state.customRules.length} 条`;
     }
 
     function renderAgendaRail() {
@@ -1610,9 +1626,9 @@
               <div class="agenda-name">${escapeHtml(item.name)}</div>
               <div class="agenda-meta">${escapeHtml(item.durationLabel || `${item.plannedMinutes} 分钟`)} · ${formatRule(rule)}</div>
               <div class="move-row">
-                <button class="icon-button" data-agenda-action="move-up" data-agenda-id="${escapeHtml(item.id)}" ${index === 0 || !pending ? "disabled" : ""}>↑</button>
-                <button class="icon-button" data-agenda-action="move-down" data-agenda-id="${escapeHtml(item.id)}" ${index === state.agendaItems.length - 1 || !pending ? "disabled" : ""}>↓</button>
-                <button class="icon-button" data-agenda-action="delete" data-agenda-id="${escapeHtml(item.id)}" ${!pending ? "disabled" : ""}>×</button>
+                <button class="icon-button" data-agenda-action="move-up" data-agenda-id="${escapeHtml(item.id)}" aria-label="上移 ${escapeHtml(item.name)}" ${index === 0 || !pending ? "disabled" : ""}>↑</button>
+                <button class="icon-button" data-agenda-action="move-down" data-agenda-id="${escapeHtml(item.id)}" aria-label="下移 ${escapeHtml(item.name)}" ${index === state.agendaItems.length - 1 || !pending ? "disabled" : ""}>↓</button>
+                <button class="icon-button danger" data-agenda-action="delete" data-agenda-id="${escapeHtml(item.id)}" aria-label="删除 ${escapeHtml(item.name)}" ${item.status === "active" ? "disabled" : ""}>×</button>
               </div>
             </div>
             <span class="agenda-status">${status}</span>
@@ -1634,6 +1650,9 @@
       els.activeStatus.textContent = statusLabel;
       els.ruleTitle.textContent = `${item.name} · ${item.durationLabel || `${item.plannedMinutes} 分钟`}`;
       els.ruleDetail.textContent = formatRemainingRule(rule);
+      const speaker = els.speakerName.value.trim() || "未填写发言人";
+      const title = els.speechTitle.value.trim();
+      els.recordPreview.textContent = `本次记录：${speaker}${title ? " · " + title : ""}`;
       els.timerStatus.textContent = getStatusLabel(timerState);
       els.timerSubline.textContent = isMultiSpeakerAgenda(item)
         ? "多人环节：可用“下一位发言人”清零秒表，议程保持进行中"
@@ -1767,9 +1786,9 @@
       const item = getActiveAgenda();
       if (!item) return;
       const elapsed = state.timer.elapsed;
-      if (elapsed > 0) addRecord(elapsed, item);
+      const record = elapsed > 0 ? addRecord(elapsed, item) : null;
       resetTimer(false);
-      showToast("已结束并记录");
+      showToast(record ? `已记录：${record.speaker}${record.title ? " · " + record.title : ""}` : "已结束");
       renderAll();
     }
 
@@ -1828,6 +1847,7 @@
       };
       state.records.push(record);
       saveRecords();
+      return record;
     }
 
     function renderRecords() {
@@ -1861,7 +1881,7 @@
       const lines = [];
       const title = els.meetingTitle.value.trim() || "Toastmasters 例会";
       lines.push("时间官报告");
-      lines.push(`会议：${title}${els.meetingTheme.value.trim() ? "｜主题：" + els.meetingTheme.value.trim() : ""}`);
+      lines.push(`会议：${title}`);
       if (els.meetingDate.value) lines.push(`日期：${els.meetingDate.value}`);
       lines.push(`计划时间：${els.meetingStartTime.value || "--:--"}-${els.meetingEndTime.value || "--:--"}`);
       if (els.timekeeperName.value.trim()) lines.push(`时间官：${els.timekeeperName.value.trim()}`);
@@ -1998,14 +2018,23 @@
 
     function deleteAgenda(itemId) {
       const item = state.agendaItems.find((agenda) => agenda.id === itemId);
-      if (!canReorder(item)) {
-        showToast("进行中或已完成的环节不能删除");
+      if (!item) return;
+      if (state.agendaItems.length <= 1) {
+        showToast("至少保留一个议程环节");
+        return;
+      }
+      if (item.status === "active") {
+        showToast("请先暂停或结束当前计时");
+        return;
+      }
+      if (item.status === "done" && !confirm(`删除已完成环节“${item.name}”？相关计时记录不会自动删除。`)) {
         return;
       }
       state.agendaItems = state.agendaItems.filter((agenda) => agenda.id !== itemId);
       state.activeAgendaId = getActiveAgenda()?.id || null;
       saveAgenda();
       renderAll();
+      showToast("环节已删除");
     }
 
     function onDragStart(event) {
@@ -2137,8 +2166,12 @@
       els.agendaMinutesInput.addEventListener("input", syncAgendaRuleFromMinutes);
       els.addAgendaBtn.addEventListener("click", addAgenda);
       els.resetAgendaBtn.addEventListener("click", resetAgenda);
+      els.quickAddBtn.addEventListener("click", () => {
+        els.agendaNameInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        els.agendaNameInput.focus();
+      });
 
-      [els.meetingTitle, els.meetingTheme, els.timekeeperName, els.meetingDate, els.meetingStartTime, els.meetingEndTime].forEach((input) => {
+      [els.meetingTitle, els.timekeeperName, els.meetingDate, els.meetingStartTime, els.meetingEndTime].forEach((input) => {
         input.addEventListener("input", saveMeeting);
       });
       [els.speakerName, els.speechTitle].forEach((input) => input.addEventListener("input", renderContext));
@@ -2164,13 +2197,8 @@
         if (button) deleteRecord(button.dataset.recordId);
       });
 
-      els.openSettingsBtn.addEventListener("click", () => openModal(els.settingsModal));
-      els.closeSettingsBtn.addEventListener("click", () => closeModal(els.settingsModal));
       els.reportModal.addEventListener("click", (event) => {
         if (event.target === els.reportModal) closeModal(els.reportModal);
-      });
-      els.settingsModal.addEventListener("click", (event) => {
-        if (event.target === els.settingsModal) closeModal(els.settingsModal);
       });
       els.resetAllBtn.addEventListener("click", resetAll);
 
