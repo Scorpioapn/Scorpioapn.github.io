@@ -83,7 +83,7 @@
       height: 100dvh;
       padding: 14px 8px;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 12px;
       background: var(--md-surface-container);
       box-shadow: var(--shadow-2);
@@ -166,20 +166,6 @@
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
-    }
-
-    .rail-action {
-      width: 56px;
-      height: 56px;
-      margin: 0 auto;
-      display: grid;
-      place-items: center;
-      border-radius: 20px;
-      background: var(--md-primary);
-      color: var(--md-on-primary);
-      box-shadow: var(--shadow-3);
-      font-size: 28px;
-      line-height: 1;
     }
 
     .main-shell {
@@ -518,6 +504,7 @@
       border-radius: 20px;
       background: var(--md-surface);
       box-shadow: var(--shadow-1);
+      transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
     }
 
     .agenda-card.active {
@@ -586,10 +573,10 @@
       padding: 0 10px;
     }
 
-    .move-row {
-      display: flex;
+    .agenda-trailing {
+      display: inline-flex;
+      align-items: center;
       gap: 6px;
-      margin-top: 8px;
     }
 
     .icon-button {
@@ -607,6 +594,33 @@
     .icon-button.danger {
       color: var(--md-red);
       background: #fff4f1;
+    }
+
+    .agenda-delete {
+      width: 34px;
+      height: 34px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      color: var(--md-red);
+      background: transparent;
+      font-size: 18px;
+      font-weight: 900;
+      opacity: 0.42;
+      transform: scale(1);
+      pointer-events: auto;
+      transition: opacity 160ms ease, transform 160ms ease, background 160ms ease;
+    }
+
+    .agenda-card:hover .agenda-delete,
+    .agenda-card:focus-within .agenda-delete {
+      opacity: 1;
+      background: #fff4f1;
+    }
+
+    .agenda-delete:disabled {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .compact-actions {
@@ -669,8 +683,7 @@
       font-weight: 650;
     }
 
-    .record-preview,
-    .agenda-rule-note {
+    .record-preview {
       margin: 0;
       padding: 12px 14px;
       border-radius: 18px;
@@ -680,6 +693,14 @@
       font-size: 12px;
       line-height: 1.45;
       font-weight: 750;
+    }
+
+    .agenda-rule-note {
+      margin: -2px 0 4px;
+      color: var(--md-on-surface-variant);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 650;
     }
 
     .record-preview strong,
@@ -733,14 +754,18 @@
       z-index: 50;
       min-width: 220px;
       max-width: min(560px, calc(100vw - 32px));
-      padding: 14px 18px;
+      padding: 12px 14px 12px 18px;
       border-radius: 18px;
       color: #fff;
       background: #2b211b;
       box-shadow: var(--shadow-3);
       opacity: 0;
       pointer-events: none;
-      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: left;
       font-weight: 800;
       transition: opacity 180ms ease, transform 180ms ease;
     }
@@ -748,6 +773,22 @@
     .toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .toast-action {
+      min-height: 34px;
+      border-radius: 999px;
+      padding: 0 12px;
+      display: none;
+      color: #1d130d;
+      background: var(--md-surface);
+      font-weight: 900;
+    }
+
+    .toast.has-action .toast-action {
+      display: inline-flex;
+      align-items: center;
     }
 
     .modal-backdrop {
@@ -921,14 +962,13 @@
         top: 0;
         width: 100%;
         height: 88px;
-        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr);
         grid-template-rows: 1fr;
         align-items: center;
         padding: 10px;
       }
 
-      .rail-brand,
-      .rail-action {
+      .rail-brand {
         margin: 0;
       }
 
@@ -1023,8 +1063,11 @@
         grid-template-columns: 1fr;
       }
 
-      .move-row {
-        display: flex;
+      .agenda-delete {
+        opacity: 1;
+        transform: scale(1);
+        pointer-events: auto;
+        background: #fff4f1;
       }
 
       .records-table {
@@ -1066,7 +1109,6 @@
     <aside class="agenda-rail" aria-label="议程切片器">
       <div class="rail-brand" aria-hidden="true">TM</div>
       <nav class="rail-list" id="agendaRail"></nav>
-      <button class="rail-action" id="quickAddBtn" aria-label="新增环节">+</button>
     </aside>
 
     <main class="main-shell">
@@ -1146,7 +1188,7 @@
               <input id="agendaMinutesInput" type="number" min="1" value="2" />
             </div>
             <p class="empty-text" id="agendaHint">输入环节名称后会自动匹配默认时长。</p>
-            <p class="agenda-rule-note"><strong>规则说明：</strong>新增环节会先按名称匹配默认时长；手动修改分钟数后，立即按三档时长重算绿牌、黄牌、红牌和超时铃声。</p>
+            <p class="agenda-rule-note"><strong>规则：</strong>按名称自动匹配默认时长；手动改分钟后，立即重算绿牌、黄牌、红牌和超时铃声。</p>
             <div class="compact-actions">
               <button class="mini-button filled" id="addAgendaBtn">添加环节</button>
               <button class="mini-button" id="resetAgendaBtn">恢复默认议程</button>
@@ -1264,7 +1306,10 @@
     </div>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toastMessage"></span>
+    <button class="toast-action" id="toastAction" type="button"></button>
+  </div>
 
   <script>
     const STORAGE_KEYS = {
@@ -1309,6 +1354,7 @@
       activeAgendaId: null,
       globalStartedAt: null,
       dragId: null,
+      deletedAgenda: null,
       timer: {
         running: false,
         paused: false,
@@ -1374,7 +1420,6 @@
       exportCsvBtn: $("exportCsvBtn"),
       clearRecordsBtn: $("clearRecordsBtn"),
       reportBox: $("reportBox"),
-      quickAddBtn: $("quickAddBtn"),
       legacyRuleSurface: $("legacyRuleSurface"),
       legacyRuleCount: $("legacyRuleCount"),
       resetAllBtn: $("resetAllBtn"),
@@ -1385,7 +1430,9 @@
       stageStatus: $("stageStatus"),
       stageMeeting: $("stageMeeting"),
       stageTimekeeper: $("stageTimekeeper"),
-      toast: $("toast")
+      toast: $("toast"),
+      toastMessage: $("toastMessage"),
+      toastAction: $("toastAction")
     };
 
     function clone(value) {
@@ -1543,8 +1590,11 @@
       }[char]));
     }
 
-    function showToast(message) {
-      els.toast.textContent = message;
+    function showToast(message, actionLabel, action) {
+      els.toastMessage.textContent = message;
+      els.toastAction.textContent = actionLabel || "";
+      els.toastAction.onclick = typeof action === "function" ? action : null;
+      els.toast.classList.toggle("has-action", Boolean(actionLabel && action));
       els.toast.classList.add("show");
       clearTimeout(showToast.timer);
       showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 2200);
@@ -1625,13 +1675,11 @@
             <div>
               <div class="agenda-name">${escapeHtml(item.name)}</div>
               <div class="agenda-meta">${escapeHtml(item.durationLabel || `${item.plannedMinutes} 分钟`)} · ${formatRule(rule)}</div>
-              <div class="move-row">
-                <button class="icon-button" data-agenda-action="move-up" data-agenda-id="${escapeHtml(item.id)}" aria-label="上移 ${escapeHtml(item.name)}" ${index === 0 || !pending ? "disabled" : ""}>↑</button>
-                <button class="icon-button" data-agenda-action="move-down" data-agenda-id="${escapeHtml(item.id)}" aria-label="下移 ${escapeHtml(item.name)}" ${index === state.agendaItems.length - 1 || !pending ? "disabled" : ""}>↓</button>
-                <button class="icon-button danger" data-agenda-action="delete" data-agenda-id="${escapeHtml(item.id)}" aria-label="删除 ${escapeHtml(item.name)}" ${item.status === "active" ? "disabled" : ""}>×</button>
-              </div>
             </div>
-            <span class="agenda-status">${status}</span>
+            <div class="agenda-trailing">
+              <span class="agenda-status">${status}</span>
+              <button class="agenda-delete" data-agenda-action="delete" data-agenda-id="${escapeHtml(item.id)}" aria-label="删除 ${escapeHtml(item.name)}" ${item.status === "active" ? "disabled" : ""}>×</button>
+            </div>
           </article>
         `;
       }).join("");
@@ -2009,15 +2057,21 @@
       return true;
     }
 
-    function moveAgenda(itemId, direction) {
-      const index = state.agendaItems.findIndex((item) => item.id === itemId);
-      const target = state.agendaItems[index + direction];
-      if (!target) return;
-      reorderAgenda(itemId, target.id);
+    function restoreDeletedAgenda() {
+      if (!state.deletedAgenda) return;
+      const { item, index } = state.deletedAgenda;
+      const targetIndex = Math.min(Math.max(index, 0), state.agendaItems.length);
+      state.agendaItems.splice(targetIndex, 0, item);
+      state.activeAgendaId = state.activeAgendaId || item.id;
+      state.deletedAgenda = null;
+      saveAgenda();
+      renderAll();
+      showToast("环节已恢复");
     }
 
     function deleteAgenda(itemId) {
-      const item = state.agendaItems.find((agenda) => agenda.id === itemId);
+      const index = state.agendaItems.findIndex((agenda) => agenda.id === itemId);
+      const item = state.agendaItems[index];
       if (!item) return;
       if (state.agendaItems.length <= 1) {
         showToast("至少保留一个议程环节");
@@ -2030,11 +2084,12 @@
       if (item.status === "done" && !confirm(`删除已完成环节“${item.name}”？相关计时记录不会自动删除。`)) {
         return;
       }
-      state.agendaItems = state.agendaItems.filter((agenda) => agenda.id !== itemId);
+      state.deletedAgenda = { item, index };
+      state.agendaItems.splice(index, 1);
       state.activeAgendaId = getActiveAgenda()?.id || null;
       saveAgenda();
       renderAll();
-      showToast("环节已删除");
+      showToast(`已删除：${item.name}`, "撤销", restoreDeletedAgenda);
     }
 
     function onDragStart(event) {
@@ -2137,8 +2192,6 @@
         const actionButton = event.target.closest("[data-agenda-action]");
         if (actionButton) {
           const id = actionButton.dataset.agendaId;
-          if (actionButton.dataset.agendaAction === "move-up") moveAgenda(id, -1);
-          if (actionButton.dataset.agendaAction === "move-down") moveAgenda(id, 1);
           if (actionButton.dataset.agendaAction === "delete") deleteAgenda(id);
           return;
         }
@@ -2166,10 +2219,6 @@
       els.agendaMinutesInput.addEventListener("input", syncAgendaRuleFromMinutes);
       els.addAgendaBtn.addEventListener("click", addAgenda);
       els.resetAgendaBtn.addEventListener("click", resetAgenda);
-      els.quickAddBtn.addEventListener("click", () => {
-        els.agendaNameInput.scrollIntoView({ behavior: "smooth", block: "center" });
-        els.agendaNameInput.focus();
-      });
 
       [els.meetingTitle, els.timekeeperName, els.meetingDate, els.meetingStartTime, els.meetingEndTime].forEach((input) => {
         input.addEventListener("input", saveMeeting);
