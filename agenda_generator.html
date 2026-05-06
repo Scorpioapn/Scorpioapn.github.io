@@ -139,7 +139,7 @@
 
     h1 {
       color: var(--md-primary);
-      font-size: 30px;
+      font-size: 28px;
       line-height: 1.08;
       font-weight: 900;
       letter-spacing: 0;
@@ -174,6 +174,39 @@
     .icon-button svg {
       width: 22px;
       height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .nav-button {
+      min-height: 48px;
+      padding: 0 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 18px;
+      color: var(--md-primary);
+      background: var(--md-surface-container-low);
+      box-shadow: var(--shadow-1);
+      font-size: 14px;
+      font-weight: 900;
+      white-space: nowrap;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .nav-button:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-2);
+      background: var(--md-surface);
+    }
+
+    .nav-button svg {
+      width: 20px;
+      height: 20px;
       fill: none;
       stroke: currentColor;
       stroke-width: 2.3;
@@ -321,6 +354,7 @@
       color: var(--md-primary);
       background: var(--md-surface);
       font-weight: 900;
+      cursor: pointer;
       box-shadow: var(--shadow-1);
       transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
     }
@@ -398,7 +432,6 @@
       position: relative;
     }
 
-    .more-tools summary,
     .fixed-info summary {
       min-height: 48px;
       padding: 0 18px;
@@ -413,27 +446,73 @@
       list-style: none;
     }
 
-    .more-tools summary::-webkit-details-marker,
     .fixed-info summary::-webkit-details-marker {
       display: none;
     }
 
-    .more-tools[open] {
-      width: 100%;
-      padding: 14px;
+    .action-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 20;
+      width: min(342px, calc(100vw - 40px));
+      padding: 8px;
+      display: grid;
+      gap: 4px;
       border-radius: var(--radius-md);
-      background: rgba(0, 82, 122, 0.07);
+      background: var(--md-surface);
+      box-shadow: var(--shadow-3);
     }
 
-    .more-tools[open] summary {
-      margin-bottom: 12px;
+    .action-menu[hidden] {
+      display: none;
     }
 
-    .more-tools p {
-      margin-top: 10px;
+    .menu-action {
+      width: 100%;
+      min-height: 64px;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      border-radius: 18px;
+      color: var(--md-on-surface);
+      background: transparent;
+      text-align: left;
+      transition: background 160ms ease;
+    }
+
+    .menu-action:hover {
+      background: var(--md-surface-container-low);
+    }
+
+    .menu-action svg {
+      width: 22px;
+      height: 22px;
+      color: var(--md-primary);
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .menu-action strong {
+      display: block;
+      color: var(--md-primary);
+      font-size: 14px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .menu-action span {
+      display: block;
+      margin-top: 3px;
       color: var(--md-on-surface-variant);
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 700;
     }
 
     .fixed-info {
@@ -455,6 +534,10 @@
     .agenda-list {
       display: grid;
       gap: 10px;
+    }
+
+    .agenda-toolbar-note {
+      margin: -4px 0 14px;
     }
 
     .agenda-row {
@@ -559,6 +642,37 @@
       white-space: nowrap;
     }
 
+    .agenda-edit-affordance {
+      margin-top: 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--md-primary);
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 900;
+      opacity: 0;
+      transform: translateY(2px);
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .agenda-row:hover .agenda-edit-affordance,
+    .agenda-row:focus-within .agenda-edit-affordance,
+    .agenda-row.selected .agenda-edit-affordance {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .agenda-edit-affordance svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     .agenda-actions {
       display: flex;
       align-items: center;
@@ -587,6 +701,77 @@
     .mini-button.danger {
       color: var(--md-error);
       background: #fff3f1;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .upload-card {
+      min-width: 0;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      border-radius: var(--radius-md);
+      background: var(--md-surface);
+      box-shadow: var(--shadow-1);
+    }
+
+    .upload-preview {
+      width: 100%;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 20px;
+      color: var(--md-on-surface-variant);
+      background: var(--md-surface-container);
+      font-size: 13px;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .upload-preview.has-image {
+      background: #fff;
+    }
+
+    .upload-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .upload-card strong {
+      color: var(--md-primary);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .upload-card p {
+      margin-top: 3px;
+      color: var(--md-on-surface-variant);
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .upload-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
 
     .mini-button svg {
@@ -1092,13 +1277,25 @@
       width: 92px;
       height: 92px;
       margin: 0 auto 6px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
       border: 7px solid #fff;
-      background:
-        linear-gradient(90deg, #111 10px, transparent 10px 20px, #111 20px 30px, transparent 30px),
-        linear-gradient(#111 10px, transparent 10px 20px, #111 20px 30px, transparent 30px),
-        #f7f7f7;
-      background-size: 30px 30px;
-      box-shadow: inset 0 0 0 2px #111, var(--shadow-1);
+      color: rgba(119, 36, 50, 0.78);
+      background: #f8f1ea;
+      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.20), var(--shadow-1);
+      font-size: 9px;
+      line-height: 1.25;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .qr-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #fff;
     }
 
     .signal-list {
@@ -1122,16 +1319,16 @@
       padding-bottom: 0;
     }
 
-    .signal-dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      box-shadow: var(--shadow-1);
+    .signal-card {
+      width: 22px;
+      height: 16px;
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75), var(--shadow-1);
     }
 
-    .signal-dot.green { background: #22a857; }
-    .signal-dot.yellow { background: #ffd426; }
-    .signal-dot.red { background: #e51d2a; }
+    .signal-card.green { background: #22a857; }
+    .signal-card.yellow { background: #ffd426; }
+    .signal-card.red { background: #e51d2a; }
 
     .signal-icon {
       width: 18px;
@@ -1482,6 +1679,25 @@
         grid-template-columns: 1fr;
       }
 
+      .upload-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-button {
+        width: 48px;
+        padding: 0;
+      }
+
+      .nav-button-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
       .agenda-row {
         grid-template-columns: 32px minmax(0, 1fr);
       }
@@ -1489,6 +1705,11 @@
       .agenda-actions {
         grid-column: 2;
         justify-content: flex-start;
+      }
+
+      .agenda-edit-affordance {
+        opacity: 1;
+        transform: none;
       }
 
       .agenda-sheet {
@@ -1758,7 +1979,7 @@
         height: 15mm;
         margin-bottom: 1mm;
         border-width: 1.4mm;
-        background-size: 5mm 5mm;
+        font-size: 4.5pt;
       }
 
       .signal-list {
@@ -1772,9 +1993,10 @@
         font-size: 5.6pt;
       }
 
-      .signal-dot {
-        width: 3.4mm;
-        height: 3.4mm;
+      .signal-card {
+        width: 4.2mm;
+        height: 3mm;
+        border-radius: 0.8mm;
       }
 
       .signal-icon {
@@ -2019,8 +2241,9 @@
             <h1>畅言中文议程生成器</h1>
           </div>
           <div class="header-actions">
-            <button class="icon-button" id="openTimekeeperBtn" type="button" title="打开时间官控制台" aria-label="打开时间官控制台">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/><path d="M14 4h6v6"/><path d="M10 14 20 4"/></svg>
+            <button class="nav-button" id="openTimekeeperBtn" type="button" title="打开时间官控制台" aria-label="打开时间官控制台">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 13l3-2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+              <span class="nav-button-label">时间官</span>
             </button>
           </div>
         </div>
@@ -2080,15 +2303,20 @@
           <div class="agenda-toolbar">
             <button class="button filled" id="addAgendaItemBtn" type="button">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-              添加议程
+              添加项目
             </button>
-            <button class="button tonal" id="addAgendaSectionBtn" type="button">添加分段</button>
-            <details class="more-tools">
-              <summary>更多</summary>
-              <button class="button" id="rescheduleBtn" type="button">按时长自动排时间</button>
-              <p>从会议开始时间出发，按每个环节的时长重新计算开始时间。适合调整顺序或时长后使用。</p>
-            </details>
+            <button class="button tonal" id="addAgendaSectionBtn" type="button">添加分组</button>
+            <div class="more-tools">
+              <button class="button" id="moreActionsBtn" type="button" aria-expanded="false" aria-controls="moreActionsMenu">更多操作</button>
+              <div class="action-menu" id="moreActionsMenu" hidden>
+                <button class="menu-action" id="rescheduleBtn" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h7"/><path d="m16 14 3 3 3-3"/><path d="M19 7v10"/></svg>
+                  <span><strong>按时长自动排时间</strong><span>从会议开始时间出发，按每个项目的时长重新计算开始时间。</span></span>
+                </button>
+              </div>
+            </div>
           </div>
+          <p class="helper-text agenda-toolbar-note">项目是一行议程；分组只做章节标题，不占用时间。点击项目或分组可编辑，拖动左侧手柄可排序。</p>
 
           <div class="agenda-form-card" id="agendaFormCard" hidden>
             <div class="panel-title compact">
@@ -2143,6 +2371,35 @@
               <input class="input" id="nextTheme" data-field="nextTheme" placeholder="夏日穿搭" />
             </div>
           </div>
+          <details class="fixed-info">
+            <summary>扫码与标识：二维码上传</summary>
+            <div class="upload-grid fixed-info-fields">
+              <section class="upload-card">
+                <div class="upload-preview" data-image-preview="wechatQrData">未上传<br>微信公众号二维码</div>
+                <div>
+                  <strong>微信公众号二维码</strong>
+                  <p>用于 A4 模板“扫码关注我们”。支持 PNG/JPG，本机保存。</p>
+                </div>
+                <div class="upload-actions">
+                  <label class="button tonal" for="wechatQrInput">上传/替换</label>
+                  <button class="button subtle" type="button" data-clear-image="wechatQrData">移除</button>
+                </div>
+                <input class="file-input" id="wechatQrInput" type="file" accept="image/*" data-image-field="wechatQrData" />
+              </section>
+              <section class="upload-card">
+                <div class="upload-preview" data-image-preview="joinQrData">未上传<br>入会咨询二维码</div>
+                <div>
+                  <strong>入会咨询二维码</strong>
+                  <p>用于 A4 模板“入会咨询”。上传后会立即出现在预览里。</p>
+                </div>
+                <div class="upload-actions">
+                  <label class="button tonal" for="joinQrInput">上传/替换</label>
+                  <button class="button subtle" type="button" data-clear-image="joinQrData">移除</button>
+                </div>
+                <input class="file-input" id="joinQrInput" type="file" accept="image/*" data-image-field="joinQrData" />
+              </section>
+            </div>
+          </details>
           <details class="fixed-info">
             <summary>固定信息：关于我们、Pathways、役员、守则</summary>
             <div class="field-grid one fixed-info-fields">
@@ -2234,6 +2491,8 @@
       location: "深圳市南山区科技园讯美科技广场3号楼4楼SPACE MAX会议室(高新中A出口)",
       manager: "卡卡",
       posterDesigner: "水杨酸",
+      wechatQrData: "",
+      joinQrData: "",
       nextTheme: "夏日穿搭",
       clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
       pathways: "Pathways 是头马国际演讲的教育体系，提供多条学习路径，帮助会员系统训练演讲、评估、领导力和项目管理能力。",
@@ -2311,6 +2570,8 @@
       ruleHint: document.querySelector("#ruleHint"),
       saveAgendaBtn: document.querySelector("#saveAgendaBtn"),
       clearAgendaFormBtn: document.querySelector("#clearAgendaFormBtn"),
+      moreActionsBtn: document.querySelector("#moreActionsBtn"),
+      moreActionsMenu: document.querySelector("#moreActionsMenu"),
       rescheduleBtn: document.querySelector("#rescheduleBtn"),
       printBtn: document.querySelector("#printBtn"),
       printBtnSide: document.querySelector("#printBtnSide"),
@@ -2358,12 +2619,18 @@
     }
 
     function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      els.saveStatus.textContent = "已自动保存";
-      window.clearTimeout(saveData.timer);
-      saveData.timer = window.setTimeout(() => {
-        els.saveStatus.textContent = "本机已保存";
-      }, 900);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        els.saveStatus.textContent = "已自动保存";
+        window.clearTimeout(saveData.timer);
+        saveData.timer = window.setTimeout(() => {
+          els.saveStatus.textContent = "本机已保存";
+        }, 900);
+      } catch (error) {
+        console.warn("Failed to save agenda data", error);
+        els.saveStatus.textContent = "保存失败";
+        showToast("本机存储空间不足，请移除较大的图片后再试");
+      }
     }
 
     function escapeHtml(value) {
@@ -2469,6 +2736,23 @@
       });
     }
 
+    function renderUploadPreviews() {
+      document.querySelectorAll("[data-image-preview]").forEach((preview) => {
+        const field = preview.dataset.imagePreview;
+        const value = state[field] || "";
+        preview.classList.toggle("has-image", Boolean(value));
+        preview.innerHTML = value
+          ? `<img src="${escapeHtml(value)}" alt="" />`
+          : `未上传<br>${field === "wechatQrData" ? "微信公众号二维码" : "入会咨询二维码"}`;
+      });
+    }
+
+    function qrBoxHtml(src) {
+      return src
+        ? `<div class="qr-box"><img src="${escapeHtml(src)}" alt="" /></div>`
+        : `<div class="qr-box"><span>未上传<br>二维码</span></div>`;
+    }
+
     function weekdayText(dateValue) {
       if (!dateValue) return "";
       const date = new Date(`${dateValue}T00:00:00`);
@@ -2548,6 +2832,8 @@
 
     function renderPreview() {
       const groups = buildAgendaGroups();
+      const wechatQr = qrBoxHtml(state.wechatQrData);
+      const joinQr = qrBoxHtml(state.joinQrData);
       const itemRows = groups.map((group, groupIndex) => {
         return group.items.map((item, itemIndex) => {
           const sectionCell = itemIndex === 0 ? `
@@ -2612,17 +2898,17 @@
               <h3>扫码关注我们</h3>
               <div class="template-info-body compact">
                 <div class="qr-row">
-                  <div><div class="qr-box" aria-hidden="true"></div><span>微信公众号</span></div>
-                  <div><div class="qr-box" aria-hidden="true"></div><span>入会咨询</span></div>
+                  <div>${wechatQr}<span>微信公众号</span></div>
+                  <div>${joinQr}<span>入会咨询</span></div>
                 </div>
               </div>
             </section>
             <section class="template-info-card">
               <h3>提示信号</h3>
               <div class="template-info-body compact signal-list">
-                <div class="signal-row"><span class="signal-dot green"></span><span>绿灯</span><span>掌声 1-3 秒</span></div>
-                <div class="signal-row"><span class="signal-dot yellow"></span><span>黄灯</span><span>掌声 1-20 秒</span></div>
-                <div class="signal-row"><span class="signal-dot red"></span><span>红灯</span><span>停止发言</span></div>
+                <div class="signal-row"><span class="signal-card green"></span><span>绿卡</span><span>掌声 1-3 秒</span></div>
+                <div class="signal-row"><span class="signal-card yellow"></span><span>黄卡</span><span>掌声 1-20 秒</span></div>
+                <div class="signal-row"><span class="signal-card red"></span><span>红卡</span><span>停止发言</span></div>
                 <div class="signal-row"><span class="signal-icon">${templateIconSvg("hand")}</span><span>静音</span><span>手机静音</span></div>
                 <div class="signal-row"><span class="signal-icon">${templateIconSvg("timer")}</span><span>计时</span><span>时间到</span></div>
                 <div class="signal-row"><span class="signal-icon">${templateIconSvg("delay")}</span><span>延时</span><span>延时 30 秒</span></div>
@@ -2696,6 +2982,10 @@
             <button class="agenda-main button subtle" type="button" data-action="edit" data-id="${escapeHtml(item.id)}">
               <div class="agenda-title">${escapeHtml(item.title || "未命名")}</div>
               <div class="agenda-meta">${escapeHtml(meta)}</div>
+              <span class="agenda-edit-affordance">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z"/></svg>
+                点击编辑
+              </span>
             </button>
             <div class="agenda-actions">
               <button class="mini-button" type="button" data-action="duplicate" data-id="${escapeHtml(item.id)}" title="复制该项目" aria-label="复制该项目">
@@ -2720,6 +3010,7 @@
 
     function renderAll() {
       renderInputs();
+      renderUploadPreviews();
       renderPreview();
       renderAgendaList();
       renderRuleHint();
@@ -2741,8 +3032,8 @@
         input.disabled = isSection;
       });
       els.agendaFormTitle.textContent = isSection
-        ? (editingId ? "编辑分段" : "新增分段")
-        : (editingId ? "编辑议程" : "新增议程");
+        ? (editingId ? "编辑分组" : "新增分组")
+        : (editingId ? "编辑项目" : "新增项目");
     }
 
     function openAgendaForm(kind = "item") {
@@ -2754,8 +3045,8 @@
       els.agendaDuration.value = "";
       els.agendaPerson.value = "";
       els.agendaDetail.value = "";
-      els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>保存议程';
       syncAgendaKindFields();
+      els.saveAgendaBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>${kind === "section" ? "保存分组" : "保存项目"}`;
       renderAgendaList();
       renderRuleHint();
       els.agendaTitle.focus();
@@ -2771,7 +3062,7 @@
       els.agendaPerson.value = "";
       els.agendaDetail.value = "";
       syncAgendaKindFields();
-      els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>保存议程';
+      els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>保存项目';
       renderAgendaList();
       renderRuleHint();
     }
@@ -2819,7 +3110,7 @@
         showToast("议程已更新");
       } else {
         state.items.push(item);
-        showToast("已添加到议程");
+        showToast(item.kind === "section" ? "已添加分组" : "已添加项目");
       }
       saveData();
       renderPreview();
@@ -2852,7 +3143,7 @@
       state.items.splice(index + 1, 0, cloneItem);
       saveData();
       renderAll();
-      showToast("已复制一条议程");
+      showToast("已复制一条项目");
     }
 
     function reorderAgenda(sourceId, targetId) {
@@ -2931,6 +3222,57 @@
       }
     }
 
+    function setMoreMenu(open) {
+      els.moreActionsMenu.hidden = !open;
+      els.moreActionsBtn.setAttribute("aria-expanded", String(open));
+    }
+
+    function imageFileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith("image/")) {
+          reject(new Error("请选择图片文件"));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("读取图片失败"));
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = () => reject(new Error("图片格式无法读取"));
+          image.onload = () => {
+            const maxSide = 720;
+            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            const context = canvas.getContext("2d");
+            context.fillStyle = "#fff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/png"));
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleImageUpload(input) {
+      const field = input.dataset.imageField;
+      const file = input.files && input.files[0];
+      if (!field || !file) return;
+      try {
+        state[field] = await imageFileToDataUrl(file);
+        input.value = "";
+        saveData();
+        renderUploadPreviews();
+        renderPreview();
+        showToast(field === "wechatQrData" ? "微信公众号二维码已更新" : "入会咨询二维码已更新");
+      } catch (error) {
+        input.value = "";
+        showToast(error.message || "图片上传失败");
+      }
+    }
+
     function bindEvents() {
       document.querySelectorAll("[data-field]").forEach((input) => {
         input.addEventListener("input", () => {
@@ -2950,7 +3292,33 @@
       els.agendaDuration.addEventListener("input", renderRuleHint);
       els.saveAgendaBtn.addEventListener("click", saveAgendaFromForm);
       els.clearAgendaFormBtn.addEventListener("click", clearAgendaForm);
-      els.rescheduleBtn.addEventListener("click", rescheduleAgenda);
+      els.moreActionsBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setMoreMenu(els.moreActionsMenu.hidden);
+      });
+      els.rescheduleBtn.addEventListener("click", () => {
+        setMoreMenu(false);
+        rescheduleAgenda();
+      });
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".more-tools")) setMoreMenu(false);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") setMoreMenu(false);
+      });
+      document.querySelectorAll("[data-image-field]").forEach((input) => {
+        input.addEventListener("change", () => handleImageUpload(input));
+      });
+      document.querySelectorAll("[data-clear-image]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const field = button.dataset.clearImage;
+          state[field] = "";
+          saveData();
+          renderUploadPreviews();
+          renderPreview();
+          showToast("二维码已移除");
+        });
+      });
 
       els.agendaList.addEventListener("click", (event) => {
         const button = event.target.closest("[data-action]");
