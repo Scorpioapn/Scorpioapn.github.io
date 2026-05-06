@@ -217,6 +217,19 @@
       letter-spacing: 0;
     }
 
+    .panel-title h3 {
+      color: var(--md-primary);
+      font-size: 20px;
+      line-height: 1.15;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .panel-title.compact {
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
     .panel-title .meta {
       color: var(--md-secondary);
       font-size: 13px;
@@ -359,6 +372,84 @@
 
     .rule-hint strong {
       color: var(--md-primary);
+    }
+
+    .agenda-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .agenda-form-card {
+      margin: 0 0 14px;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: var(--md-surface-container);
+      box-shadow: var(--shadow-1);
+    }
+
+    .agenda-form-card[hidden] {
+      display: none;
+    }
+
+    .more-tools {
+      position: relative;
+    }
+
+    .more-tools summary,
+    .fixed-info summary {
+      min-height: 48px;
+      padding: 0 18px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      color: var(--md-primary);
+      background: var(--md-surface);
+      box-shadow: var(--shadow-1);
+      font-weight: 900;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .more-tools summary::-webkit-details-marker,
+    .fixed-info summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .more-tools[open] {
+      width: 100%;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: rgba(0, 82, 122, 0.07);
+    }
+
+    .more-tools[open] summary {
+      margin-bottom: 12px;
+    }
+
+    .more-tools p {
+      margin-top: 10px;
+      color: var(--md-on-surface-variant);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .fixed-info {
+      margin-top: 16px;
+    }
+
+    .fixed-info summary {
+      width: 100%;
+      justify-content: space-between;
+      border-radius: 22px;
+      color: var(--md-on-primary-container);
+      background: var(--md-primary-container);
+    }
+
+    .fixed-info-fields {
+      margin-top: 14px;
     }
 
     .agenda-list {
@@ -803,6 +894,453 @@
       align-items: start;
     }
 
+    .template-sheet {
+      padding: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 0;
+      background: #fffdf8;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .template-header {
+      min-height: 128px;
+      padding: 18px 26px;
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr) 210px;
+      align-items: center;
+      gap: 18px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.16), transparent 28%),
+        linear-gradient(135deg, #003d5d 0%, #00527a 58%, #003047 100%);
+    }
+
+    .tm-logo-print {
+      width: 116px;
+      height: 88px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #003047;
+      background:
+        linear-gradient(90deg, transparent 47%, rgba(0, 82, 122, 0.28) 48% 52%, transparent 53%),
+        linear-gradient(0deg, transparent 47%, rgba(0, 82, 122, 0.28) 48% 52%, transparent 53%),
+        #f8fbff;
+      box-shadow: inset 0 0 0 3px #e45c35, inset 0 0 0 7px #fff, var(--shadow-2);
+      font-weight: 950;
+      text-align: center;
+      line-height: 1.05;
+    }
+
+    .tm-logo-print span {
+      display: block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: #00527a;
+      background: rgba(255, 255, 255, 0.88);
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    .tm-logo-print small {
+      display: block;
+      color: #772432;
+      font-size: 8px;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .template-title-block {
+      min-width: 0;
+      text-align: center;
+    }
+
+    .template-title-block .english {
+      margin-bottom: 4px;
+      font-size: 23px;
+      line-height: 1.1;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .template-title-block h2 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.1;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .template-theme-line {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .template-meta-stack {
+      display: grid;
+      gap: 10px;
+      justify-content: end;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .template-meta-row {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .template-meta-icon {
+      width: 22px;
+      height: 22px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 7px;
+      border: 2px solid rgba(255, 255, 255, 0.82);
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .template-main {
+      min-height: 0;
+      padding: 18px 20px 10px;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .template-sidebar {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .template-info-card {
+      overflow: hidden;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.25);
+    }
+
+    .template-info-card h3 {
+      margin: 0;
+      padding: 7px 14px;
+      color: #fff;
+      background: linear-gradient(135deg, #772432 0%, #9f2d3d 72%, transparent 72%);
+      font-size: 14px;
+      line-height: 1.15;
+      font-weight: 950;
+    }
+
+    .template-info-card p,
+    .template-info-card li {
+      margin: 0;
+      color: #211a15;
+      font-size: 11px;
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+
+    .template-info-body {
+      padding: 11px 14px;
+    }
+
+    .template-info-body.compact {
+      padding: 9px 12px;
+    }
+
+    .qr-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .qr-box {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 6px;
+      border: 7px solid #fff;
+      background:
+        linear-gradient(90deg, #111 10px, transparent 10px 20px, #111 20px 30px, transparent 30px),
+        linear-gradient(#111 10px, transparent 10px 20px, #111 20px 30px, transparent 30px),
+        #f7f7f7;
+      background-size: 30px 30px;
+      box-shadow: inset 0 0 0 2px #111, var(--shadow-1);
+    }
+
+    .signal-list {
+      display: grid;
+      gap: 5px;
+    }
+
+    .signal-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 1.2fr;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(106, 88, 66, 0.16);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .signal-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .signal-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      box-shadow: var(--shadow-1);
+    }
+
+    .signal-dot.green { background: #22a857; }
+    .signal-dot.yellow { background: #ffd426; }
+    .signal-dot.red { background: #e51d2a; }
+
+    .signal-icon {
+      color: #772432;
+      font-size: 18px;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 10px;
+      row-gap: 3px;
+    }
+
+    .flow-panel {
+      min-width: 0;
+      align-self: start;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(0, 48, 71, 0.28);
+    }
+
+    .flow-title {
+      height: 56px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #772432;
+      background: #fff;
+      font-size: 23px;
+      font-weight: 950;
+    }
+
+    .flow-title-mark {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: #772432;
+      font-size: 16px;
+    }
+
+    .flow-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .flow-section-col {
+      width: 78px;
+    }
+
+    .flow-time-col {
+      width: 64px;
+    }
+
+    .flow-duration-col {
+      width: 72px;
+    }
+
+    .flow-person-col {
+      width: 88px;
+    }
+
+    .flow-table th {
+      padding: 10px 8px;
+      color: #fff;
+      background: #003d5d;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 12px;
+      line-height: 1.2;
+      text-align: center;
+      font-weight: 950;
+    }
+
+    .flow-table td {
+      padding: 6px 8px;
+      border: 1px solid rgba(102, 91, 82, 0.24);
+      color: #211a15;
+      font-size: 11px;
+      line-height: 1.22;
+      vertical-align: middle;
+      word-break: break-word;
+    }
+
+    .flow-table .section-band {
+      width: 92px;
+      padding: 0;
+      text-align: center;
+      color: #772432;
+      background: #fff;
+      font-weight: 950;
+    }
+
+    .section-band-inner {
+      min-height: 100%;
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      align-items: stretch;
+    }
+
+    .section-index {
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: #8f1f34;
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .section-label {
+      min-height: 84px;
+      display: grid;
+      place-items: center;
+      padding: 8px 4px;
+      font-size: 13px;
+      line-height: 1.2;
+      color: #8f1f34;
+      background: #fff;
+    }
+
+    .flow-table .flow-time {
+      width: 72px;
+      text-align: center;
+      color: #003d5d;
+      background: #eff8e9;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .flow-table .flow-duration {
+      width: 86px;
+      text-align: center;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .flow-table .flow-person {
+      width: 104px;
+      text-align: center;
+      font-weight: 850;
+    }
+
+    .flow-activity-title {
+      display: block;
+      font-weight: 950;
+    }
+
+    .flow-activity-detail {
+      display: block;
+      margin-top: 2px;
+      color: #554941;
+      font-size: 10px;
+      line-height: 1.25;
+      white-space: pre-line;
+    }
+
+    .flow-table tr.highlight td:not(.section-band) {
+      background: #eef7e8;
+    }
+
+    .flow-table tr.speech-row td:nth-child(3),
+    .flow-table tr.speech-row td:nth-child(2) + td {
+      background: #eaf3fb;
+    }
+
+    .vision-bar {
+      padding: 9px 14px;
+      color: #fff;
+      background: #8f1f34;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.3;
+      font-weight: 950;
+    }
+
+    .template-footer {
+      margin: 0 20px 18px;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(0, 48, 71, 0.24);
+    }
+
+    .template-footer-box {
+      min-height: 92px;
+      padding: 12px 16px;
+      border-right: 1px solid rgba(102, 91, 82, 0.20);
+      text-align: center;
+    }
+
+    .template-footer-box:last-child {
+      border-right: 0;
+    }
+
+    .template-footer-box h3 {
+      margin: 0 0 8px;
+      color: #003d5d;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .template-footer-box p {
+      margin: 0;
+      color: #211a15;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+
+    .note-lines {
+      display: grid;
+      gap: 9px;
+      margin-top: 6px;
+    }
+
+    .note-lines span {
+      display: block;
+      height: 1px;
+      background: rgba(33, 26, 21, 0.45);
+    }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -915,11 +1453,121 @@
       .sheet-meta {
         grid-template-columns: 1fr;
       }
+
+      .template-sheet {
+        width: 100%;
+        min-height: auto;
+      }
+
+      .template-header {
+        padding: 18px 16px;
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .tm-logo-print {
+        margin: 0 auto;
+      }
+
+      .template-title-block .english {
+        font-size: 20px;
+      }
+
+      .template-title-block h2 {
+        font-size: 24px;
+      }
+
+      .template-theme-line {
+        gap: 10px;
+        font-size: 14px;
+      }
+
+      .template-meta-stack {
+        justify-content: center;
+        font-size: 13px;
+      }
+
+      .template-main {
+        padding: 14px;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .template-sidebar {
+        order: 2;
+      }
+
+      .flow-panel {
+        order: 1;
+      }
+
+      .flow-title {
+        height: auto;
+        min-height: 48px;
+        font-size: 20px;
+      }
+
+      .flow-section-col {
+        width: 48px;
+      }
+
+      .flow-time-col {
+        width: 48px;
+      }
+
+      .flow-duration-col {
+        width: 48px;
+      }
+
+      .flow-person-col {
+        width: 58px;
+      }
+
+      .flow-table th {
+        padding: 8px 4px;
+        font-size: 10px;
+      }
+
+      .flow-table td {
+        padding: 6px 4px;
+        font-size: 10px;
+      }
+
+      .section-band-inner {
+        grid-template-columns: 24px minmax(0, 1fr);
+      }
+
+      .section-index {
+        font-size: 14px;
+      }
+
+      .section-label {
+        padding: 6px 2px;
+        font-size: 10px;
+      }
+
+      .flow-activity-detail {
+        font-size: 9px;
+      }
+
+      .template-footer {
+        margin: 0 14px 14px;
+        grid-template-columns: 1fr;
+      }
+
+      .template-footer-box {
+        border-right: 0;
+        border-bottom: 1px solid rgba(102, 91, 82, 0.20);
+      }
+
+      .template-footer-box:last-child {
+        border-bottom: 0;
+      }
     }
 
     @page {
       size: A4 portrait;
-      margin: 7mm;
+      margin: 5mm;
     }
 
     @media print {
@@ -948,8 +1596,8 @@
       }
 
       .agenda-sheet {
-        width: 196mm;
-        height: 283mm;
+        width: 200mm;
+        height: 287mm;
         min-height: 0;
         aspect-ratio: auto;
         margin: 0;
@@ -958,6 +1606,243 @@
         box-shadow: none;
         overflow: visible;
         page-break-inside: avoid;
+      }
+
+      .template-header {
+        min-height: 21mm;
+        padding: 3.5mm 5mm;
+        grid-template-columns: 29mm minmax(0, 1fr) 39mm;
+        gap: 3mm;
+      }
+
+      .tm-logo-print {
+        width: 24mm;
+        height: 18mm;
+        box-shadow: inset 0 0 0 1.2px #e45c35, inset 0 0 0 3px #fff;
+      }
+
+      .tm-logo-print span {
+        padding: 1mm 1.8mm;
+        font-size: 6.2pt;
+      }
+
+      .tm-logo-print small {
+        font-size: 4.4pt;
+      }
+
+      .template-title-block .english {
+        margin-bottom: 0.6mm;
+        font-size: 14pt;
+        line-height: 1.02;
+      }
+
+      .template-title-block h2 {
+        font-size: 18pt;
+        line-height: 1.03;
+      }
+
+      .template-theme-line {
+        margin-top: 2mm;
+        gap: 4mm;
+        font-size: 9pt;
+      }
+
+      .template-meta-stack {
+        gap: 1.4mm;
+        font-size: 8pt;
+      }
+
+      .template-meta-row {
+        grid-template-columns: 5mm minmax(0, 1fr);
+        gap: 1.6mm;
+      }
+
+      .template-meta-icon {
+        width: 4.5mm;
+        height: 4.5mm;
+        border-width: 1px;
+        border-radius: 1.2mm;
+        font-size: 5pt;
+      }
+
+      .template-main {
+        padding: 4mm 5mm 2mm;
+        grid-template-columns: 48mm minmax(0, 1fr);
+        gap: 4mm;
+      }
+
+      .template-sidebar {
+        gap: 2mm;
+      }
+
+      .template-info-card {
+        border-radius: 2mm;
+      }
+
+      .template-info-card h3 {
+        padding: 1.3mm 2.6mm;
+        font-size: 7.2pt;
+      }
+
+      .template-info-card p,
+      .template-info-card li {
+        font-size: 5.55pt;
+        line-height: 1.14;
+      }
+
+      .template-info-body {
+        padding: 1.7mm 2.4mm;
+      }
+
+      .template-info-body.compact {
+        padding: 1.5mm 2mm;
+      }
+
+      .qr-row {
+        gap: 2mm;
+        font-size: 5.2pt;
+      }
+
+      .qr-box {
+        width: 15mm;
+        height: 15mm;
+        margin-bottom: 1mm;
+        border-width: 1.4mm;
+        background-size: 5mm 5mm;
+      }
+
+      .signal-list {
+        gap: 0.8mm;
+      }
+
+      .signal-row {
+        grid-template-columns: 5mm 1fr 1.2fr;
+        gap: 1.4mm;
+        padding-bottom: 0.7mm;
+        font-size: 5.6pt;
+      }
+
+      .signal-dot {
+        width: 3.4mm;
+        height: 3.4mm;
+      }
+
+      .signal-icon {
+        font-size: 8pt;
+      }
+
+      .team-grid {
+        column-gap: 1.8mm;
+        row-gap: 0.5mm;
+      }
+
+      .flow-panel {
+        border-radius: 2mm;
+      }
+
+      .flow-title {
+        height: 11mm;
+        padding: 0 3.4mm;
+        gap: 2mm;
+        font-size: 13pt;
+      }
+
+      .flow-title-mark {
+        width: 6mm;
+        height: 6mm;
+        border-radius: 1.4mm;
+        font-size: 8pt;
+      }
+
+      .flow-section-col {
+        width: 15mm;
+      }
+
+      .flow-time-col {
+        width: 12mm;
+      }
+
+      .flow-duration-col {
+        width: 12mm;
+      }
+
+      .flow-person-col {
+        width: 17mm;
+      }
+
+      .flow-table th {
+        padding: 1.5mm 1mm;
+        font-size: 6.2pt;
+      }
+
+      .flow-table td {
+        padding: 1mm 1.2mm;
+        font-size: 5.8pt;
+        line-height: 1.08;
+      }
+
+      .section-band-inner {
+        grid-template-columns: 5.2mm minmax(0, 1fr);
+      }
+
+      .section-index {
+        font-size: 8.4pt;
+      }
+
+      .section-label {
+        min-height: 0;
+        padding: 1mm 0.8mm;
+        font-size: 6.2pt;
+        line-height: 1.05;
+      }
+
+      .flow-table .flow-time {
+        width: auto;
+      }
+
+      .flow-table .flow-duration {
+        width: auto;
+      }
+
+      .flow-table .flow-person {
+        width: auto;
+      }
+
+      .flow-activity-detail {
+        margin-top: 0.4mm;
+        font-size: 5.05pt;
+        line-height: 1.05;
+      }
+
+      .vision-bar {
+        padding: 1.7mm 2.5mm;
+        font-size: 7.5pt;
+      }
+
+      .template-footer {
+        margin: 0 5mm 3mm;
+        grid-template-columns: 1fr 1.35fr 1fr;
+        border-radius: 2mm;
+      }
+
+      .template-footer-box {
+        min-height: 18mm;
+        padding: 2.2mm 3mm;
+      }
+
+      .template-footer-box h3 {
+        margin-bottom: 1.5mm;
+        font-size: 8.3pt;
+      }
+
+      .template-footer-box p {
+        font-size: 6.8pt;
+        line-height: 1.25;
+      }
+
+      .note-lines {
+        gap: 2.3mm;
+        margin-top: 1.5mm;
       }
 
       .sheet-header {
@@ -1124,65 +2009,88 @@
           </div>
         </section>
 
-        <section class="surface-panel" aria-labelledby="agendaEditorTitle">
-          <div class="panel-title">
-            <h2 id="agendaEditorTitle">议程管理</h2>
-            <span class="meta">拖动排序，点击编辑</span>
-          </div>
-          <div class="field-grid">
-            <div class="field">
-              <label for="agendaKind">类型</label>
-              <select class="select" id="agendaKind">
-                <option value="item">议程项目</option>
-                <option value="section">分段标题</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="agendaTime">时间</label>
-              <input class="input" id="agendaTime" type="time" />
-            </div>
-            <div class="field full">
-              <label for="agendaTitle">活动内容</label>
-              <input class="input" id="agendaTitle" placeholder="例如：备稿演讲1" />
-            </div>
-            <div class="field">
-              <label for="agendaDuration">时长</label>
-              <input class="input" id="agendaDuration" placeholder="5-7 或 2min/人" />
-            </div>
-            <div class="field">
-              <label for="agendaPerson">参与者</label>
-              <input class="input" id="agendaPerson" placeholder="例如：Maggie" />
-            </div>
-            <div class="field full">
-              <label for="agendaDetail">补充说明</label>
-              <textarea class="textarea" id="agendaDetail" placeholder="演讲题目、Pathways 项目、规则说明或个人目标"></textarea>
-            </div>
-          </div>
-          <div class="rule-hint" id="ruleHint"></div>
-          <div class="actions-row">
-            <button class="button filled" id="saveAgendaBtn" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-              添加项目
-            </button>
-            <button class="button tonal" id="clearAgendaFormBtn" type="button">清空表单</button>
-            <button class="button" id="rescheduleBtn" type="button">按时长重排时间</button>
-          </div>
-        </section>
-
         <section class="surface-panel" aria-labelledby="agendaListTitle">
           <div class="panel-title">
             <h2 id="agendaListTitle">当前议程</h2>
             <span class="meta" id="agendaCount">0 个项目</span>
           </div>
+          <div class="agenda-toolbar">
+            <button class="button filled" id="addAgendaItemBtn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              添加议程
+            </button>
+            <button class="button tonal" id="addAgendaSectionBtn" type="button">添加分段</button>
+            <details class="more-tools">
+              <summary>更多</summary>
+              <button class="button" id="rescheduleBtn" type="button">按时长自动排时间</button>
+              <p>从会议开始时间出发，按每个环节的时长重新计算开始时间。适合调整顺序或时长后使用。</p>
+            </details>
+          </div>
+
+          <div class="agenda-form-card" id="agendaFormCard" hidden>
+            <div class="panel-title compact">
+              <h3 id="agendaFormTitle">新增议程</h3>
+              <button class="mini-button" id="clearAgendaFormBtn" type="button" title="收起编辑" aria-label="收起编辑">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <input id="agendaKind" type="hidden" value="item" />
+            <div class="field-grid">
+              <div class="field">
+                <label for="agendaTime">时间</label>
+                <input class="input" id="agendaTime" type="time" />
+              </div>
+              <div class="field">
+                <label for="agendaDuration">时长</label>
+                <input class="input" id="agendaDuration" placeholder="5-7 或 2min/人" />
+              </div>
+              <div class="field full">
+                <label for="agendaTitle">活动内容</label>
+                <input class="input" id="agendaTitle" placeholder="例如：备稿演讲1" />
+              </div>
+              <div class="field">
+                <label for="agendaPerson">负责人</label>
+                <input class="input" id="agendaPerson" placeholder="例如：Maggie" />
+              </div>
+              <div class="field full">
+                <label for="agendaDetail">补充说明</label>
+                <textarea class="textarea" id="agendaDetail" placeholder="演讲题目、Pathways 项目、规则说明或个人目标"></textarea>
+              </div>
+            </div>
+            <div class="rule-hint" id="ruleHint"></div>
+            <div class="actions-row">
+              <button class="button filled" id="saveAgendaBtn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                保存议程
+              </button>
+            </div>
+          </div>
+
           <div class="agenda-list" id="agendaList"></div>
         </section>
 
         <section class="surface-panel" aria-labelledby="sideInfoTitle">
           <div class="panel-title">
-            <h2 id="sideInfoTitle">右栏内容</h2>
-            <span class="meta">打印页信息区</span>
+            <h2 id="sideInfoTitle">下期与固定信息</h2>
+            <span class="meta">默认折叠</span>
           </div>
           <div class="field-grid one">
+            <div class="field">
+              <label for="nextTheme">下期主题</label>
+              <input class="input" id="nextTheme" data-field="nextTheme" placeholder="夏日穿搭" />
+            </div>
+          </div>
+          <details class="fixed-info">
+            <summary>固定信息：关于我们、Pathways、役员、守则</summary>
+            <div class="field-grid one fixed-info-fields">
+              <div class="field">
+                <label for="clubNameEnglish">英文俱乐部名</label>
+                <input class="input" id="clubNameEnglish" data-field="clubNameEnglish" placeholder="Changyan Chinese Toastmasters Club" />
+              </div>
+              <div class="field">
+                <label for="meetingVision">会议愿景</label>
+                <input class="input" id="meetingVision" data-field="meetingVision" placeholder="很开心与大家建立一种愉悦的学习旅程，谢谢大家~" />
+              </div>
             <div class="field">
               <label for="clubIntro">俱乐部介绍</label>
               <textarea class="textarea" id="clubIntro" data-field="clubIntro"></textarea>
@@ -1196,26 +2104,30 @@
               <textarea class="textarea" id="officers" data-field="officers"></textarea>
             </div>
             <div class="field">
-              <label for="nextTheme">下期主题</label>
-              <input class="input" id="nextTheme" data-field="nextTheme" placeholder="夏日穿搭" />
+                <label for="joinInfo">如何加入我们</label>
+                <textarea class="textarea" id="joinInfo" data-field="joinInfo"></textarea>
             </div>
             <div class="field">
               <label for="meetingRules">会议守则</label>
               <textarea class="textarea" id="meetingRules" data-field="meetingRules"></textarea>
             </div>
+              <div class="field">
+                <label for="guestInvitation">来宾可参与环节</label>
+                <textarea class="textarea" id="guestInvitation" data-field="guestInvitation"></textarea>
+              </div>
           </div>
+          </details>
         </section>
 
         <section class="surface-panel" aria-labelledby="templateTitle">
           <div class="panel-title">
-            <h2 id="templateTitle">模板操作</h2>
+            <h2 id="templateTitle">导出</h2>
             <span class="meta">本机保存</span>
           </div>
           <p class="helper-text">所有编辑会保存在浏览器本地。打印时只输出右侧 A4 预览，不会打印编辑面板。</p>
           <div class="actions-row">
             <button class="button filled" id="printBtnSide" type="button">打印 A4</button>
             <button class="button tonal" id="copyBtn" type="button">复制文字版</button>
-            <button class="button danger" id="resetBtn" type="button">恢复 739 样张</button>
           </div>
         </section>
       </div>
@@ -1234,7 +2146,7 @@
         </div>
       </header>
       <div class="preview-viewport">
-        <article class="agenda-sheet" id="printPage" aria-label="议程单打印预览"></article>
+        <article class="agenda-sheet template-sheet" id="printPage" aria-label="议程单打印预览"></article>
       </div>
     </main>
   </div>
@@ -1249,6 +2161,7 @@
 
     const DEFAULT_DATA = {
       clubName: "畅言中文国际演讲俱乐部",
+      clubNameEnglish: "Changyan Chinese Toastmasters Club",
       meetingNo: "739",
       theme: "去运动",
       wordOfDay: "越来越好",
@@ -1262,7 +2175,10 @@
       clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
       pathways: "Pathways 是头马国际演讲的教育体系，提供多条学习路径，帮助会员系统训练演讲、评估、领导力和项目管理能力。",
       officers: "会长：女侠  秘书长：夏奈\n教育副会长：聪聪  财务官：王兵伟\n会员副会长：Venus斯敏  事务官：Jeff\n公关副会长：水杨酸",
+      joinInfo: "入会条件：参加2次以上例会，并完成一次角色或四项演讲/履职分享。\n入会费用：首次缴费包含国际会费、本地会费及资料费。",
       meetingRules: "1. 请将手机调至静音。\n2. 演讲时请尊重时间官提示。\n3. 会议期间欢迎积极鼓掌、反馈和投票。\n4. 来宾可在会议后联系会员副会长了解入会。",
+      meetingVision: "会议愿景：很开心与大家建立一种愉悦的学习旅程，谢谢大家~",
+      guestInvitation: "【来宾介绍】 【即兴演讲】 【真情分享】\n诚邀您一起，成为一半！\n所有的伟大都源于开始！",
       items: [
         { id: "s-open", kind: "section", title: "一、开场环节" },
         { id: "i-guest-checkin", kind: "item", time: "19:15", title: "来宾入会，相互认识与交流", detail: "", duration: "10", person: "全体会员" },
@@ -1319,6 +2235,10 @@
       agendaList: document.querySelector("#agendaList"),
       agendaCount: document.querySelector("#agendaCount"),
       saveStatus: document.querySelector("#saveStatus"),
+      agendaFormCard: document.querySelector("#agendaFormCard"),
+      agendaFormTitle: document.querySelector("#agendaFormTitle"),
+      addAgendaItemBtn: document.querySelector("#addAgendaItemBtn"),
+      addAgendaSectionBtn: document.querySelector("#addAgendaSectionBtn"),
       agendaKind: document.querySelector("#agendaKind"),
       agendaTime: document.querySelector("#agendaTime"),
       agendaTitle: document.querySelector("#agendaTitle"),
@@ -1333,7 +2253,6 @@
       printBtnSide: document.querySelector("#printBtnSide"),
       copyBtn: document.querySelector("#copyBtn"),
       copyBtnTop: document.querySelector("#copyBtnTop"),
-      resetBtn: document.querySelector("#resetBtn"),
       openTimekeeperBtn: document.querySelector("#openTimekeeperBtn"),
       toast: document.querySelector("#toast"),
       toastText: document.querySelector("#toastText"),
@@ -1351,7 +2270,7 @@
     }
 
     function normalizeEscapedNewlines(data) {
-      ["clubIntro", "pathways", "officers", "meetingRules"].forEach((field) => {
+      ["clubIntro", "pathways", "officers", "joinInfo", "meetingRules", "meetingVision", "guestInvitation"].forEach((field) => {
         if (typeof data[field] === "string") {
           data[field] = data[field].replaceAll("\\n", "\n");
         }
@@ -1487,91 +2406,183 @@
       });
     }
 
-    function renderPreview() {
-      const itemRows = state.items.map((item) => {
+    function weekdayText(dateValue) {
+      if (!dateValue) return "";
+      const date = new Date(`${dateValue}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return "";
+      return ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][date.getDay()];
+    }
+
+    function offsetDate(dateValue, dayOffset) {
+      const date = new Date(`${dateValue}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return dateValue;
+      date.setDate(date.getDate() + dayOffset);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function cleanSectionTitle(title) {
+      return String(title || "会议环节").replace(/^[一二三四五六七八九十]+、\s*/, "");
+    }
+
+    function buildAgendaGroups() {
+      const groups = [];
+      let current = null;
+      state.items.forEach((item) => {
         if (item.kind === "section") {
-          return `<tr class="section-row"><td colspan="4">${escapeHtml(item.title)}</td></tr>`;
+          current = { title: item.title || "会议环节", items: [] };
+          groups.push(current);
+          return;
         }
-        return `
-          <tr>
-            <td class="time-col">${escapeHtml(item.time || "")}</td>
-            <td>
-              <span class="activity-title">${escapeHtml(item.title || "")}</span>
-              ${item.detail ? `<span class="activity-detail">${escapeHtml(item.detail)}</span>` : ""}
+        if (!current) {
+          current = { title: "会议流程", items: [] };
+          groups.push(current);
+        }
+        current.items.push(item);
+      });
+      return groups.filter((group) => group.items.length);
+    }
+
+    function rowClassForAgenda(item) {
+      const text = `${item.title || ""} ${item.detail || ""}`;
+      if (/茶歇|合照|来宾|真情|颁奖/.test(text)) return "highlight";
+      if (/备稿|精心|演讲/.test(text)) return "speech-row";
+      return "";
+    }
+
+    function formatNextMeeting() {
+      const nextDate = offsetDate(state.date, 7);
+      return `${formatDate(nextDate)}（${weekdayText(nextDate)}） ${state.startTime}-${state.endTime}`;
+    }
+
+    function renderPreview() {
+      const groups = buildAgendaGroups();
+      const itemRows = groups.map((group, groupIndex) => {
+        return group.items.map((item, itemIndex) => {
+          const sectionCell = itemIndex === 0 ? `
+            <td class="section-band" rowspan="${group.items.length}">
+              <div class="section-band-inner">
+                <div class="section-index">${groupIndex + 1}</div>
+                <div class="section-label">${escapeHtml(cleanSectionTitle(group.title))}</div>
+              </div>
             </td>
-            <td class="duration-col">${escapeHtml(item.duration || "")}</td>
-            <td class="person-col">${escapeHtml(item.person || "")}</td>
-          </tr>
-        `;
+          ` : "";
+          return `
+            <tr class="${rowClassForAgenda(item)}">
+              ${sectionCell}
+              <td class="flow-time">${escapeHtml(item.time || "")}</td>
+              <td>
+                <span class="flow-activity-title">${escapeHtml(item.title || "")}</span>
+                ${item.detail ? `<span class="flow-activity-detail">${escapeHtml(item.detail)}</span>` : ""}
+              </td>
+              <td class="flow-duration">${escapeHtml(item.duration || "")}</td>
+              <td class="flow-person">${escapeHtml(item.person || "")}</td>
+            </tr>
+          `;
+        }).join("");
       }).join("");
 
       els.previewChip.textContent = `第 ${state.meetingNo || "-"} 期`;
       els.printPage.innerHTML = `
-        <header class="sheet-header">
-          <div class="sheet-kicker">
-            <span>TOASTMASTERS INTERNATIONAL</span>
-            <span>${escapeHtml(state.clubName)}</span>
+        <header class="template-header">
+          <div class="tm-logo-print" aria-label="Toastmasters International">
+            <span>TOASTMASTERS<small>INTERNATIONAL</small></span>
           </div>
-          <h2 class="sheet-title">${escapeHtml(state.clubName)} 第（${escapeHtml(state.meetingNo)}）期例会</h2>
-          <div class="sheet-chips">
-            <span class="sheet-chip">本期主题：${escapeHtml(state.theme)}</span>
-            <span class="sheet-chip alt">今日一词：${escapeHtml(state.wordOfDay)}</span>
+          <div class="template-title-block">
+            <div class="english">${escapeHtml(state.clubNameEnglish || "Toastmasters Club")}</div>
+            <h2>${escapeHtml(state.clubName.replace("国际演讲俱乐部", "国际演讲会"))}</h2>
+            <div class="template-theme-line">
+              <span>主题：${escapeHtml(state.theme)}</span>
+              <span>|</span>
+              <span>今日一词：${escapeHtml(state.wordOfDay)}</span>
+            </div>
           </div>
-          <div class="sheet-meta">
-            <span>时间：${escapeHtml(formatDate(state.date))} ${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</span>
-            <span>地点：${escapeHtml(state.location)}</span>
-            <span>例会经理：${escapeHtml(state.manager)}</span>
-            <span>海报设计：${escapeHtml(state.posterDesigner)}</span>
+          <div class="template-meta-stack">
+            <div class="template-meta-row"><span class="template-meta-icon">日</span><span>${escapeHtml(formatDate(state.date))} ${escapeHtml(weekdayText(state.date))}</span></div>
+            <div class="template-meta-row"><span class="template-meta-icon">时</span><span>${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</span></div>
+            <div class="template-meta-row"><span class="template-meta-icon">期</span><span>第${escapeHtml(state.meetingNo)}期例会</span></div>
           </div>
         </header>
 
-        <section class="sheet-body">
-          <div>
-            <table class="print-table" aria-label="会议议程">
+        <section class="template-main">
+          <aside class="template-sidebar">
+            <section class="template-info-card">
+              <h3>关于我们</h3>
+              <div class="template-info-body">
+                <p>${escapeHtml(state.clubIntro)}</p>
+                <p>会议时间：每周 ${escapeHtml(weekdayText(state.date))} ${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</p>
+                <p>地点：${escapeHtml(state.location)}</p>
+              </div>
+            </section>
+            <section class="template-info-card">
+              <h3>扫码关注我们</h3>
+              <div class="template-info-body compact">
+                <div class="qr-row">
+                  <div><div class="qr-box" aria-hidden="true"></div><span>微信公众号</span></div>
+                  <div><div class="qr-box" aria-hidden="true"></div><span>入会咨询</span></div>
+                </div>
+              </div>
+            </section>
+            <section class="template-info-card">
+              <h3>提示信号</h3>
+              <div class="template-info-body compact signal-list">
+                <div class="signal-row"><span class="signal-dot green"></span><span>绿灯</span><span>掌声 1-3 秒</span></div>
+                <div class="signal-row"><span class="signal-dot yellow"></span><span>黄灯</span><span>掌声 1-20 秒</span></div>
+                <div class="signal-row"><span class="signal-dot red"></span><span>红灯</span><span>停止发言</span></div>
+                <div class="signal-row"><span class="signal-icon">静</span><span>静音</span><span>手机静音</span></div>
+                <div class="signal-row"><span class="signal-icon">时</span><span>计时</span><span>时间到</span></div>
+                <div class="signal-row"><span class="signal-icon">延</span><span>延时</span><span>延时 30 秒</span></div>
+              </div>
+            </section>
+            <section class="template-info-card">
+              <h3>会长团队</h3>
+              <div class="template-info-body team-grid">
+                ${escapeHtml(state.officers).split("\n").map((line) => `<p>${line}</p>`).join("")}
+              </div>
+            </section>
+            <section class="template-info-card">
+              <h3>如何加入我们</h3>
+              <div class="template-info-body">
+                <p>${escapeHtml(state.joinInfo || state.meetingRules)}</p>
+              </div>
+            </section>
+          </aside>
+
+          <section class="flow-panel">
+            <div class="flow-title"><span class="flow-title-mark">日</span><span>会议流程</span></div>
+            <table class="flow-table" aria-label="会议流程">
+              <colgroup>
+                <col class="flow-section-col" />
+                <col class="flow-time-col" />
+                <col />
+                <col class="flow-duration-col" />
+                <col class="flow-person-col" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th class="time-col">时间</th>
-                  <th>活动内容</th>
-                  <th class="duration-col">时长</th>
-                  <th class="person-col">参与者</th>
+                  <th colspan="2">时间</th>
+                  <th>内容</th>
+                  <th>时长<br>（分钟）</th>
+                  <th>负责人</th>
                 </tr>
               </thead>
               <tbody>${itemRows}</tbody>
             </table>
-          </div>
-          <aside class="side-stack">
-            <section class="side-box">
-              <h3>俱乐部介绍</h3>
-              <p>${escapeHtml(state.clubIntro)}</p>
-            </section>
-            <section class="side-box">
-              <h3>TM-PATHWAYS 学习路径</h3>
-              <p>${escapeHtml(state.pathways)}</p>
-            </section>
-            <section class="side-box">
-              <h3>本届役员</h3>
-              <p>${escapeHtml(state.officers)}</p>
-            </section>
-            <section class="side-box">
-              <h3>下期例会主题</h3>
-              <p>${escapeHtml(state.nextTheme)}</p>
-            </section>
-          </aside>
+            <div class="vision-bar">${escapeHtml(state.meetingVision || "")}</div>
+          </section>
         </section>
 
-        <footer class="sheet-foot">
-          <section class="timing-box">
-            <h3>演讲时间守则</h3>
-            <div class="timing-grid">
-              <span class="head">类型</span><span class="head">绿牌</span><span class="head">黄牌</span><span class="head">红牌</span><span class="head">响铃</span>
-              <span>3分钟及以下</span><span>剩余 1:00</span><span>剩余 0:30</span><span>时间到</span><span>超时 0:15</span>
-              <span>3-10分钟</span><span>剩余 2:00</span><span>剩余 1:00</span><span>时间到</span><span>超时 0:30</span>
-              <span>10分钟以上</span><span>剩余 5:00</span><span>剩余 2:00</span><span>时间到</span><span>超时 0:30</span>
-            </div>
+        <footer class="template-footer">
+          <section class="template-footer-box">
+            <h3>下次例会时间</h3>
+            <p>${escapeHtml(formatNextMeeting())}</p>
           </section>
-          <section class="side-box">
-            <h3>会议守则</h3>
-            <p>${escapeHtml(state.meetingRules)}</p>
+          <section class="template-footer-box">
+            <h3>来宾可参与环节</h3>
+            <p>${escapeHtml(state.guestInvitation || "")}</p>
+          </section>
+          <section class="template-footer-box">
+            <h3>备注</h3>
+            <div class="note-lines"><span></span><span></span><span></span></div>
           </section>
         </footer>
       `;
@@ -1629,15 +2640,43 @@
       toastTimer = window.setTimeout(() => els.toast.classList.remove("open"), actionText ? 6500 : 2800);
     }
 
+    function syncAgendaKindFields() {
+      const isSection = els.agendaKind.value === "section";
+      [els.agendaTime, els.agendaDuration, els.agendaPerson, els.agendaDetail].forEach((input) => {
+        input.disabled = isSection;
+      });
+      els.agendaFormTitle.textContent = isSection
+        ? (editingId ? "编辑分段" : "新增分段")
+        : (editingId ? "编辑议程" : "新增议程");
+    }
+
+    function openAgendaForm(kind = "item") {
+      editingId = null;
+      els.agendaFormCard.hidden = false;
+      els.agendaKind.value = kind;
+      els.agendaTime.value = "";
+      els.agendaTitle.value = "";
+      els.agendaDuration.value = "";
+      els.agendaPerson.value = "";
+      els.agendaDetail.value = "";
+      els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>保存议程';
+      syncAgendaKindFields();
+      renderAgendaList();
+      renderRuleHint();
+      els.agendaTitle.focus();
+    }
+
     function clearAgendaForm() {
       editingId = null;
+      els.agendaFormCard.hidden = true;
       els.agendaKind.value = "item";
       els.agendaTime.value = "";
       els.agendaTitle.value = "";
       els.agendaDuration.value = "";
       els.agendaPerson.value = "";
       els.agendaDetail.value = "";
-      els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>添加项目';
+      syncAgendaKindFields();
+      els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>保存议程';
       renderAgendaList();
       renderRuleHint();
     }
@@ -1646,15 +2685,18 @@
       const item = state.items.find((entry) => entry.id === id);
       if (!item) return;
       editingId = id;
+      els.agendaFormCard.hidden = false;
       els.agendaKind.value = item.kind || "item";
       els.agendaTime.value = item.time || "";
       els.agendaTitle.value = item.title || "";
       els.agendaDuration.value = item.duration || "";
       els.agendaPerson.value = item.person || "";
       els.agendaDetail.value = item.detail || "";
+      syncAgendaKindFields();
       els.saveAgendaBtn.textContent = "保存修改";
       renderAgendaList();
       renderRuleHint();
+      els.agendaTitle.focus();
     }
 
     function readAgendaForm() {
@@ -1794,16 +2836,6 @@
       }
     }
 
-    function resetToDefault() {
-      if (!confirm("恢复第 739 期样张会覆盖当前本机编辑内容，确定继续吗？")) return;
-      state = clone(DEFAULT_DATA);
-      editingId = null;
-      saveData();
-      clearAgendaForm();
-      renderAll();
-      showToast("已恢复 739 样张");
-    }
-
     function bindEvents() {
       document.querySelectorAll("[data-field]").forEach((input) => {
         input.addEventListener("input", () => {
@@ -1813,11 +2845,10 @@
         });
       });
 
+      els.addAgendaItemBtn.addEventListener("click", () => openAgendaForm("item"));
+      els.addAgendaSectionBtn.addEventListener("click", () => openAgendaForm("section"));
       els.agendaKind.addEventListener("change", () => {
-        const isSection = els.agendaKind.value === "section";
-        [els.agendaTime, els.agendaDuration, els.agendaPerson, els.agendaDetail].forEach((input) => {
-          input.disabled = isSection;
-        });
+        syncAgendaKindFields();
         renderRuleHint();
       });
       els.agendaTitle.addEventListener("input", applyTitleDefault);
@@ -1866,7 +2897,6 @@
 
       [els.printBtn, els.printBtnSide].forEach((button) => button.addEventListener("click", () => window.print()));
       [els.copyBtn, els.copyBtnTop].forEach((button) => button.addEventListener("click", copyPlainText));
-      els.resetBtn.addEventListener("click", resetToDefault);
       els.openTimekeeperBtn.addEventListener("click", () => {
         window.location.href = "index.html";
       });
