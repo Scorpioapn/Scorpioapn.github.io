@@ -1010,6 +1010,19 @@
       font-weight: 950;
     }
 
+    .template-meta-icon svg,
+    .flow-title-mark svg,
+    .signal-icon svg {
+      width: 70%;
+      height: 70%;
+      display: block;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     .template-main {
       min-height: 0;
       padding: 18px 20px 10px;
@@ -1121,8 +1134,11 @@
     .signal-dot.red { background: #e51d2a; }
 
     .signal-icon {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
       color: #772432;
-      font-size: 18px;
       font-weight: 950;
       text-align: center;
     }
@@ -1762,7 +1778,8 @@
       }
 
       .signal-icon {
-        font-size: 8pt;
+        width: 3.8mm;
+        height: 3.8mm;
       }
 
       .team-grid {
@@ -2503,6 +2520,19 @@
       return `<svg ${common}><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" /><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" /><path d="M3 20a5 5 0 0 1 10 0" /><path d="M11 20a5 5 0 0 1 10 0" /></svg>`;
     }
 
+    function templateIconSvg(type) {
+      const common = 'viewBox="0 0 24 24" aria-hidden="true" focusable="false"';
+      const icons = {
+        calendar: `<svg ${common}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4" /><path d="M16 3v4" /><path d="M4 10h16" /><path d="M8 14h2" /><path d="M14 14h2" /></svg>`,
+        clock: `<svg ${common}><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3 2" /></svg>`,
+        pin: `<svg ${common}><path d="M12 21s7-5.1 7-12a7 7 0 1 0-14 0c0 6.9 7 12 7 12z" /><circle cx="12" cy="9" r="2.2" /></svg>`,
+        hand: `<svg ${common}><path d="M6 13V7a1.5 1.5 0 0 1 3 0v5" /><path d="M9 12V5.5a1.5 1.5 0 0 1 3 0V12" /><path d="M12 12V7a1.5 1.5 0 0 1 3 0v6" /><path d="M15 13v-2a1.5 1.5 0 0 1 3 0v4a6 6 0 0 1-12 0v-2" /></svg>`,
+        timer: `<svg ${common}><circle cx="12" cy="13" r="7" /><path d="M12 13l3-2" /><path d="M9 2h6" /><path d="M12 2v3" /></svg>`,
+        delay: `<svg ${common}><path d="M4 7h10a6 6 0 1 1-5.2 9" /><path d="M4 7l4-4" /><path d="M4 7l4 4" /></svg>`,
+      };
+      return icons[type] || icons.calendar;
+    }
+
     function rowClassForAgenda(item) {
       const text = `${item.title || ""} ${item.detail || ""}`;
       if (/茶歇|休息|合照|中场/.test(text)) return "break-row";
@@ -2562,9 +2592,9 @@
             </div>
           </div>
           <div class="template-meta-stack">
-            <div class="template-meta-row"><span class="template-meta-icon">日</span><span>${escapeHtml(formatDate(state.date))} ${escapeHtml(weekdayText(state.date))}</span></div>
-            <div class="template-meta-row"><span class="template-meta-icon">时</span><span>${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</span></div>
-            <div class="template-meta-row"><span class="template-meta-icon">期</span><span>第${escapeHtml(state.meetingNo)}期例会</span></div>
+            <div class="template-meta-row"><span class="template-meta-icon">${templateIconSvg("calendar")}</span><span>${escapeHtml(formatDate(state.date))} ${escapeHtml(weekdayText(state.date))}</span></div>
+            <div class="template-meta-row"><span class="template-meta-icon">${templateIconSvg("clock")}</span><span>${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</span></div>
+            <div class="template-meta-row"><span class="template-meta-icon">${templateIconSvg("pin")}</span><span>第${escapeHtml(state.meetingNo)}期例会</span></div>
           </div>
         </header>
 
@@ -2593,9 +2623,9 @@
                 <div class="signal-row"><span class="signal-dot green"></span><span>绿灯</span><span>掌声 1-3 秒</span></div>
                 <div class="signal-row"><span class="signal-dot yellow"></span><span>黄灯</span><span>掌声 1-20 秒</span></div>
                 <div class="signal-row"><span class="signal-dot red"></span><span>红灯</span><span>停止发言</span></div>
-                <div class="signal-row"><span class="signal-icon">静</span><span>静音</span><span>手机静音</span></div>
-                <div class="signal-row"><span class="signal-icon">时</span><span>计时</span><span>时间到</span></div>
-                <div class="signal-row"><span class="signal-icon">延</span><span>延时</span><span>延时 30 秒</span></div>
+                <div class="signal-row"><span class="signal-icon">${templateIconSvg("hand")}</span><span>静音</span><span>手机静音</span></div>
+                <div class="signal-row"><span class="signal-icon">${templateIconSvg("timer")}</span><span>计时</span><span>时间到</span></div>
+                <div class="signal-row"><span class="signal-icon">${templateIconSvg("delay")}</span><span>延时</span><span>延时 30 秒</span></div>
               </div>
             </section>
             <section class="template-info-card">
@@ -2613,7 +2643,7 @@
           </aside>
 
           <section class="flow-panel">
-            <div class="flow-title"><span class="flow-title-mark">日</span><span>会议流程</span></div>
+            <div class="flow-title"><span class="flow-title-mark">${templateIconSvg("calendar")}</span><span>会议流程</span></div>
             <table class="flow-table" aria-label="会议流程">
               <colgroup>
                 <col class="flow-section-col" />
