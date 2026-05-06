@@ -2320,7 +2320,7 @@
 
           <div class="agenda-form-card" id="agendaFormCard" hidden>
             <div class="panel-title compact">
-              <h3 id="agendaFormTitle">新增议程</h3>
+              <h3 id="agendaFormTitle">新增项目</h3>
               <button class="mini-button" id="clearAgendaFormBtn" type="button" title="收起编辑" aria-label="收起编辑">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
@@ -2352,7 +2352,7 @@
             <div class="actions-row">
               <button class="button filled" id="saveAgendaBtn" type="button">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                保存议程
+                保存项目
               </button>
             </div>
           </div>
@@ -2974,7 +2974,7 @@
       els.agendaList.innerHTML = state.items.map((item, index) => {
         const isSection = item.kind === "section";
         const meta = isSection
-          ? "分段标题"
+          ? "分组标题"
           : `${item.time || "未定时间"} · ${item.duration || "未定时长"} · ${item.person || "未定参与者"}`;
         return `
           <div class="agenda-row ${isSection ? "section" : ""} ${editingId === item.id ? "selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
@@ -3107,7 +3107,7 @@
       if (editingId) {
         const index = state.items.findIndex((entry) => entry.id === editingId);
         if (index >= 0) state.items[index] = item;
-        showToast("议程已更新");
+        showToast("项目已更新");
       } else {
         state.items.push(item);
         showToast(item.kind === "section" ? "已添加分组" : "已添加项目");
@@ -3155,7 +3155,7 @@
       state.items.splice(targetIndex, 0, moved);
       saveData();
       renderAll();
-      showToast("议程顺序已更新");
+      showToast("顺序已更新");
     }
 
     function rescheduleAgenda() {
