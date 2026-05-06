@@ -1259,10 +1259,10 @@
       manager: "卡卡",
       posterDesigner: "水杨酸",
       nextTheme: "夏日穿搭",
-      clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\\n愿景：打造全球最具人格魅力的演讲俱乐部。\\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
+      clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
       pathways: "Pathways 是头马国际演讲的教育体系，提供多条学习路径，帮助会员系统训练演讲、评估、领导力和项目管理能力。",
-      officers: "会长：女侠  秘书长：夏奈\\n教育副会长：聪聪  财务官：王兵伟\\n会员副会长：Venus斯敏  事务官：Jeff\\n公关副会长：水杨酸",
-      meetingRules: "1. 请将手机调至静音。\\n2. 演讲时请尊重时间官提示。\\n3. 会议期间欢迎积极鼓掌、反馈和投票。\\n4. 来宾可在会议后联系会员副会长了解入会。",
+      officers: "会长：女侠  秘书长：夏奈\n教育副会长：聪聪  财务官：王兵伟\n会员副会长：Venus斯敏  事务官：Jeff\n公关副会长：水杨酸",
+      meetingRules: "1. 请将手机调至静音。\n2. 演讲时请尊重时间官提示。\n3. 会议期间欢迎积极鼓掌、反馈和投票。\n4. 来宾可在会议后联系会员副会长了解入会。",
       items: [
         { id: "s-open", kind: "section", title: "一、开场环节" },
         { id: "i-guest-checkin", kind: "item", time: "19:15", title: "来宾入会，相互认识与交流", detail: "", duration: "10", person: "全体会员" },
@@ -1350,19 +1350,28 @@
       return JSON.parse(JSON.stringify(value));
     }
 
+    function normalizeEscapedNewlines(data) {
+      ["clubIntro", "pathways", "officers", "meetingRules"].forEach((field) => {
+        if (typeof data[field] === "string") {
+          data[field] = data[field].replaceAll("\\n", "\n");
+        }
+      });
+      return data;
+    }
+
     function loadData() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return clone(DEFAULT_DATA);
+        if (!saved) return normalizeEscapedNewlines(clone(DEFAULT_DATA));
         const parsed = JSON.parse(saved);
-        return {
+        return normalizeEscapedNewlines({
           ...clone(DEFAULT_DATA),
           ...parsed,
           items: Array.isArray(parsed.items) && parsed.items.length ? parsed.items : clone(DEFAULT_DATA.items)
-        };
+        });
       } catch (error) {
         console.warn("Failed to load agenda data", error);
-        return clone(DEFAULT_DATA);
+        return normalizeEscapedNewlines(clone(DEFAULT_DATA));
       }
     }
 
@@ -1766,7 +1775,7 @@
         }
       });
       lines.push("", `下期例会主题：${state.nextTheme}`);
-      return lines.join("\\n");
+      return lines.join("\n");
     }
 
     async function copyPlainText() {
