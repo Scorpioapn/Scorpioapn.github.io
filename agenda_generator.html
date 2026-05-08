@@ -35,8 +35,8 @@
       --radius-lg: 34px;
       --editor-width: 470px;
       --template-sidebar-width: 300px;
-      --sidebar-left-col: minmax(0, 1fr);
-      --sidebar-right-col: minmax(0, 1fr);
+      --sidebar-left-col: minmax(0, 1.15fr);
+      --sidebar-right-col: minmax(0, 0.85fr);
       --sidebar-gap: 12px;
       --font-ui: "Inter", "Noto Sans SC", "Source Han Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
       --font-display: "Noto Sans SC", "Source Han Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
@@ -816,6 +816,14 @@
       gap: 0;
     }
 
+    .full-upload-card {
+      grid-column: 1 / -1;
+    }
+
+    .poster-upload-card .upload-preview {
+      aspect-ratio: 16 / 9;
+    }
+
     .upload-preview {
       position: relative;
       width: 100%;
@@ -1248,8 +1256,8 @@
 
     .template-sheet {
       --template-sidebar-width: 300px;
-      --sidebar-left-col: minmax(0, 1fr);
-      --sidebar-right-col: minmax(0, 1fr);
+      --sidebar-left-col: minmax(0, 1.15fr);
+      --sidebar-right-col: minmax(0, 0.85fr);
       --sidebar-gap: 12px;
       padding: 0;
       display: grid;
@@ -1401,6 +1409,7 @@
 
     .template-info-card {
       overflow: hidden;
+      min-height: 0;
       border-radius: 10px;
       background: #fff;
       box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.25);
@@ -1565,6 +1574,29 @@
     .team-name {
       color: #211a15;
       font-weight: 900;
+    }
+
+    .poster-body {
+      position: relative;
+      padding: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .template-poster {
+      position: absolute;
+      inset: 8px 10px;
+      width: calc(100% - 20px);
+      height: calc(100% - 16px);
+      max-width: 100%;
+      max-height: 100%;
+      min-height: 0;
+      min-width: 0;
+      object-fit: contain;
+      display: block;
+      border-radius: 6px;
+      background: #f8f1ea;
+      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.16);
     }
 
     .flow-panel {
@@ -1804,6 +1836,30 @@
       white-space: pre-line;
     }
 
+    .next-meeting-footer {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      white-space: normal;
+    }
+
+    .next-meeting-footer span {
+      display: block;
+    }
+
+    .next-meeting-footer .next-theme {
+      color: #211a15;
+      font-size: 12px;
+      font-weight: 950;
+      overflow-wrap: anywhere;
+    }
+
+    .next-meeting-footer .next-time {
+      color: #211a15;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
     .footer-notes-text {
       text-align: left;
     }
@@ -2016,8 +2072,8 @@
       .preview-frame .template-sheet,
       .agenda-sheet {
         --template-sidebar-width: 54mm;
-        --sidebar-left-col: minmax(0, 1fr);
-        --sidebar-right-col: minmax(0, 1fr);
+        --sidebar-left-col: minmax(0, 1.15fr);
+        --sidebar-right-col: minmax(0, 0.85fr);
         --sidebar-gap: 2mm;
         width: 200mm;
         height: 287mm;
@@ -2027,7 +2083,7 @@
         padding: 0;
         border-radius: 0;
         box-shadow: none;
-        overflow: visible;
+        overflow: hidden;
         page-break-inside: avoid;
         transform: none !important;
       }
@@ -2163,6 +2219,17 @@
         row-gap: 0.5mm;
       }
 
+      .poster-body {
+        padding: 0;
+      }
+
+      .template-poster {
+        inset: 1.4mm 1.8mm;
+        width: calc(100% - 3.6mm);
+        height: calc(100% - 2.8mm);
+        border-radius: 1.2mm;
+      }
+
       .flow-panel {
         border-radius: 2mm;
       }
@@ -2277,6 +2344,19 @@
       .template-footer-box p {
         font-size: 6.8pt;
         line-height: 1.25;
+      }
+
+      .next-meeting-footer {
+        gap: 0.8mm;
+      }
+
+      .next-meeting-footer .next-theme {
+        font-size: 6.8pt;
+      }
+
+      .next-meeting-footer .next-time {
+        font-size: 6.2pt;
+        line-height: 1.16;
       }
 
       .note-lines {
@@ -2558,8 +2638,17 @@
             </div>
           </details>
           <details class="fixed-info">
-            <summary>扫码与标识：二维码上传</summary>
+            <summary>海报与标识：图片上传</summary>
             <div class="upload-grid fixed-info-fields">
+              <section class="upload-card poster-upload-card full-upload-card">
+                <label class="upload-preview" for="posterInput" data-image-preview="posterData" tabindex="0">
+                  <span class="upload-empty">未上传<br>当期海报<small>点按上传</small></span>
+                </label>
+                <button class="qr-remove-button" type="button" data-clear-image="posterData" title="移除当期海报" aria-label="移除当期海报" hidden>×</button>
+                <input class="file-input" id="posterInput" type="file" accept="image/*" data-image-field="posterData" />
+                <strong>当期海报</strong>
+                <p>上传后会替换 A4 左上“关于我们”区域；未上传时继续显示俱乐部介绍。</p>
+              </section>
               <section class="upload-card qr-upload-card">
                 <label class="upload-preview" for="wechatQrInput" data-image-preview="wechatQrData" tabindex="0">
                   <span class="upload-empty">未上传<br>微信公众号二维码<small>点按上传</small></span>
@@ -2665,6 +2754,7 @@
       location: "深圳市南山区科技园讯美科技广场3号楼4楼SPACE MAX会议室(高新中A出口)",
       manager: "卡卡",
       posterDesigner: "水杨酸",
+      posterData: "",
       wechatQrData: "",
       joinQrData: "",
       nextTheme: "夏日穿搭",
@@ -2934,14 +3024,44 @@
         : `<span class="helper-text">还没有常驻人员。添加后会出现在负责人下拉建议里。</span>`;
     }
 
+    function imageFieldMeta(field) {
+      const meta = {
+        posterData: {
+          emptyLabel: "当期海报",
+          overlay: "更换海报",
+          updated: "当期海报已更新",
+          removed: "海报已移除",
+        },
+        wechatQrData: {
+          emptyLabel: "微信公众号二维码",
+          overlay: "更换二维码",
+          updated: "微信公众号二维码已更新",
+          removed: "二维码已移除",
+        },
+        joinQrData: {
+          emptyLabel: "入会咨询二维码",
+          overlay: "更换二维码",
+          updated: "入会咨询二维码已更新",
+          removed: "二维码已移除",
+        },
+      };
+      return meta[field] || {
+        emptyLabel: "图片",
+        overlay: "更换图片",
+        updated: "图片已更新",
+        removed: "图片已移除",
+      };
+    }
+
     function renderUploadPreviews() {
       document.querySelectorAll("[data-image-preview]").forEach((preview) => {
         const field = preview.dataset.imagePreview;
+        const meta = imageFieldMeta(field);
         const value = state[field] || "";
         preview.classList.toggle("has-image", Boolean(value));
         preview.innerHTML = value
-          ? `<img src="${escapeHtml(value)}" alt="" /><span class="upload-overlay">更换二维码</span>`
-          : `<span class="upload-empty">未上传<br>${field === "wechatQrData" ? "微信公众号二维码" : "入会咨询二维码"}<small>点按上传</small></span>`;
+          ? `<img src="${escapeHtml(value)}" alt="" /><span class="upload-overlay">${escapeHtml(meta.overlay)}</span>`
+          : `<span class="upload-empty">未上传<br>${escapeHtml(meta.emptyLabel)}<small>点按上传</small></span>`;
       });
       document.querySelectorAll("[data-clear-image]").forEach((button) => {
         button.hidden = !state[button.dataset.clearImage];
@@ -3073,6 +3193,23 @@
       const groups = buildAgendaGroups();
       const wechatQr = qrBoxHtml(state.wechatQrData);
       const joinQr = qrBoxHtml(state.joinQrData);
+      const introOrPosterCard = state.posterData ? `
+            <section class="template-info-card poster-info-card">
+              <h3>本期海报</h3>
+              <div class="template-info-body poster-body">
+                <img class="template-poster" src="${escapeHtml(state.posterData)}" alt="本期海报" />
+              </div>
+            </section>
+      ` : `
+            <section class="template-info-card">
+              <h3>关于我们</h3>
+              <div class="template-info-body">
+                <p>${escapeHtml(state.clubIntro)}</p>
+                <p>会议时间：每周 ${escapeHtml(weekdayText(state.date))} ${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</p>
+                <p>地点：${escapeHtml(state.location)}</p>
+              </div>
+            </section>
+      `;
       const itemRows = groups.map((group, groupIndex) => {
         return group.items.map((item, itemIndex) => {
           const sectionCell = itemIndex === 0 ? `
@@ -3129,14 +3266,7 @@
 
         <section class="template-main">
           <aside class="template-sidebar">
-            <section class="template-info-card">
-              <h3>关于我们</h3>
-              <div class="template-info-body">
-                <p>${escapeHtml(state.clubIntro)}</p>
-                <p>会议时间：每周 ${escapeHtml(weekdayText(state.date))} ${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</p>
-                <p>地点：${escapeHtml(state.location)}</p>
-              </div>
-            </section>
+            ${introOrPosterCard}
             <section class="template-info-card">
               <h3>扫码关注我们</h3>
               <div class="template-info-body compact">
@@ -3197,8 +3327,11 @@
 
         <footer class="template-footer">
           <section class="template-footer-box">
-            <h3>下次例会时间</h3>
-            <p>${escapeHtml(formatNextMeeting())}</p>
+            <h3>下期例会</h3>
+            <p class="next-meeting-footer">
+              <span class="next-theme">主题：${escapeHtml(state.nextTheme || "待定")}</span>
+              <span class="next-time">时间：${escapeHtml(formatNextMeeting())}</span>
+            </p>
           </section>
           <section class="template-footer-box">
             <h3>来宾可参与环节</h3>
@@ -3522,12 +3655,13 @@
       const file = input.files && input.files[0];
       if (!field || !file) return;
       try {
+        const meta = imageFieldMeta(field);
         state[field] = await imageFileToDataUrl(file);
         input.value = "";
         saveData();
         renderUploadPreviews();
         renderPreview();
-        showToast(field === "wechatQrData" ? "微信公众号二维码已更新" : "入会咨询二维码已更新");
+        showToast(meta.updated);
       } catch (error) {
         input.value = "";
         showToast(error.message || "图片上传失败");
@@ -3581,11 +3715,12 @@
       document.querySelectorAll("[data-clear-image]").forEach((button) => {
         button.addEventListener("click", () => {
           const field = button.dataset.clearImage;
+          const meta = imageFieldMeta(field);
           state[field] = "";
           saveData();
           renderUploadPreviews();
           renderPreview();
-          showToast("二维码已移除");
+          showToast(meta.removed);
         });
       });
 
