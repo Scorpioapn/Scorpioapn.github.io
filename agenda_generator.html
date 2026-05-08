@@ -605,6 +605,16 @@
 
     .fixed-info-fields {
       margin-top: 14px;
+      align-items: start;
+    }
+
+    .fixed-info-fields .field.full,
+    .fixed-info-fields .field:has(.textarea) {
+      grid-column: 1 / -1;
+    }
+
+    .fixed-info-fields .textarea {
+      min-height: 96px;
     }
 
     .agenda-list {
@@ -795,6 +805,11 @@
       border-radius: var(--radius-md);
       background: var(--md-surface);
       box-shadow: var(--shadow-1);
+    }
+
+    .qr-upload-card {
+      padding: 16px;
+      gap: 0;
     }
 
     .upload-preview {
@@ -1504,21 +1519,21 @@
       overflow: hidden;
       border-radius: 10px;
       background: #fff;
-      box-shadow: inset 0 0 0 1px rgba(0, 48, 71, 0.28);
+      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.25);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
     }
 
     .flow-title {
-      height: 56px;
-      padding: 0 18px;
+      height: 50px;
+      padding: 0 16px;
       display: flex;
       align-items: center;
       gap: 12px;
-      color: #772432;
-      background: #fff;
+      color: #fff;
+      background: linear-gradient(135deg, #772432 0%, #9f2d3d 62%, transparent 62%);
       font-family: var(--font-display);
-      font-size: 23px;
+      font-size: 21px;
       font-weight: 950;
     }
 
@@ -1528,8 +1543,8 @@
       display: grid;
       place-items: center;
       border-radius: 8px;
-      color: #fff;
-      background: #772432;
+      color: #772432;
+      background: #fff;
       font-size: 16px;
     }
 
@@ -1733,6 +1748,10 @@
       font-size: 12px;
       line-height: 1.45;
       white-space: pre-line;
+    }
+
+    .footer-notes-text {
+      text-align: left;
     }
 
     .note-lines {
@@ -2454,75 +2473,82 @@
             <h2 id="sideInfoTitle">下期与固定信息</h2>
             <span class="meta">默认折叠</span>
           </div>
-          <div class="field-grid one">
-            <div class="field">
-              <label for="nextTheme">下期主题</label>
-              <input class="input" id="nextTheme" data-field="nextTheme" placeholder="夏日穿搭" />
+          <details class="fixed-info">
+            <summary>下期与页脚信息</summary>
+            <div class="field-grid fixed-info-fields">
+              <div class="field">
+                <label for="nextTheme">下期主题</label>
+                <input class="input" id="nextTheme" data-field="nextTheme" placeholder="夏日穿搭" />
+              </div>
+              <div class="field">
+                <label for="nextMeetingDate">下次例会日期</label>
+                <input class="input" id="nextMeetingDate" data-field="nextMeetingDate" type="date" />
+              </div>
+              <div class="field full">
+                <label for="nextMeetingTime">下次例会时间</label>
+                <input class="input" id="nextMeetingTime" data-field="nextMeetingTime" placeholder="默认使用本期开始/结束时间" />
+              </div>
+              <div class="field full">
+                <label for="guestInvitation">来宾可参与环节</label>
+                <textarea class="textarea" id="guestInvitation" data-field="guestInvitation"></textarea>
+              </div>
+              <div class="field full">
+                <label for="footerNotes">备注</label>
+                <textarea class="textarea" id="footerNotes" data-field="footerNotes" placeholder="留空时，A4 底部保留手写横线"></textarea>
+              </div>
             </div>
-          </div>
+          </details>
           <details class="fixed-info">
             <summary>扫码与标识：二维码上传</summary>
             <div class="upload-grid fixed-info-fields">
-              <section class="upload-card">
+              <section class="upload-card qr-upload-card">
                 <label class="upload-preview" for="wechatQrInput" data-image-preview="wechatQrData" tabindex="0">
                   <span class="upload-empty">未上传<br>微信公众号二维码<small>点按上传</small></span>
                 </label>
                 <button class="qr-remove-button" type="button" data-clear-image="wechatQrData" title="移除微信公众号二维码" aria-label="移除微信公众号二维码" hidden>×</button>
-                <div>
-                  <strong>微信公众号二维码</strong>
-                  <p>点按上方区域上传或替换，用于 A4 模板“扫码关注我们”。支持 PNG/JPG，本机保存。</p>
-                </div>
                 <input class="file-input" id="wechatQrInput" type="file" accept="image/*" data-image-field="wechatQrData" />
               </section>
-              <section class="upload-card">
+              <section class="upload-card qr-upload-card">
                 <label class="upload-preview" for="joinQrInput" data-image-preview="joinQrData" tabindex="0">
                   <span class="upload-empty">未上传<br>入会咨询二维码<small>点按上传</small></span>
                 </label>
                 <button class="qr-remove-button" type="button" data-clear-image="joinQrData" title="移除入会咨询二维码" aria-label="移除入会咨询二维码" hidden>×</button>
-                <div>
-                  <strong>入会咨询二维码</strong>
-                  <p>点按上方区域上传或替换，上传后会立即出现在预览里。</p>
-                </div>
                 <input class="file-input" id="joinQrInput" type="file" accept="image/*" data-image-field="joinQrData" />
               </section>
             </div>
           </details>
           <details class="fixed-info">
             <summary>固定信息：关于我们、Pathways、干事团队、守则</summary>
-            <div class="field-grid one fixed-info-fields">
-              <div class="field">
+            <div class="field-grid fixed-info-fields">
+              <div class="field full">
                 <label for="clubNameEnglish">英文俱乐部名</label>
                 <input class="input" id="clubNameEnglish" data-field="clubNameEnglish" placeholder="Changyan Chinese Toastmasters Club" />
               </div>
-              <div class="field">
+              <div class="field full">
                 <label for="meetingVision">会议愿景</label>
                 <input class="input" id="meetingVision" data-field="meetingVision" placeholder="很开心与大家建立一种愉悦的学习旅程，谢谢大家~" />
               </div>
-            <div class="field">
-              <label for="clubIntro">俱乐部介绍</label>
-              <textarea class="textarea" id="clubIntro" data-field="clubIntro"></textarea>
-            </div>
-            <div class="field">
-              <label for="pathways">Pathways 介绍</label>
-              <textarea class="textarea" id="pathways" data-field="pathways"></textarea>
-            </div>
-            <div class="field">
-              <label for="officers">本届干事团队</label>
-              <textarea class="textarea" id="officers" data-field="officers"></textarea>
-            </div>
-            <div class="field">
+              <div class="field full">
+                <label for="clubIntro">俱乐部介绍</label>
+                <textarea class="textarea" id="clubIntro" data-field="clubIntro"></textarea>
+              </div>
+              <div class="field full">
+                <label for="pathways">Pathways 介绍</label>
+                <textarea class="textarea" id="pathways" data-field="pathways"></textarea>
+              </div>
+              <div class="field full">
+                <label for="officers">本届干事团队</label>
+                <textarea class="textarea" id="officers" data-field="officers"></textarea>
+              </div>
+              <div class="field full">
                 <label for="joinInfo">如何加入我们</label>
                 <textarea class="textarea" id="joinInfo" data-field="joinInfo"></textarea>
-            </div>
-            <div class="field">
-              <label for="meetingRules">会议守则</label>
-              <textarea class="textarea" id="meetingRules" data-field="meetingRules"></textarea>
-            </div>
-              <div class="field">
-                <label for="guestInvitation">来宾可参与环节</label>
-                <textarea class="textarea" id="guestInvitation" data-field="guestInvitation"></textarea>
               </div>
-          </div>
+              <div class="field full">
+                <label for="meetingRules">会议守则</label>
+                <textarea class="textarea" id="meetingRules" data-field="meetingRules"></textarea>
+              </div>
+            </div>
           </details>
         </section>
 
@@ -2583,6 +2609,9 @@
       wechatQrData: "",
       joinQrData: "",
       nextTheme: "夏日穿搭",
+      nextMeetingDate: "",
+      nextMeetingTime: "",
+      footerNotes: "",
       residentPeople: "女侠\nMaggie\nBell\n聪聪\nVenus斯敏\n纳纳\nIsabel\nRui（Soar High）\nDavid（MAD）\n筠筠\n卡卡\n水杨酸\nJeff",
       clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
       pathways: "Pathways 是头马国际演讲的教育体系，提供多条学习路径，帮助会员系统训练演讲、评估、领导力和项目管理能力。",
@@ -2687,7 +2716,7 @@
     }
 
     function normalizeEscapedNewlines(data) {
-      ["clubIntro", "pathways", "officers", "joinInfo", "meetingRules", "meetingVision", "guestInvitation", "residentPeople"].forEach((field) => {
+      ["clubIntro", "pathways", "officers", "joinInfo", "meetingRules", "meetingVision", "guestInvitation", "residentPeople", "footerNotes"].forEach((field) => {
         if (typeof data[field] === "string") {
           data[field] = data[field].replaceAll("\\n", "\n");
         }
@@ -2939,8 +2968,9 @@
     }
 
     function formatNextMeeting() {
-      const nextDate = offsetDate(state.date, 7);
-      return `${formatDate(nextDate)}（${weekdayText(nextDate)}） ${state.startTime}-${state.endTime}`;
+      const nextDate = state.nextMeetingDate || offsetDate(state.date, 7);
+      const nextTime = state.nextMeetingTime || `${state.startTime}-${state.endTime}`;
+      return `${formatDate(nextDate)}（${weekdayText(nextDate)}） ${nextTime}`;
     }
 
     function renderPreview() {
@@ -2975,6 +3005,10 @@
         }).join("");
       }).join("");
 
+      const footerNotes = String(state.footerNotes || "").trim();
+      const footerNotesHtml = footerNotes
+        ? `<p class="footer-notes-text">${escapeHtml(footerNotes)}</p>`
+        : `<div class="note-lines"><span></span><span></span><span></span></div>`;
       els.previewChip.textContent = `第 ${state.meetingNo || "-"} 期`;
       els.printPage.innerHTML = `
         <header class="template-header">
@@ -3076,7 +3110,7 @@
           </section>
           <section class="template-footer-box">
             <h3>备注</h3>
-            <div class="note-lines"><span></span><span></span><span></span></div>
+            ${footerNotesHtml}
           </section>
         </footer>
       `;
@@ -3332,7 +3366,8 @@
           if (item.detail) lines.push(`  ${item.detail}`);
         }
       });
-      lines.push("", `下期例会主题：${state.nextTheme}`);
+      lines.push("", `下期例会主题：${state.nextTheme}`, `下次例会时间：${formatNextMeeting()}`);
+      if (state.footerNotes) lines.push(`备注：${state.footerNotes}`);
       return lines.join("\n");
     }
 
