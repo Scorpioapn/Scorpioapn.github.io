@@ -25,6 +25,24 @@
       --md-outline: #837568;
       --md-outline-variant: #d5c5b4;
       --tm-red: #772432;
+      --tm-navy: #003d5d;
+      --tm-navy-strong: #002f48;
+      --tm-navy-soft: #00527a;
+      --tm-maroon: #8f1f34;
+      --tm-maroon-strong: #772432;
+      --tm-maroon-soft: #a3293c;
+      --tm-bg: #fffdf8;
+      --tm-card: #ffffff;
+      --tm-card-soft: #fbf7f1;
+      --tm-border: rgba(0, 48, 71, 0.18);
+      --tm-border-warm: rgba(119, 36, 50, 0.22);
+      --tm-muted: #554941;
+      --tm-grid-line: rgba(88, 74, 62, 0.22);
+      --tm-blue-row: #eaf3fb;
+      --tm-green-row: #eef7e8;
+      --tm-gray-row: #d7d7d7;
+      --radius-card: 10px;
+      --shadow-card: 0 1px 2px rgba(31, 20, 10, 0.08), 0 4px 10px rgba(31, 20, 10, 0.05);
       --white: #ffffff;
       --shadow-1: 0 1px 2px rgba(30, 20, 10, 0.10), 0 1px 3px rgba(30, 20, 10, 0.08);
       --shadow-2: 0 2px 6px rgba(30, 20, 10, 0.12), 0 8px 18px rgba(30, 20, 10, 0.08);
@@ -38,9 +56,9 @@
       --sidebar-left-col: minmax(0, 1.15fr);
       --sidebar-right-col: minmax(0, 0.85fr);
       --sidebar-gap: 12px;
-      --font-ui: "Inter", "Noto Sans SC", "Source Han Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
-      --font-display: "Noto Sans SC", "Source Han Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
-      --font-number: "DIN Alternate", "Roboto Mono", "Cascadia Mono", "SFMono-Regular", Consolas, "Noto Sans Mono", monospace;
+      --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      --font-display: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+      --font-number: "DIN Alternate", "Segoe UI", "Roboto Mono", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
     }
 
     * {
@@ -1263,40 +1281,46 @@
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
       gap: 0;
-      background: #fffdf8;
+      background: var(--tm-bg);
+      border: 1px solid rgba(0, 48, 71, 0.16);
       border-radius: 14px;
       overflow: hidden;
     }
 
     .template-header {
-      min-height: 128px;
-      padding: 18px 26px;
+      min-height: 132px;
+      padding: 20px 26px;
       display: grid;
-      grid-template-columns: 150px minmax(0, 1fr) 210px;
+      grid-template-columns: 152px minmax(0, 1fr) 218px;
       align-items: center;
       gap: 18px;
       color: #fff;
-      background:
-        radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.16), transparent 28%),
-        linear-gradient(135deg, #003d5d 0%, #00527a 58%, #003047 100%);
+      background: var(--tm-navy);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.18);
     }
 
     .tm-logo-print {
-      width: 116px;
-      height: 88px;
+      width: 132px;
+      height: 110px;
       display: grid;
       place-items: center;
-      border-radius: 50%;
+      border-radius: 0;
       color: #003047;
-      background:
-        linear-gradient(90deg, transparent 47%, rgba(0, 82, 122, 0.28) 48% 52%, transparent 53%),
-        linear-gradient(0deg, transparent 47%, rgba(0, 82, 122, 0.28) 48% 52%, transparent 53%),
-        #f8fbff;
-      box-shadow: inset 0 0 0 3px #e45c35, inset 0 0 0 7px #fff, var(--shadow-2);
+      background: transparent;
+      box-shadow: none;
       font-family: var(--font-display);
       font-weight: 950;
       text-align: center;
       line-height: 1.05;
+      overflow: visible;
+    }
+
+    .tm-logo-print img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: transparent;
     }
 
     .tm-logo-print span {
@@ -1325,7 +1349,7 @@
 
     .template-title-block .english {
       margin-bottom: 4px;
-      font-size: 23px;
+      font-size: 24px;
       line-height: 1.1;
       font-weight: 950;
       letter-spacing: 0;
@@ -1333,14 +1357,14 @@
 
     .template-title-block h2 {
       margin: 0;
-      font-size: 30px;
+      font-size: 32px;
       line-height: 1.1;
       font-weight: 950;
       letter-spacing: 0;
     }
 
     .template-theme-line {
-      margin-top: 12px;
+      margin-top: 11px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1354,7 +1378,7 @@
       gap: 10px;
       justify-content: end;
       font-family: var(--font-number);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 900;
     }
 
@@ -1392,7 +1416,7 @@
 
     .template-main {
       min-height: 0;
-      padding: 18px 20px 10px;
+      padding: 18px 20px 14px;
       display: grid;
       grid-template-columns: var(--template-sidebar-width) minmax(0, 1fr);
       gap: 16px;
@@ -1402,49 +1426,129 @@
     .template-sidebar {
       height: 100%;
       display: grid;
-      gap: 12px;
-      grid-template-rows: 1.08fr 0.82fr 1fr 0.84fr 1.02fr;
+      gap: 10px;
+      grid-template-rows: auto auto auto auto minmax(132px, 1fr);
       align-content: stretch;
+      align-self: stretch;
     }
 
     .template-info-card {
       overflow: hidden;
       min-height: 0;
-      border-radius: 10px;
-      background: #fff;
-      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.25);
+      border-radius: var(--radius-card);
+      background: var(--tm-card);
+      box-shadow: inset 0 0 0 1px var(--tm-border-warm), var(--shadow-card);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
     }
 
     .template-info-card h3 {
+      position: relative;
       margin: 0;
+      width: calc(100% - 38px);
+      min-height: 28px;
       padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
       color: #fff;
-      background: linear-gradient(135deg, #772432 0%, #9f2d3d 72%, transparent 72%);
+      background: var(--tm-maroon);
       font-size: 14px;
       line-height: 1.15;
       font-weight: 950;
+      overflow: visible;
+    }
+
+    .template-info-card h3::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: -38px;
+      width: 38px;
+      height: 100%;
+      background: var(--tm-maroon);
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+    }
+
+    .template-info-card h3 > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-title-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .card-title-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.25;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .template-info-card p,
     .template-info-card li {
       margin: 0;
       color: #211a15;
-      font-size: 11px;
-      line-height: 1.45;
+      font-size: 10.8px;
+      line-height: 1.48;
       white-space: pre-line;
     }
 
     .template-info-body {
-      padding: 11px 14px;
+      padding: 10px 14px 11px;
       min-height: 0;
       display: grid;
       align-content: start;
     }
 
     .template-info-body.compact {
-      padding: 9px 14px;
+      padding: 8px 14px;
+    }
+
+    .info-line-list {
+      display: grid;
+      gap: 5px;
+    }
+
+    .info-line {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 5px;
+      align-items: baseline;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed rgba(106, 88, 66, 0.18);
+      color: #211a15;
+      font-size: 10.6px;
+      line-height: 1.36;
+    }
+
+    .info-line:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .info-line.full {
+      grid-template-columns: 1fr;
+    }
+
+    .info-label {
+      color: var(--tm-maroon);
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .info-text {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .qr-row {
@@ -1463,8 +1567,8 @@
     }
 
     .qr-box {
-      width: 92px;
-      height: 92px;
+      width: 82px;
+      height: 82px;
       margin: 0 auto 6px;
       display: grid;
       place-items: center;
@@ -1489,7 +1593,7 @@
 
     .signal-list {
       display: grid;
-      gap: 5px;
+      gap: 4px;
     }
 
     .signal-row {
@@ -1497,8 +1601,8 @@
       grid-template-columns: var(--sidebar-left-col) var(--sidebar-right-col);
       align-items: center;
       column-gap: var(--sidebar-gap);
-      padding-bottom: 4px;
-      border-bottom: 1px solid rgba(106, 88, 66, 0.16);
+      padding-bottom: 3px;
+      border-bottom: 1px dashed rgba(106, 88, 66, 0.22);
       font-size: 11px;
       font-weight: 850;
     }
@@ -1576,6 +1680,43 @@
       font-weight: 900;
     }
 
+    .pathways-card {
+      align-self: stretch;
+      height: 100%;
+    }
+
+    .pathways-body {
+      align-content: start;
+      gap: 6px;
+    }
+
+    .pathways-lead {
+      color: #211a15;
+      font-size: 9.2px;
+      line-height: 1.24;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .pathways-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+      gap: 2px 8px;
+      align-items: baseline;
+      font-size: 8.8px;
+      line-height: 1.08;
+    }
+
+    .pathways-grid span:nth-child(odd) {
+      color: #211a15;
+      font-weight: 850;
+    }
+
+    .pathways-grid span:nth-child(even) {
+      color: #211a15;
+      font-weight: 900;
+    }
+
     .poster-body {
       position: relative;
       padding: 0;
@@ -1603,24 +1744,40 @@
       min-width: 0;
       align-self: stretch;
       overflow: hidden;
-      border-radius: 10px;
-      background: #fff;
-      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.25);
+      border-radius: var(--radius-card);
+      background: var(--tm-card);
+      box-shadow: inset 0 0 0 1px var(--tm-border-warm), var(--shadow-card);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
     }
 
     .flow-title {
+      position: relative;
       height: 50px;
       padding: 0 16px;
       display: flex;
       align-items: center;
       gap: 12px;
       color: #fff;
-      background: linear-gradient(135deg, #772432 0%, #9f2d3d 62%, transparent 62%);
+      background: var(--tm-card);
       font-family: var(--font-display);
       font-size: 21px;
       font-weight: 950;
+      overflow: hidden;
+    }
+
+    .flow-title::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 66%;
+      background: var(--tm-maroon);
+      clip-path: polygon(0 0, 88% 0, 100% 100%, 0 100%);
+    }
+
+    .flow-title > * {
+      position: relative;
+      z-index: 1;
     }
 
     .flow-title-mark {
@@ -1661,7 +1818,7 @@
     .flow-table th {
       padding: 10px 8px;
       color: #fff;
-      background: #003d5d;
+      background: var(--tm-navy);
       border: 1px solid rgba(255, 255, 255, 0.18);
       font-size: 12px;
       line-height: 1.2;
@@ -1671,12 +1828,14 @@
 
     .flow-table td {
       padding: 6px 8px;
-      border: 1px solid rgba(102, 91, 82, 0.24);
+      border: 1px solid var(--tm-grid-line);
       color: #211a15;
       font-size: 11px;
       line-height: 1.22;
       vertical-align: middle;
       word-break: break-word;
+      overflow-wrap: anywhere;
+      background: var(--tm-bg);
     }
 
     .flow-table .section-band {
@@ -1699,7 +1858,7 @@
       display: grid;
       place-items: center;
       color: #fff;
-      background: #8f1f34;
+      background: var(--tm-maroon);
       font-size: 18px;
       font-weight: 950;
     }
@@ -1713,7 +1872,7 @@
       padding: 8px 6px;
       font-size: 13px;
       line-height: 1.2;
-      color: #8f1f34;
+      color: var(--tm-maroon);
       background: #fff;
     }
 
@@ -1740,7 +1899,7 @@
       width: 72px;
       text-align: center;
       color: #003d5d;
-      background: #eff8e9;
+      background: var(--tm-green-row);
       font-family: var(--font-number);
       font-weight: 950;
       white-space: nowrap;
@@ -1778,22 +1937,30 @@
       overflow-wrap: anywhere;
     }
 
+    .flow-empty {
+      height: 280px;
+      color: var(--tm-muted);
+      text-align: center;
+      font-weight: 850;
+      background: var(--tm-card-soft) !important;
+    }
+
     .flow-table tr.highlight td:not(.section-band) {
-      background: #eef7e8;
+      background: var(--tm-green-row);
     }
 
     .flow-table tr.speech-row .flow-content {
-      background: #eaf3fb;
+      background: var(--tm-blue-row);
     }
 
     .flow-table tr.break-row td:not(.section-band) {
-      background: #d7d7d7;
+      background: var(--tm-gray-row);
     }
 
     .vision-bar {
       padding: 9px 14px;
       color: #fff;
-      background: #8f1f34;
+      background: var(--tm-maroon);
       text-align: center;
       font-size: 15px;
       line-height: 1.3;
@@ -1804,16 +1971,16 @@
       margin: 0 20px 18px;
       display: grid;
       grid-template-columns: var(--template-sidebar-width) minmax(0, 1.4fr) minmax(0, 1fr);
-      border-radius: 10px;
+      border-radius: var(--radius-card);
       overflow: hidden;
-      background: #fff;
-      box-shadow: inset 0 0 0 1px rgba(0, 48, 71, 0.24);
+      background: var(--tm-card);
+      box-shadow: inset 0 0 0 1px var(--tm-border), var(--shadow-card);
     }
 
     .template-footer-box {
       min-height: 92px;
       padding: 12px 16px;
-      border-right: 1px solid rgba(102, 91, 82, 0.20);
+      border-right: 1px solid var(--tm-grid-line);
       text-align: center;
     }
 
@@ -1822,10 +1989,24 @@
     }
 
     .template-footer-box h3 {
-      margin: 0 0 8px;
-      color: #003d5d;
+      margin: 0 0 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      color: var(--tm-navy);
       font-size: 15px;
       font-weight: 950;
+    }
+
+    .template-footer-box h3 svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.25;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .template-footer-box p {
@@ -1861,7 +2042,10 @@
     }
 
     .footer-notes-text {
-      text-align: left;
+      text-align: center;
+      display: grid;
+      min-height: 42px;
+      place-content: center;
     }
 
     .note-lines {
@@ -2035,14 +2219,14 @@
 
     @page {
       size: A4 portrait;
-      margin: 5mm;
+      margin: 0;
     }
 
     @media print {
       html,
       body {
-        width: 200mm;
-        height: 287mm;
+        width: 210mm;
+        height: 297mm;
         min-height: 0;
         margin: 0;
         background: #fff;
@@ -2057,8 +2241,7 @@
 
       .app-shell,
       .preview-shell,
-      .preview-viewport,
-      .preview-frame {
+      .preview-viewport {
         display: block;
         width: auto;
         height: auto;
@@ -2069,251 +2252,117 @@
         overflow: visible;
       }
 
-      .preview-frame .template-sheet,
-      .agenda-sheet {
-        --template-sidebar-width: 54mm;
+      .preview-frame {
+        display: block;
+        width: 210mm;
+        height: 297mm;
+        padding: 0;
+        margin: 0;
+        aspect-ratio: auto;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .preview-frame .template-sheet {
+        --template-sidebar-width: 300px;
         --sidebar-left-col: minmax(0, 1.15fr);
         --sidebar-right-col: minmax(0, 0.85fr);
-        --sidebar-gap: 2mm;
-        width: 200mm;
-        height: 287mm;
+        --sidebar-gap: 12px;
+        width: 980px;
+        height: 1386px;
         min-height: 0;
         aspect-ratio: auto;
         margin: 0;
         padding: 0;
-        border-radius: 0;
+        border-radius: 14px;
         box-shadow: none;
         overflow: hidden;
         page-break-inside: avoid;
-        transform: none !important;
+        transform: scale(0.8099) !important;
+        transform-origin: top left;
       }
 
       .preview-frame .template-sheet,
-      .preview-frame .template-sheet *,
-      .agenda-sheet,
-      .agenda-sheet * {
+      .preview-frame .template-sheet * {
         print-color-adjust: exact !important;
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
       }
 
-      .preview-frame .template-sheet,
-      .agenda-sheet {
+      .preview-frame .template-sheet {
         background: #fffdf8 !important;
       }
 
       .template-header {
-        min-height: 28mm;
-        padding: 4.2mm 5mm;
-        grid-template-columns: 33mm minmax(0, 1fr) 42mm;
-        gap: 3mm;
         color: #fff !important;
-        background-color: #00527a !important;
+        background-color: #003d5d !important;
         background-image: none !important;
       }
 
       .tm-logo-print {
-        width: 28mm;
-        height: 22mm;
-        background-color: #f8fbff !important;
-        box-shadow: inset 0 0 0 1.2px #e45c35, inset 0 0 0 3px #fff;
+        background-color: transparent !important;
+        box-shadow: none !important;
       }
 
-      .tm-logo-print span {
-        padding: 1mm 1.8mm;
-        font-size: 6.6pt;
-        color: #00527a !important;
-        background: rgba(255, 255, 255, 0.88) !important;
-      }
-
-      .tm-logo-print small {
-        font-size: 4.4pt;
-      }
-
-      .template-title-block .english {
-        margin-bottom: 0.8mm;
-        font-size: 15.5pt;
-        line-height: 1.02;
-      }
-
-      .template-title-block h2 {
-        font-size: 20pt;
-        line-height: 1.03;
-      }
-
-      .template-theme-line {
-        margin-top: 2mm;
-        gap: 4mm;
-        font-size: 9.7pt;
-      }
-
-      .template-meta-stack {
-        gap: 1.8mm;
-        font-size: 8.8pt;
-      }
-
-      .template-meta-row {
-        grid-template-columns: 5mm minmax(0, 1fr);
-        gap: 1.6mm;
-      }
-
-      .template-meta-icon {
-        width: 4.5mm;
-        height: 4.5mm;
-        border-width: 1px;
-        border-radius: 1.2mm;
-        font-size: 5pt;
-      }
-
-      .template-main {
-        padding: 4mm 4mm 2.5mm;
-        grid-template-columns: var(--template-sidebar-width) minmax(0, 1fr);
-        gap: 4mm;
-      }
-
-      .template-sidebar {
-        gap: 2mm;
+      .tm-logo-print img {
+        background: transparent !important;
       }
 
       .template-info-card {
-        border-radius: 2mm;
         background: #fff !important;
         box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.25) !important;
       }
 
       .template-info-card h3 {
-        padding: 1.3mm 2.6mm;
         color: #fff !important;
-        background-color: #9f2d3d !important;
+        background-color: #8f1f34 !important;
         background-image: none !important;
-        font-size: 7.2pt;
       }
 
-      .template-info-card p,
-      .template-info-card li {
-        font-size: 5.7pt;
-        line-height: 1.17;
-      }
-
-      .template-info-body {
-        padding: 1.7mm 2.4mm;
-      }
-
-      .template-info-body.compact {
-        padding: 1.5mm 2.4mm;
-      }
-
-      .qr-row {
-        font-size: 5.2pt;
+      .template-info-card h3::after {
+        background: #8f1f34 !important;
       }
 
       .qr-box {
-        width: 15mm;
-        height: 15mm;
-        margin-bottom: 1mm;
-        border-width: 1.4mm;
         color: rgba(119, 36, 50, 0.78) !important;
         background: #f8f1ea !important;
-        font-size: 4.5pt;
-      }
-
-      .signal-list {
-        gap: 0.8mm;
-      }
-
-      .signal-row {
-        padding-bottom: 0.7mm;
-        font-size: 5.6pt;
-      }
-
-      .signal-key {
-        grid-template-columns: 5mm minmax(0, 1fr);
-        gap: 1.4mm;
-      }
-
-      .signal-card {
-        width: 4.2mm;
-        height: 3mm;
-        border-radius: 0.8mm;
       }
 
       .signal-card.green { background: #22a857 !important; }
       .signal-card.yellow { background: #ffd426 !important; }
       .signal-card.red { background: #e51d2a !important; }
 
-      .signal-icon {
-        width: 3.8mm;
-        height: 3.8mm;
-      }
-
-      .team-grid {
-        row-gap: 0.5mm;
-      }
-
       .poster-body {
         padding: 0;
       }
 
-      .template-poster {
-        inset: 1.4mm 1.8mm;
-        width: calc(100% - 3.6mm);
-        height: calc(100% - 2.8mm);
-        border-radius: 1.2mm;
-      }
-
       .flow-panel {
-        border-radius: 2mm;
         background: #fff !important;
         box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.25) !important;
       }
 
       .flow-title {
-        height: 11mm;
-        padding: 0 3.4mm;
-        gap: 2mm;
         color: #fff !important;
-        background-color: #9f2d3d !important;
+        background-color: #fff !important;
         background-image: none !important;
-        font-size: 13pt;
+      }
+
+      .flow-title::before {
+        background: #8f1f34 !important;
       }
 
       .flow-title-mark {
-        width: 6mm;
-        height: 6mm;
-        border-radius: 1.4mm;
         color: #772432 !important;
         background: #fff !important;
-        font-size: 8pt;
-      }
-
-      .flow-section-col {
-        width: 23mm;
-      }
-
-      .flow-time-col {
-        width: 13mm;
-      }
-
-      .flow-duration-col {
-        width: 13mm;
-      }
-
-      .flow-person-col {
-        width: 18mm;
       }
 
       .flow-table th {
-        padding: 1.7mm 1mm;
         color: #fff !important;
         background: #003d5d !important;
-        font-size: 6.5pt;
       }
 
       .flow-table td {
-        padding: 1.05mm 1.15mm;
         background: #fffdf8 !important;
-        font-size: 5.9pt;
-        line-height: 1.12;
       }
 
       .flow-table .section-band {
@@ -2321,49 +2370,19 @@
         background: #fff !important;
       }
 
-      .section-band-inner {
-        grid-template-columns: 6.2mm minmax(0, 1fr);
-      }
-
       .section-index {
         color: #fff !important;
         background: #8f1f34 !important;
-        font-size: 8.4pt;
       }
 
       .section-label {
-        min-height: 0;
-        gap: 0.8mm;
-        padding: 1mm 0.9mm;
         color: #8f1f34 !important;
         background: #fff !important;
-        font-size: 6.6pt;
-        line-height: 1.08;
-      }
-
-      .section-symbol {
-        width: 6.8mm;
-        height: 6.8mm;
-      }
-
-      .section-symbol svg {
-        width: 6.4mm;
-        height: 6.4mm;
-        stroke-width: 2;
       }
 
       .flow-table .flow-time {
-        width: auto;
         color: #003d5d !important;
         background: #eff8e9 !important;
-      }
-
-      .flow-table .flow-duration {
-        width: auto;
-      }
-
-      .flow-table .flow-person {
-        width: auto;
       }
 
       .flow-table tr.highlight td:not(.section-band) {
@@ -2378,156 +2397,19 @@
         background: #d7d7d7 !important;
       }
 
-      .flow-activity-detail {
-        margin-top: 0.4mm;
-        font-size: 5.05pt;
-        line-height: 1.05;
+      .flow-empty {
+        color: #554941 !important;
+        background: #fbf7f1 !important;
       }
 
       .vision-bar {
-        padding: 1.7mm 2.5mm;
         color: #fff !important;
         background: #8f1f34 !important;
-        font-size: 7.5pt;
       }
 
       .template-footer {
-        margin: 0 4mm 3mm;
-        grid-template-columns: var(--template-sidebar-width) minmax(0, 1.35fr) minmax(0, 1fr);
-        border-radius: 2mm;
         background: #fff !important;
         box-shadow: inset 0 0 0 1px rgba(0, 48, 71, 0.24) !important;
-      }
-
-      .template-footer-box {
-        min-height: 18mm;
-        padding: 2.2mm 3mm;
-      }
-
-      .template-footer-box h3 {
-        margin-bottom: 1.5mm;
-        font-size: 8.3pt;
-      }
-
-      .template-footer-box p {
-        font-size: 6.8pt;
-        line-height: 1.25;
-      }
-
-      .next-meeting-footer {
-        gap: 0.8mm;
-      }
-
-      .next-meeting-footer .next-theme {
-        font-size: 6.8pt;
-      }
-
-      .next-meeting-footer .next-time {
-        font-size: 6.2pt;
-        line-height: 1.16;
-      }
-
-      .note-lines {
-        gap: 2.3mm;
-        margin-top: 1.5mm;
-      }
-
-      .sheet-header {
-        gap: 3px;
-        padding-bottom: 5px;
-        border-bottom-width: 1.4px;
-      }
-
-      .sheet-kicker {
-        font-size: 7.2pt;
-      }
-
-      .sheet-title {
-        font-size: 16.2pt;
-        line-height: 1.04;
-      }
-
-      .sheet-chip {
-        min-height: 17px;
-        padding: 0 7px;
-        font-size: 6.8pt;
-      }
-
-      .sheet-meta {
-        gap: 4px;
-        font-size: 6.6pt;
-      }
-
-      .sheet-body {
-        gap: 6px;
-        grid-template-columns: minmax(0, 2.18fr) minmax(168px, 0.72fr);
-      }
-
-      .print-table {
-        border-radius: 8px;
-      }
-
-      .print-table th {
-        padding: 3px 4px;
-        font-size: 6.5pt;
-      }
-
-      .print-table td {
-        padding: 3px 4px;
-        font-size: 6.25pt;
-        line-height: 1.12;
-      }
-
-      .activity-title {
-        margin-bottom: 1px;
-        font-size: 6.7pt;
-      }
-
-      .section-row td {
-        padding: 3px 5px;
-        font-size: 7pt;
-      }
-
-      .side-stack {
-        gap: 5px;
-      }
-
-      .side-box,
-      .timing-box {
-        padding: 5px;
-        border-radius: 8px;
-      }
-
-      .side-box h3,
-      .timing-box h3 {
-        margin-bottom: 2px;
-        font-size: 7.2pt;
-      }
-
-      .side-box p,
-      .side-box li {
-        font-size: 5.7pt;
-        line-height: 1.14;
-      }
-
-      .sheet-foot {
-        gap: 6px;
-      }
-
-      .timing-grid {
-        border-radius: 6px;
-      }
-
-      .timing-grid span {
-        padding: 3px;
-        font-size: 5.2pt;
-        line-height: 1.1;
-      }
-
-      .print-table th,
-      .print-table td {
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
       }
     }
   </style>
@@ -2708,6 +2590,13 @@
           <details class="fixed-info">
             <summary>海报与标识：图片上传</summary>
             <div class="upload-grid fixed-info-fields">
+              <section class="upload-card qr-upload-card">
+                <label class="upload-preview" for="logoInput" data-image-preview="logoData" tabindex="0">
+                  <span class="upload-empty">未上传<br>品牌 Logo<small>点按上传</small></span>
+                </label>
+                <button class="qr-remove-button" type="button" data-clear-image="logoData" title="移除品牌 Logo" aria-label="移除品牌 Logo" hidden>×</button>
+                <input class="file-input" id="logoInput" type="file" accept="image/*" data-image-field="logoData" />
+              </section>
               <section class="upload-card poster-upload-card full-upload-card">
                 <label class="upload-preview" for="posterInput" data-image-preview="posterData" tabindex="0">
                   <span class="upload-empty">未上传<br>当期海报<small>点按上传</small></span>
@@ -2738,7 +2627,7 @@
             <div class="field-grid fixed-info-fields">
               <div class="field full">
                 <label for="clubNameEnglish">英文俱乐部名</label>
-                <input class="input" id="clubNameEnglish" data-field="clubNameEnglish" placeholder="Changyan Chinese Toastmasters Club" />
+                <input class="input" id="clubNameEnglish" data-field="clubNameEnglish" placeholder="Charm Voice Mandarin Toastmasters Club" />
               </div>
               <div class="field full">
                 <label for="meetingVision">会议愿景</label>
@@ -2777,6 +2666,9 @@
           <div class="actions-row">
             <button class="button filled" id="printBtnSide" type="button">打印 A4</button>
             <button class="button tonal" id="copyBtn" type="button">复制文字版</button>
+            <button class="button tonal" id="exportJsonBtn" type="button">导出 JSON</button>
+            <button class="button subtle" id="importJsonBtn" type="button">导入 JSON</button>
+            <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" />
           </div>
         </section>
       </div>
@@ -2809,10 +2701,11 @@
 
   <script>
     const STORAGE_KEY = "tm_agenda_generator_v1";
+    const OFFICIAL_TOASTMASTERS_LOGO_SRC = "assets/toastmasters-logo-color-png.png";
 
     const DEFAULT_DATA = {
       clubName: "畅言中文国际演讲俱乐部",
-      clubNameEnglish: "Changyan Chinese Toastmasters Club",
+      clubNameEnglish: "Charm Voice Mandarin Toastmasters Club",
       meetingNo: "739",
       theme: "去运动",
       wordOfDay: "越来越好",
@@ -2822,6 +2715,7 @@
       location: "深圳市南山区科技园讯美科技广场3号楼4楼SPACE MAX会议室(高新中A出口)",
       manager: "卡卡",
       posterDesigner: "水杨酸",
+      logoData: "",
       posterData: "",
       wechatQrData: "",
       joinQrData: "",
@@ -2831,7 +2725,7 @@
       footerNotes: "",
       residentPeople: "女侠\nMaggie\nBell\n聪聪\nVenus斯敏\n纳纳\nIsabel\nRui（Soar High）\nDavid（MAD）\n筠筠\n卡卡\n水杨酸\nJeff",
       clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
-      pathways: "Pathways 是头马国际演讲的教育体系，提供多条学习路径，帮助会员系统训练演讲、评估、领导力和项目管理能力。",
+      pathways: "Pathways 是头马国际演讲教育体系，6条学习路径覆盖不同方向的能力训练。\nDynamic Leadership 动态领导力\nEngaging Humor 运用幽默\nMotivational Strategies 激励策略\nPresentation Mastery 精通演讲\nPersuasive Influence 有说服力的影响\nVisionary Communication 愿景沟通",
       officers: "会长：女侠  秘书长：夏奈\n教育副会长：聪聪  财务官：王兵伟\n会员副会长：Venus斯敏  事务官：Jeff\n公关副会长：水杨酸",
       joinInfo: "入会条件：参加2次以上例会，并完成一次角色或四项演讲/履职分享。\n入会费用：首次缴费包含国际会费、本地会费及资料费。",
       meetingRules: "1. 请将手机调至静音。\n2. 演讲时请尊重时间官提示。\n3. 会议期间欢迎积极鼓掌、反馈和投票。\n4. 来宾可在会议后联系会员副会长了解入会。",
@@ -2916,6 +2810,9 @@
       printBtnSide: document.querySelector("#printBtnSide"),
       copyBtn: document.querySelector("#copyBtn"),
       copyBtnTop: document.querySelector("#copyBtnTop"),
+      exportJsonBtn: document.querySelector("#exportJsonBtn"),
+      importJsonBtn: document.querySelector("#importJsonBtn"),
+      jsonImportInput: document.querySelector("#jsonImportInput"),
       openTimekeeperBtn: document.querySelector("#openTimekeeperBtn"),
       toast: document.querySelector("#toast"),
       toastText: document.querySelector("#toastText"),
@@ -2946,11 +2843,16 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) return normalizeEscapedNewlines(clone(DEFAULT_DATA));
         const parsed = JSON.parse(saved);
-        return normalizeEscapedNewlines({
+        const merged = normalizeEscapedNewlines({
           ...clone(DEFAULT_DATA),
           ...parsed,
           items: Array.isArray(parsed.items) && parsed.items.length ? parsed.items : clone(DEFAULT_DATA.items)
         });
+        if (merged.clubNameEnglish === "Changyan Chinese Toastmasters Club") {
+          merged.clubNameEnglish = DEFAULT_DATA.clubNameEnglish;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        }
+        return merged;
       } catch (error) {
         console.warn("Failed to load agenda data", error);
         return normalizeEscapedNewlines(clone(DEFAULT_DATA));
@@ -3094,6 +2996,12 @@
 
     function imageFieldMeta(field) {
       const meta = {
+        logoData: {
+          emptyLabel: "品牌 Logo",
+          overlay: "更换 Logo",
+          updated: "品牌 Logo 已更新",
+          removed: "Logo 已移除",
+        },
         posterData: {
           emptyLabel: "当期海报",
           overlay: "更换海报",
@@ -3101,9 +3009,9 @@
           removed: "海报已移除",
         },
         wechatQrData: {
-          emptyLabel: "微信公众号二维码",
+          emptyLabel: "取伙二维码",
           overlay: "更换二维码",
-          updated: "微信公众号二维码已更新",
+          updated: "取伙二维码已更新",
           removed: "二维码已移除",
         },
         joinQrData: {
@@ -3126,9 +3034,10 @@
         const field = preview.dataset.imagePreview;
         const meta = imageFieldMeta(field);
         const value = state[field] || "";
-        preview.classList.toggle("has-image", Boolean(value));
-        preview.innerHTML = value
-          ? `<img src="${escapeHtml(value)}" alt="" /><span class="upload-overlay">${escapeHtml(meta.overlay)}</span>`
+        const displayValue = value || (field === "logoData" ? OFFICIAL_TOASTMASTERS_LOGO_SRC : "");
+        preview.classList.toggle("has-image", Boolean(displayValue));
+        preview.innerHTML = displayValue
+          ? `<img src="${escapeHtml(displayValue)}" alt="" /><span class="upload-overlay">${escapeHtml(meta.overlay)}</span>`
           : `<span class="upload-empty">未上传<br>${escapeHtml(meta.emptyLabel)}<small>点按上传</small></span>`;
       });
       document.querySelectorAll("[data-clear-image]").forEach((button) => {
@@ -3202,8 +3111,57 @@
         hand: `<svg ${common}><path d="M6 13V7a1.5 1.5 0 0 1 3 0v5" /><path d="M9 12V5.5a1.5 1.5 0 0 1 3 0V12" /><path d="M12 12V7a1.5 1.5 0 0 1 3 0v6" /><path d="M15 13v-2a1.5 1.5 0 0 1 3 0v4a6 6 0 0 1-12 0v-2" /></svg>`,
         timer: `<svg ${common}><circle cx="12" cy="13" r="7" /><path d="M12 13l3-2" /><path d="M9 2h6" /><path d="M12 2v3" /></svg>`,
         delay: `<svg ${common}><path d="M4 7h10a6 6 0 1 1-5.2 9" /><path d="M4 7l4-4" /><path d="M4 7l4 4" /></svg>`,
+        people: `<svg ${common}><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" /><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" /><path d="M3 20a5 5 0 0 1 10 0" /><path d="M11 20a5 5 0 0 1 10 0" /></svg>`,
+        qr: `<svg ${common}><path d="M4 4h6v6H4z" /><path d="M14 4h6v6h-6z" /><path d="M4 14h6v6H4z" /><path d="M14 14h2" /><path d="M18 14h2v2" /><path d="M14 18h6" /><path d="M16 16v4" /></svg>`,
+        bell: `<svg ${common}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>`,
+        team: `<svg ${common}><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" /><path d="M5 21a7 7 0 0 1 14 0" /><path d="M4 10a3 3 0 0 0 3 3" /><path d="M20 10a3 3 0 0 1-3 3" /></svg>`,
+        join: `<svg ${common}><path d="M12 5v14" /><path d="M5 12h14" /><circle cx="12" cy="12" r="9" /></svg>`,
+        note: `<svg ${common}><path d="M5 4h14v16H5z" /><path d="M8 8h8" /><path d="M8 12h8" /><path d="M8 16h5" /></svg>`,
       };
       return icons[type] || icons.calendar;
+    }
+
+    function cardTitleHtml(icon, title) {
+      return `<h3><span class="card-title-icon">${templateIconSvg(icon)}</span><span>${escapeHtml(title)}</span></h3>`;
+    }
+
+    function infoLinesHtml(text) {
+      const lines = String(text || "").split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      if (!lines.length) return `<div class="info-line-list"><div class="info-line full"><span class="info-text">待补充</span></div></div>`;
+      return `<div class="info-line-list">${lines.map((line) => {
+        const match = line.match(/^([^：:]{1,8})[：:]\s*(.+)$/);
+        if (!match) return `<div class="info-line full"><span class="info-text">${escapeHtml(line)}</span></div>`;
+        return `<div class="info-line"><span class="info-label">${escapeHtml(match[1])}</span><span class="info-text">${escapeHtml(match[2])}</span></div>`;
+      }).join("")}</div>`;
+    }
+
+    function pathwaysHtml(text) {
+      const raw = String(text || "").trim();
+      const fallbackPaths = [
+        ["Dynamic Leadership", "动态领导力"],
+        ["Engaging Humor", "运用幽默"],
+        ["Motivational Strategies", "激励策略"],
+        ["Presentation Mastery", "精通演讲"],
+        ["Persuasive Influence", "有说服力的影响"],
+        ["Visionary Communication", "愿景沟通"],
+      ];
+      const lines = raw.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      const pathPairs = fallbackPaths.map(([english, fallbackChinese]) => {
+        const sourceLine = lines.find((line) => line.includes(english));
+        if (!sourceLine) return [english, fallbackChinese];
+        const chinese = sourceLine.replace(english, "").trim() || fallbackChinese;
+        return [english, chinese];
+      });
+      const leadLines = lines.filter((line) => !fallbackPaths.some(([english]) => line.includes(english)));
+      const lead = leadLines.length
+        ? leadLines.join(" ")
+        : "Pathways 是头马国际演讲教育体系，帮助会员按路径训练演讲、反馈与领导力。";
+      return `
+        <p class="pathways-lead">${escapeHtml(lead)}</p>
+        <div class="pathways-grid">
+          ${pathPairs.map(([english, chinese]) => `<span>${escapeHtml(english)}</span><span>${escapeHtml(chinese)}</span>`).join("")}
+        </div>
+      `;
     }
 
     function rowClassForAgenda(item) {
@@ -3254,27 +3212,37 @@
           return `<p class="team-row"><span class="team-role">${escapeHtml(entry.role)}</span><span class="team-name">${escapeHtml(entry.name)}</span></p>`;
         }
         return `<p class="team-row full"><span class="team-freeform">${escapeHtml(entry.text || "")}</span></p>`;
-      }).join("");
+      }).join("") || `
+            <tr>
+              <td class="flow-empty" colspan="5">暂无会议流程，请在左侧添加议程项目。</td>
+            </tr>
+      `;
     }
 
     function renderPreview() {
       const groups = buildAgendaGroups();
       const wechatQr = qrBoxHtml(state.wechatQrData);
       const joinQr = qrBoxHtml(state.joinQrData);
+      const logoHtml = state.logoData
+        ? `<img src="${escapeHtml(state.logoData)}" alt="Toastmasters Logo" />`
+        : `<img src="${OFFICIAL_TOASTMASTERS_LOGO_SRC}" alt="Toastmasters International Logo" />`;
+      const aboutInfo = [
+        state.clubIntro,
+        `会议时间：每周 ${weekdayText(state.date)} ${state.startTime}-${state.endTime}`,
+        `地点：${state.location}`
+      ].filter(Boolean).join("\n");
       const introOrPosterCard = state.posterData ? `
             <section class="template-info-card poster-info-card">
-              <h3>本期海报</h3>
+              ${cardTitleHtml("note", "本期海报")}
               <div class="template-info-body poster-body">
                 <img class="template-poster" src="${escapeHtml(state.posterData)}" alt="本期海报" />
               </div>
             </section>
       ` : `
             <section class="template-info-card">
-              <h3>关于我们</h3>
+              ${cardTitleHtml("people", "关于我们")}
               <div class="template-info-body">
-                <p>${escapeHtml(state.clubIntro)}</p>
-                <p>会议时间：每周 ${escapeHtml(weekdayText(state.date))} ${escapeHtml(state.startTime)}-${escapeHtml(state.endTime)}</p>
-                <p>地点：${escapeHtml(state.location)}</p>
+                ${infoLinesHtml(aboutInfo)}
               </div>
             </section>
       `;
@@ -3314,7 +3282,7 @@
       els.printPage.innerHTML = `
         <header class="template-header">
           <div class="tm-logo-print" aria-label="Toastmasters International">
-            <span>TOASTMASTERS<small>INTERNATIONAL</small></span>
+            ${logoHtml}
           </div>
           <div class="template-title-block">
             <div class="english">${escapeHtml(state.clubNameEnglish || "Toastmasters Club")}</div>
@@ -3336,16 +3304,16 @@
           <aside class="template-sidebar">
             ${introOrPosterCard}
             <section class="template-info-card">
-              <h3>扫码关注我们</h3>
+              ${cardTitleHtml("qr", "扫码关注我们")}
               <div class="template-info-body compact">
                 <div class="qr-row">
-                  <div class="qr-item">${wechatQr}<span>微信公众号</span></div>
+                  <div class="qr-item">${wechatQr}<span>取伙</span></div>
                   <div class="qr-item">${joinQr}<span>入会咨询</span></div>
                 </div>
               </div>
             </section>
             <section class="template-info-card">
-              <h3>提示信号</h3>
+              ${cardTitleHtml("bell", "提示信号")}
               <div class="template-info-body compact signal-list">
                 <div class="signal-row"><span class="signal-key"><span class="signal-card green"></span><span>绿卡</span></span><span class="signal-desc">掌声 1-3 秒</span></div>
                 <div class="signal-row"><span class="signal-key"><span class="signal-card yellow"></span><span>黄卡</span></span><span class="signal-desc">掌声 1-20 秒</span></div>
@@ -3356,15 +3324,21 @@
               </div>
             </section>
             <section class="template-info-card">
-              <h3>会长团队</h3>
+              ${cardTitleHtml("team", "会长团队")}
               <div class="template-info-body team-grid">
                 ${officerGridHtml()}
               </div>
             </section>
             <section class="template-info-card">
-              <h3>如何加入我们</h3>
+              ${cardTitleHtml("join", "如何加入我们")}
               <div class="template-info-body">
-                <p>${escapeHtml(state.joinInfo || state.meetingRules)}</p>
+                ${infoLinesHtml(state.joinInfo || state.meetingRules)}
+              </div>
+            </section>
+            <section class="template-info-card pathways-card">
+              ${cardTitleHtml("note", "TM-Pathways 6条学习路径")}
+              <div class="template-info-body pathways-body">
+                ${pathwaysHtml(state.pathways)}
               </div>
             </section>
           </aside>
@@ -3395,18 +3369,18 @@
 
         <footer class="template-footer">
           <section class="template-footer-box">
-            <h3>下期例会</h3>
+            <h3>${templateIconSvg("calendar")}<span>下期例会</span></h3>
             <p class="next-meeting-footer">
               <span class="next-theme">主题：${escapeHtml(state.nextTheme || "待定")}</span>
               <span class="next-time">时间：${escapeHtml(formatNextMeeting())}</span>
             </p>
           </section>
           <section class="template-footer-box">
-            <h3>来宾可参与环节</h3>
+            <h3>${templateIconSvg("people")}<span>来宾可参与环节</span></h3>
             <p>${escapeHtml(state.guestInvitation || "")}</p>
           </section>
           <section class="template-footer-box">
-            <h3>备注</h3>
+            <h3>${templateIconSvg("note")}<span>备注</span></h3>
             ${footerNotesHtml}
           </section>
         </footer>
@@ -3684,6 +3658,51 @@
       }
     }
 
+    function downloadJson() {
+      const payload = JSON.stringify(state, null, 2);
+      const blob = new Blob([payload], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const meetingNo = String(state.meetingNo || "agenda").replace(/[^\w\u4e00-\u9fa5-]+/g, "_");
+      link.href = url;
+      link.download = `toastmasters-agenda-${meetingNo}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast("JSON 已导出");
+    }
+
+    function normalizeImportedData(parsed) {
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("JSON 内容不是有效对象");
+      }
+      return normalizeEscapedNewlines({
+        ...clone(DEFAULT_DATA),
+        ...parsed,
+        items: Array.isArray(parsed.items) ? parsed.items : clone(DEFAULT_DATA.items)
+      });
+    }
+
+    async function importJson(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        state = normalizeImportedData(JSON.parse(text));
+        editingId = null;
+        dragId = null;
+        undoDelete = null;
+        input.value = "";
+        saveData();
+        renderAll();
+        showToast("JSON 已导入");
+      } catch (error) {
+        input.value = "";
+        showToast(error.message || "JSON 导入失败");
+      }
+    }
+
     function setMoreMenu(open) {
       els.moreActionsMenu.hidden = !open;
       els.moreActionsBtn.setAttribute("aria-expanded", String(open));
@@ -3832,6 +3851,9 @@
 
       [els.printBtn, els.printBtnSide].forEach((button) => button.addEventListener("click", () => window.print()));
       [els.copyBtn, els.copyBtnTop].forEach((button) => button.addEventListener("click", copyPlainText));
+      els.exportJsonBtn.addEventListener("click", downloadJson);
+      els.importJsonBtn.addEventListener("click", () => els.jsonImportInput.click());
+      els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
       els.openTimekeeperBtn.addEventListener("click", () => {
         window.location.href = "index.html";
       });
