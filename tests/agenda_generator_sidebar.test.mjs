@@ -72,6 +72,7 @@ test("sidebar typography and gutters stay visually consistent", () => {
   const compactBodyRule = cssRule(".template-info-body.compact");
   const timingBodyRule = cssRule(".timing-rules-body");
   const infoLineRule = cssRule(".info-line");
+  const qrRowRule = cssRule(".qr-row");
   const teamRowRule = cssRule(".team-row");
 
   assert.match(source, /--sidebar-card-x:\s*14px;/, "sidebar cards should share one horizontal padding token");
@@ -82,6 +83,9 @@ test("sidebar typography and gutters stay visually consistent", () => {
   assert.match(infoLineRule, /font-size:\s*10\.8px;[\s\S]*?line-height:\s*1\.38;/, "about text should keep a readable body rhythm");
   assert.match(source, /\.team-grid\s*\{[\s\S]*?row-gap:\s*5px;[\s\S]*?align-content:\s*center;/, "team list should have demo-like vertical breathing room");
   assert.match(teamRowRule, /font-size:\s*10\.4px;[\s\S]*?line-height:\s*1\.38;/, "team rows should be readable without feeling cramped");
+  assert.match(qrRowRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?align-items:\s*center;/, "QR blocks should sit in equal-width columns and align vertically");
+  assert.match(teamRowRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "team names should use equal-width columns for cleaner left and right edges");
+  assert.match(source, /\.about-card \.info-line-list\s*\{[\s\S]*?height:\s*100%;[\s\S]*?align-content:\s*space-between;/, "about text should balance vertically inside its card");
 });
 
 test("timing rules module contains all three detailed rule groups", () => {

@@ -1528,6 +1528,11 @@
       gap: 5px;
     }
 
+    .about-card .info-line-list {
+      height: 100%;
+      align-content: space-between;
+    }
+
     .info-line {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
@@ -1562,9 +1567,10 @@
 
     .qr-row {
       display: grid;
-      grid-template-columns: var(--sidebar-left-col) var(--sidebar-right-col);
-      gap: var(--sidebar-gap);
-      align-items: start;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      height: 100%;
+      align-items: center;
       text-align: center;
       font-size: 10px;
       font-weight: 800;
@@ -1573,6 +1579,7 @@
     .qr-item {
       min-width: 0;
       display: grid;
+      align-content: center;
       justify-items: center;
     }
 
@@ -1658,6 +1665,7 @@
 
     .about-card .template-info-body {
       gap: 5px;
+      align-content: stretch;
     }
 
     .timing-rules-body {
@@ -1735,6 +1743,7 @@
       display: grid;
       gap: 0;
       padding-left: 32px;
+      padding-right: 2px;
     }
 
     .timing-rule-item {
@@ -1792,7 +1801,7 @@
 
     .timing-note {
       min-width: 0;
-      padding: 5px 8px;
+      padding: 5px 10px;
       display: grid;
       grid-template-columns: 16px minmax(0, 1fr);
       gap: 5px;
@@ -1823,8 +1832,8 @@
     .team-row {
       min-width: 0;
       display: grid;
-      grid-template-columns: var(--sidebar-left-col) var(--sidebar-right-col);
-      column-gap: var(--sidebar-gap);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 12px;
       align-items: baseline;
       font-size: 10.4px;
       line-height: 1.38;
