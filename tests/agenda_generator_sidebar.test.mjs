@@ -10,6 +10,13 @@ function sidebarTemplate() {
   return match[1];
 }
 
+function cssRule(selector) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = source.match(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`));
+  assert.ok(match, `${selector} CSS rule should exist`);
+  return match[1];
+}
+
 test("printable sidebar renders the requested information cards in order", () => {
   const sidebar = sidebarTemplate();
   const expectedOrder = ["关于我们", "提示信号与计时规则", "拍照关注我们", "会员团队"];
@@ -26,9 +33,10 @@ test("printable sidebar renders the requested information cards in order", () =>
 });
 
 test("printable sidebar keeps a single aligned four-card grid", () => {
+  assert.match(source, /--template-sidebar-width:\s*316px;/, "sidebar should gain a little width for a calmer left column");
   assert.match(
     source,
-    /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.92fr 2\.36fr 0\.58fr 0\.72fr;[\s\S]*?align-content:\s*stretch;/,
+    /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.92fr 2\.32fr 0\.66fr 0\.68fr;[\s\S]*?align-content:\s*stretch;/,
     "sidebar should keep four aligned rows that fill the printable flow height"
   );
   assert.match(source, /\.template-sidebar\s*\{[\s\S]*?gap:\s*10px;/, "sidebar cards should keep consistent compact gaps");
@@ -46,15 +54,16 @@ test("printable sidebar keeps a single aligned four-card grid", () => {
   );
 });
 
-test("timing rule groups use light two-column scan cards instead of stacked mini tables", () => {
-  assert.match(
-    source,
-    /\.timing-rule-list\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/,
-    "each timing rule group should use a 2 × 2 grid for faster scanning"
-  );
-  assert.match(source, /\.timing-rule-item\s*\{[\s\S]*?grid-template-columns:\s*auto minmax\(0,\s*1fr\);/, "rule cells should align labels and values cleanly");
+test("timing rule groups read as calm vertical instruction cards", () => {
+  const listRule = cssRule(".timing-rule-list");
+  const itemRule = cssRule(".timing-rule-item");
+
+  assert.doesNotMatch(listRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "timing rules should not use 2 × 2 cell grids");
+  assert.match(listRule, /padding-left:\s*32px;/, "rule lists should align under the heading copy instead of filling the whole card like a table");
+  assert.match(itemRule, /grid-template-columns:\s*62px minmax\(0,\s*1fr\);/, "rule rows should align labels and values cleanly");
   assert.doesNotMatch(source, /class="timing-rule-line"/, "timing rules should not render as four-row mini tables");
-  assert.doesNotMatch(source, /\.timing-rule-item\s*\{[\s\S]*?border-top:/, "rule cells should avoid heavy row separators");
+  assert.doesNotMatch(itemRule, /background:/, "individual rule rows should not look like boxed cells");
+  assert.match(source, /\.timing-rule-heading\s*\{[\s\S]*?grid-template-columns:\s*26px minmax\(0,\s*1fr\);/, "each rule card should have a clear icon-led heading");
 });
 
 test("timing rules module contains all three detailed rule groups", () => {
