@@ -2985,6 +2985,18 @@
       "欢迎鼓掌、反馈与投票",
       "入会咨询请联系会员副会长"
     ];
+    const DEFAULT_OFFICERS = [
+      "会长：卡卡  秘书长：浩岩",
+      "教育副会长：斯敏  财务官：燕薇",
+      "会员副会长：莫婷  事务官：文星",
+      "公关副会长：聪聪"
+    ].join("\n");
+    const LEGACY_DEFAULT_OFFICERS = [
+      "会长：女侠  秘书长：夏奈",
+      "教育副会长：聪聪  财务官：王兵伟",
+      "会员副会长：Venus斯敏  事务官：Jeff",
+      "公关副会长：水杨酸"
+    ].join("\n");
 
     const DEFAULT_DATA = {
       clubName: "畅言中文国际演讲俱乐部",
@@ -3009,7 +3021,7 @@
       residentPeople: "女侠\nMaggie\nBell\n聪聪\nVenus斯敏\n纳纳\nIsabel\nRui（Soar High）\nDavid（MAD）\n筠筠\n卡卡\n水杨酸\nJeff",
       clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
       pathways: "Pathways 是头马国际演讲教育体系，6条学习路径覆盖不同方向的能力训练。\nDynamic Leadership 动态领导力\nEngaging Humor 运用幽默\nMotivational Strategies 激励策略\nPresentation Mastery 精通演讲\nPersuasive Influence 有说服力的影响\nVisionary Communication 愿景沟通",
-      officers: "会长：女侠  秘书长：夏奈\n教育副会长：聪聪  财务官：王兵伟\n会员副会长：Venus斯敏  事务官：Jeff\n公关副会长：水杨酸",
+      officers: DEFAULT_OFFICERS,
       joinInfo: "入会条件：参加2次以上例会，并完成一次角色或四项演讲/履职分享。\n入会费用：首次缴费包含国际会费、本地会费及资料费。",
       meetingRules: DEFAULT_MEETING_RULES.join("\n"),
       meetingVision: "会议愿景：很开心与大家建立一种愉悦的学习旅程，谢谢大家~",
@@ -3132,10 +3144,16 @@ ${GUEST_PARTICIPATION_NOTE}`,
           ...parsed,
           items: Array.isArray(parsed.items) && parsed.items.length ? parsed.items : clone(DEFAULT_DATA.items)
         });
+        let migrated = false;
         if (merged.clubNameEnglish === "Changyan Chinese Toastmasters Club") {
           merged.clubNameEnglish = DEFAULT_DATA.clubNameEnglish;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          migrated = true;
         }
+        if (merged.officers === LEGACY_DEFAULT_OFFICERS) {
+          merged.officers = DEFAULT_OFFICERS;
+          migrated = true;
+        }
+        if (migrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
         return merged;
       } catch (error) {
         console.warn("Failed to load agenda data", error);

@@ -38,6 +38,19 @@ test("printable sidebar renders the requested information cards in order", () =>
   assert.equal(sidebar.includes("TM-Pathways"), false, "Pathways should not occupy printable sidebar space");
 });
 
+
+test("default member team roster matches the updated club officers", () => {
+  assert.match(source, /officers:\s*DEFAULT_OFFICERS,/, "default data should reference the shared updated officer roster");
+  assert.ok(source.includes("LEGACY_DEFAULT_OFFICERS"), "old saved default roster should migrate without overwriting custom edits");
+  for (const text of [
+    "会长：卡卡  秘书长：浩岩",
+    "教育副会长：斯敏  财务官：燕薇",
+    "会员副会长：莫婷  事务官：文星",
+    "公关副会长：聪聪"
+  ]) {
+    assert.ok(source.includes(text), `updated default roster should include: ${text}`);
+  }
+});
 test("printable sidebar keeps a single aligned four-card grid", () => {
   assert.match(source, /--template-sidebar-width:\s*316px;/, "sidebar should gain a little width for a calmer left column");
   assert.match(
