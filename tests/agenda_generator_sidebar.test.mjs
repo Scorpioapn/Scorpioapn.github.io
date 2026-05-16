@@ -77,6 +77,17 @@ test("follow-us card uses default QR assets with upload override support", () =>
   assert.match(source, /qrBoxHtml\(state\.wechatQrData\s*\|\|\s*DEFAULT_WECHAT_QR_SRC\)/, "取火 QR should fall back to the default asset");
   assert.match(source, /qrBoxHtml\(state\.joinQrData\s*\|\|\s*DEFAULT_JOIN_QR_SRC\)/, "入会咨询 QR should fall back to the default asset");
 });
+
+test("image upload editor omits obsolete current poster upload", () => {
+  const uploadDetails = fixedInfoDetails("海报与标识：图片上传");
+
+  assert.ok(uploadDetails.includes('id="logoInput"'), "brand logo upload should remain available");
+  assert.ok(uploadDetails.includes('id="wechatQrInput"'), "取火 QR upload should remain available");
+  assert.ok(uploadDetails.includes('id="joinQrInput"'), "入会咨询 QR upload should remain available");
+  assert.equal(uploadDetails.includes('id="posterInput"'), false, "current poster upload input should be removed");
+  assert.equal(uploadDetails.includes('data-image-preview="posterData"'), false, "current poster preview upload card should be removed");
+  assert.equal(uploadDetails.includes("当期海报"), false, "current poster editing copy should be removed from the upload editor");
+});
 test("printable sidebar keeps a single aligned four-card grid", () => {
   assert.match(source, /--template-sidebar-width:\s*316px;/, "sidebar should gain a little width for a calmer left column");
   assert.match(
