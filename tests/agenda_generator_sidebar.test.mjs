@@ -25,6 +25,22 @@ test("printable sidebar renders the requested information cards in order", () =>
   assert.equal(sidebar.includes("TM-Pathways"), false, "Pathways should not occupy printable sidebar space");
 });
 
+test("printable sidebar keeps a single aligned four-card grid", () => {
+  assert.match(
+    source,
+    /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.92fr 2\.36fr 0\.68fr 0\.78fr;[\s\S]*?align-content:\s*stretch;/,
+    "sidebar should keep four aligned rows that fill the printable flow height"
+  );
+  assert.match(source, /\.template-sidebar\s*\{[\s\S]*?gap:\s*10px;/, "sidebar cards should keep consistent compact gaps");
+  assert.match(source, /\.template-info-card\s*\{[\s\S]*?grid-template-rows:\s*auto minmax\(0,\s*1fr\);/, "cards should keep title/body alignment");
+  assert.match(
+    source,
+    /\.timing-rules-body\s*\{[\s\S]*?grid-template-rows:\s*auto minmax\(0,\s*1fr\) auto;[\s\S]*?align-content:\s*stretch;/,
+    "timing content should fill its card vertically instead of leaving a bottom void"
+  );
+  assert.match(source, /\.timing-rule-groups\s*\{[\s\S]*?align-content:\s*space-between;/, "rule groups should be visually distributed inside the timing card");
+});
+
 test("timing rules module contains all three detailed rule groups", () => {
   const sidebar = sidebarTemplate();
 

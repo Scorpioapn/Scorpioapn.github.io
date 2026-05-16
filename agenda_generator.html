@@ -1654,8 +1654,10 @@
     }
 
     .timing-rules-body {
-      gap: 6px;
-      padding: 8px 10px;
+      gap: 5px;
+      padding: 7px 10px 8px;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      align-content: stretch;
     }
 
     .timing-rules-intro {
@@ -1667,14 +1669,16 @@
 
     .timing-rule-groups {
       display: grid;
-      gap: 5px;
+      gap: 4px;
+      min-height: 0;
+      align-content: space-between;
     }
 
     .timing-rule-card {
       min-width: 0;
-      padding: 5px 6px;
+      padding: 4px 6px;
       display: grid;
-      gap: 3px;
+      gap: 2px;
       border: 1px solid rgba(119, 36, 50, 0.18);
       border-radius: 8px;
       background: linear-gradient(180deg, #fffdf8 0%, #fff8f2 100%);
@@ -1772,7 +1776,7 @@
 
     .timing-note {
       min-width: 0;
-      padding: 5px 7px;
+      padding: 4px 7px;
       display: grid;
       grid-template-columns: 16px minmax(0, 1fr);
       gap: 5px;
