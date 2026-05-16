@@ -179,6 +179,30 @@ test("printable footer keeps guest participation as centered tags", () => {
   assert.match(guestCardRule, /align-content:\s*center;[\s\S]*?justify-items:\s*center;/, "guest content should be vertically centered");
 });
 
+test("printable footer renders as three independent reference-style cards", () => {
+  const footerRule = cssRule(".template-footer");
+  const cardRule = cssRule(".template-footer-box");
+  const titleRule = cssRule(".template-footer-box h3");
+  const nextRule = cssRule(".next-meeting-footer");
+  const nextThemeRule = cssRule(".next-meeting-footer .next-theme");
+  const guestTagRule = cssRule(".guest-tag");
+  const rulesBulletRule = cssRule(".meeting-rules-list li::before");
+
+  assert.match(footerRule, /grid-template-columns:\s*var\(--template-sidebar-width\) minmax\(0,\s*1\.4fr\) minmax\(0,\s*1fr\);/, "footer should preserve the original three-column alignment");
+  assert.match(footerRule, /margin:\s*0 20px 18px;/, "footer should keep its original outer alignment with the page");
+  assert.match(footerRule, /gap:\s*14px;/, "footer cards should be separated like independent cards");
+  assert.match(footerRule, /background:\s*transparent;/, "footer strip should not look like one connected table");
+  assert.match(footerRule, /box-shadow:\s*none;/, "footer wrapper should not carry the card shadow");
+  assert.match(cardRule, /border:\s*1px solid var\(--tm-border\);[\s\S]*?border-radius:\s*var\(--radius-card\);[\s\S]*?background:\s*var\(--tm-card\);/, "each footer item should be its own bordered white card");
+  assert.match(cardRule, /text-align:\s*left;/, "footer cards should follow the reference's left-aligned title rhythm");
+  assert.doesNotMatch(source, /\.template-footer-box:last-child\s*\{[\s\S]*?border-right:\s*0;/, "last footer card should keep a complete border");
+  assert.match(titleRule, /display:\s*flex;[\s\S]*?justify-content:\s*flex-start;/, "footer titles should align to the left");
+  assert.match(nextRule, /justify-items:\s*start;[\s\S]*?text-align:\s*left;/, "next meeting content should be left aligned");
+  assert.match(nextThemeRule, /color:\s*var\(--tm-maroon\);[\s\S]*?font-size:\s*14px;/, "next meeting theme should be the visual emphasis");
+  assert.match(guestTagRule, /background:\s*#eaf3fb;[\s\S]*?border-radius:\s*999px;[\s\S]*?padding:\s*4px 10px;/, "guest participation labels should look like blue pills");
+  assert.match(rulesBulletRule, /background:\s*var\(--tm-maroon\);[\s\S]*?content:\s*"✓";/, "meeting rules should use compact red checked bullets");
+});
+
 test("printable footer replaces notes with meeting rules", () => {
   const footer = footerTemplate();
   const rulesListRule = cssRule(".meeting-rules-list");
