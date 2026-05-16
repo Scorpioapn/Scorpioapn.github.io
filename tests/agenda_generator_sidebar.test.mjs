@@ -28,7 +28,7 @@ test("printable sidebar renders the requested information cards in order", () =>
 test("printable sidebar keeps a single aligned four-card grid", () => {
   assert.match(
     source,
-    /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.92fr 2\.36fr 0\.68fr 0\.78fr;[\s\S]*?align-content:\s*stretch;/,
+    /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.92fr 2\.36fr 0\.58fr 0\.72fr;[\s\S]*?align-content:\s*stretch;/,
     "sidebar should keep four aligned rows that fill the printable flow height"
   );
   assert.match(source, /\.template-sidebar\s*\{[\s\S]*?gap:\s*10px;/, "sidebar cards should keep consistent compact gaps");
@@ -36,9 +36,25 @@ test("printable sidebar keeps a single aligned four-card grid", () => {
   assert.match(
     source,
     /\.timing-rules-body\s*\{[\s\S]*?grid-template-rows:\s*auto minmax\(0,\s*1fr\) auto;[\s\S]*?align-content:\s*stretch;/,
-    "timing content should fill its card vertically instead of leaving a bottom void"
+    "timing content should fill its allotted card without creating a bottom void"
   );
-  assert.match(source, /\.timing-rule-groups\s*\{[\s\S]*?align-content:\s*space-between;/, "rule groups should be visually distributed inside the timing card");
+  assert.doesNotMatch(source, /\.timing-rule-groups\s*\{[\s\S]*?align-content:\s*space-between;/, "rule groups should not be artificially spread apart");
+  assert.match(
+    source,
+    /\.timing-rule-groups\s*\{[\s\S]*?grid-template-rows:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/,
+    "rule groups should fill the timing card as three evenly weighted light blocks"
+  );
+});
+
+test("timing rule groups use light two-column scan cards instead of stacked mini tables", () => {
+  assert.match(
+    source,
+    /\.timing-rule-list\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/,
+    "each timing rule group should use a 2 × 2 grid for faster scanning"
+  );
+  assert.match(source, /\.timing-rule-item\s*\{[\s\S]*?grid-template-columns:\s*auto minmax\(0,\s*1fr\);/, "rule cells should align labels and values cleanly");
+  assert.doesNotMatch(source, /class="timing-rule-line"/, "timing rules should not render as four-row mini tables");
+  assert.doesNotMatch(source, /\.timing-rule-item\s*\{[\s\S]*?border-top:/, "rule cells should avoid heavy row separators");
 });
 
 test("timing rules module contains all three detailed rule groups", () => {

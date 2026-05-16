@@ -1430,7 +1430,7 @@
       height: 100%;
       display: grid;
       gap: 10px;
-      grid-template-rows: 0.92fr 2.36fr 0.68fr 0.78fr;
+      grid-template-rows: 0.92fr 2.36fr 0.58fr 0.72fr;
       align-content: stretch;
       align-self: stretch;
     }
@@ -1519,7 +1519,7 @@
 
     .info-line-list {
       display: grid;
-      gap: 5px;
+      gap: 4px;
     }
 
     .info-line {
@@ -1527,11 +1527,11 @@
       grid-template-columns: auto minmax(0, 1fr);
       gap: 5px;
       align-items: baseline;
-      padding-bottom: 4px;
-      border-bottom: 1px dashed rgba(106, 88, 66, 0.18);
+      padding-bottom: 3px;
+      border-bottom: 1px solid rgba(106, 88, 66, 0.10);
       color: #211a15;
       font-size: 10.6px;
-      line-height: 1.36;
+      line-height: 1.34;
     }
 
     .info-line:last-child {
@@ -1558,8 +1558,9 @@
       display: grid;
       grid-template-columns: var(--sidebar-left-col) var(--sidebar-right-col);
       gap: var(--sidebar-gap);
+      align-items: start;
       text-align: center;
-      font-size: 10px;
+      font-size: 9.6px;
       font-weight: 850;
     }
 
@@ -1570,17 +1571,17 @@
     }
 
     .qr-box {
-      width: 82px;
-      height: 82px;
-      margin: 0 auto 6px;
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 5px;
       display: grid;
       place-items: center;
       overflow: hidden;
-      border: 7px solid #fff;
+      border: 5px solid #fff;
       color: rgba(119, 36, 50, 0.78);
       background: #f8f1ea;
-      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.20), var(--shadow-1);
-      font-size: 9px;
+      box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.14), 0 1px 3px rgba(31, 20, 10, 0.06);
+      font-size: 8.6px;
       line-height: 1.25;
       font-weight: 900;
       text-align: center;
@@ -1654,48 +1655,52 @@
     }
 
     .timing-rules-body {
-      gap: 5px;
-      padding: 7px 10px 8px;
+      gap: 7px;
+      padding: 8px 10px 9px;
       grid-template-rows: auto minmax(0, 1fr) auto;
       align-content: stretch;
     }
 
     .timing-rules-intro {
       color: #4c4038;
-      font-size: 9.6px;
-      line-height: 1.28;
-      font-weight: 760;
+      font-size: 10px;
+      line-height: 1.32;
+      font-weight: 780;
     }
 
     .timing-rule-groups {
       display: grid;
-      gap: 4px;
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      gap: 7px;
       min-height: 0;
-      align-content: space-between;
+      align-content: stretch;
+      align-items: stretch;
     }
 
     .timing-rule-card {
       min-width: 0;
-      padding: 4px 6px;
+      min-height: 0;
+      padding: 8px 8px 7px;
       display: grid;
-      gap: 2px;
-      border: 1px solid rgba(119, 36, 50, 0.18);
-      border-radius: 8px;
-      background: linear-gradient(180deg, #fffdf8 0%, #fff8f2 100%);
-      box-shadow: 0 1px 3px rgba(31, 20, 10, 0.06);
+      gap: 6px;
+      align-content: center;
+      border: 1px solid rgba(119, 36, 50, 0.10);
+      border-radius: 9px;
+      background: linear-gradient(180deg, #fffdf9 0%, #fff8ef 100%);
+      box-shadow: 0 1px 2px rgba(31, 20, 10, 0.035);
     }
 
     .timing-rule-heading {
       min-width: 0;
       display: grid;
-      grid-template-columns: 18px minmax(0, 1fr);
-      gap: 5px;
+      grid-template-columns: 17px minmax(0, 1fr);
+      gap: 6px;
       align-items: start;
     }
 
     .timing-rule-icon {
-      width: 17px;
-      height: 17px;
+      width: 16px;
+      height: 16px;
       display: grid;
       place-items: center;
       color: #9f2d3d;
@@ -1704,8 +1709,8 @@
     .timing-rule-heading strong {
       display: block;
       color: #8f1f34;
-      font-size: 10.1px;
-      line-height: 1.12;
+      font-size: 10.8px;
+      line-height: 1.15;
       font-weight: 950;
     }
 
@@ -1713,28 +1718,27 @@
       display: block;
       margin-top: 1px;
       color: #665b52;
-      font-size: 7.8px;
-      line-height: 1.16;
+      font-size: 8.1px;
+      line-height: 1.18;
       font-weight: 720;
     }
 
     .timing-rule-list {
       display: grid;
-      gap: 1px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px 8px;
     }
 
-    .timing-rule-line {
+    .timing-rule-item {
       min-width: 0;
       display: grid;
-      grid-template-columns: 52px minmax(0, 1fr);
+      grid-template-columns: auto minmax(0, 1fr);
       align-items: center;
-      gap: 4px;
-      padding-top: 1px;
-      border-top: 1px dashed rgba(106, 88, 66, 0.12);
-    }
-
-    .timing-rule-line:first-child {
-      border-top: 0;
+      gap: 5px;
+      min-height: 20px;
+      padding: 2px 4px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.56);
     }
 
     .timing-rule-token {
@@ -1743,22 +1747,23 @@
       align-items: center;
       gap: 4px;
       color: #211a15;
-      font-size: 8.5px;
+      font-size: 9.2px;
       line-height: 1.12;
       font-weight: 900;
       white-space: nowrap;
     }
 
     .timing-rule-token .signal-card {
-      width: 10px;
-      height: 8px;
-      border-radius: 2px;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
       flex: 0 0 auto;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.68);
     }
 
     .rule-bell-icon {
-      width: 10px;
-      height: 10px;
+      width: 11px;
+      height: 11px;
       display: inline-grid;
       place-items: center;
       flex: 0 0 auto;
@@ -1768,15 +1773,15 @@
     .timing-rule-value {
       min-width: 0;
       color: #211a15;
-      font-size: 8.8px;
-      line-height: 1.14;
+      font-size: 9.2px;
+      line-height: 1.15;
       font-weight: 820;
       overflow-wrap: anywhere;
     }
 
     .timing-note {
       min-width: 0;
-      padding: 4px 7px;
+      padding: 5px 8px;
       display: grid;
       grid-template-columns: 16px minmax(0, 1fr);
       gap: 5px;
@@ -1785,8 +1790,8 @@
       color: #5f281f;
       background: #fff6df;
       box-shadow: inset 0 0 0 1px rgba(159, 45, 61, 0.16);
-      font-size: 8.4px;
-      line-height: 1.25;
+      font-size: 8.9px;
+      line-height: 1.28;
       font-weight: 820;
     }
 
@@ -1800,8 +1805,8 @@
 
     .team-grid {
       display: grid;
-      row-gap: 2px;
-      align-content: start;
+      row-gap: 3px;
+      align-content: center;
     }
 
     .team-row {
@@ -1810,6 +1815,8 @@
       grid-template-columns: var(--sidebar-left-col) var(--sidebar-right-col);
       column-gap: var(--sidebar-gap);
       align-items: baseline;
+      font-size: 10.2px;
+      line-height: 1.24;
     }
 
     .team-row.full {
@@ -3490,28 +3497,28 @@
                   <div class="timing-rule-card">
                     <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>3分钟及以下规则</strong><small>适用于主席致辞、主持串场、三官宣言、短点评等</small></span></div>
                     <div class="timing-rule-list">
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 30 秒</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 15 秒</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 30 秒</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 15 秒</span></div>
                     </div>
                   </div>
                   <div class="timing-rule-card">
                     <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>3–10分钟规则</strong><small>适用于备稿演讲、来宾介绍、即兴点评等</small></span></div>
                     <div class="timing-rule-list">
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
                     </div>
                   </div>
                   <div class="timing-rule-card">
                     <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>10分钟以上规则</strong><small>适用于工作坊、专题分享、较长流程说明等</small></span></div>
                     <div class="timing-rule-list">
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 5 分钟</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
-                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 5 分钟</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
                     </div>
                   </div>
                 </div>
