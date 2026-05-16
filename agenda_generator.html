@@ -384,6 +384,41 @@
       flex-wrap: wrap;
     }
 
+    .export-panel .helper-text {
+      margin-bottom: 0;
+    }
+
+    .export-action-groups {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .export-action-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .export-group-title {
+      color: var(--md-secondary);
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .export-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      align-items: center;
+    }
+
+    .export-actions .button {
+      width: 100%;
+      min-height: 48px;
+      padding-inline: 12px;
+    }
+
     .button {
       min-height: 48px;
       padding: 0 20px;
@@ -2867,10 +2902,6 @@
                 <label for="guestInvitation">来宾可参与环节</label>
                 <textarea class="textarea" id="guestInvitation" data-field="guestInvitation"></textarea>
               </div>
-              <div class="field full">
-                <label for="footerNotes">备注</label>
-                <textarea class="textarea" id="footerNotes" data-field="footerNotes" placeholder="留空时，A4 底部保留手写横线"></textarea>
-              </div>
             </div>
           </details>
           <details class="fixed-info">
@@ -2909,7 +2940,7 @@
             </div>
           </details>
           <details class="fixed-info">
-            <summary>固定信息：关于我们、Pathways、干事团队、守则</summary>
+            <summary>固定信息：关于我们、会员团队、会议守则</summary>
             <div class="field-grid fixed-info-fields">
               <div class="field full">
                 <label for="clubNameEnglish">英文俱乐部名</label>
@@ -2924,36 +2955,39 @@
                 <textarea class="textarea" id="clubIntro" data-field="clubIntro"></textarea>
               </div>
               <div class="field full">
-                <label for="pathways">Pathways 介绍</label>
-                <textarea class="textarea" id="pathways" data-field="pathways"></textarea>
-              </div>
-              <div class="field full">
                 <label for="officers">本届干事团队</label>
                 <textarea class="textarea" id="officers" data-field="officers"></textarea>
               </div>
               <div class="field full">
-                <label for="joinInfo">如何加入我们</label>
-                <textarea class="textarea" id="joinInfo" data-field="joinInfo"></textarea>
-              </div>
-              <div class="field full">
                 <label for="meetingRules">会议守则</label>
-                <textarea class="textarea" id="meetingRules" data-field="meetingRules"></textarea>
+                <textarea class="textarea" id="meetingRules" data-field="meetingRules" placeholder="每行一条，将显示在 A4 底部“会议守则”卡片"></textarea>
+                <p class="helper-text">每行一条，对应预览页底部“会议守则”卡片中的一项。</p>
               </div>
             </div>
           </details>
         </section>
 
-        <section class="surface-panel" aria-labelledby="templateTitle">
+        <section class="surface-panel export-panel" aria-labelledby="templateTitle">
           <div class="panel-title">
-            <h2 id="templateTitle">导出</h2>
-            <span class="meta">本机保存</span>
+            <h2 id="templateTitle">导出与备份</h2>
+            <span class="meta">打印 / 备份</span>
           </div>
-          <p class="helper-text">所有编辑会保存在浏览器本地。打印时只输出右侧 A4 预览，不会打印编辑面板。</p>
-          <div class="actions-row">
-            <button class="button filled" id="printBtnSide" type="button">打印 A4</button>
-            <button class="button tonal" id="copyBtn" type="button">复制文字版</button>
-            <button class="button tonal" id="exportJsonBtn" type="button">导出 JSON</button>
-            <button class="button subtle" id="importJsonBtn" type="button">导入 JSON</button>
+          <p class="helper-text">编辑内容会自动保存在本机浏览器；需要换电脑或备份时，请导出 JSON。</p>
+          <div class="export-action-groups">
+            <div class="export-action-group">
+              <span class="export-group-title">打印输出</span>
+              <div class="export-actions primary">
+                <button class="button filled" id="printBtnSide" type="button">打印 A4</button>
+                <button class="button tonal" id="copyBtn" type="button">复制文字版</button>
+              </div>
+            </div>
+            <div class="export-action-group">
+              <span class="export-group-title">数据备份</span>
+              <div class="export-actions backup">
+                <button class="button tonal" id="exportJsonBtn" type="button">导出 JSON</button>
+                <button class="button subtle" id="importJsonBtn" type="button">导入 JSON</button>
+              </div>
+            </div>
             <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" />
           </div>
         </section>

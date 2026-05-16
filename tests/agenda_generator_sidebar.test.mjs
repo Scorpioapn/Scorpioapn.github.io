@@ -16,6 +16,19 @@ function footerTemplate() {
   return match[1];
 }
 
+function fixedInfoDetails(summaryText) {
+  const escaped = summaryText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = source.match(new RegExp(`<details class="fixed-info">\\s*<summary>${escaped}</summary>([\\s\\S]*?)</details>`));
+  assert.ok(match, `${summaryText} fixed-info details should exist`);
+  return match[1];
+}
+
+function exportPanelTemplate() {
+  const match = source.match(/<section class="surface-panel export-panel" aria-labelledby="templateTitle">([\s\S]*?)<\/section>/);
+  assert.ok(match, "export panel should use the optimized export-panel layout");
+  return match[1];
+}
+
 function cssRule(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = source.match(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`));
@@ -214,4 +227,29 @@ test("printable footer replaces notes with meeting rules", () => {
     assert.ok(source.includes(text), `meeting rules should include: ${text}`);
   }
   assert.match(rulesListRule, /align-content:\s*center;[\s\S]*?text-align:\s*left;/, "meeting rules should be vertically centered and readable");
+});
+
+test("fixed info editor only exposes fields that still appear in the preview", () => {
+  const nextDetails = fixedInfoDetails("下期与页脚信息");
+  const fixedDetails = fixedInfoDetails("固定信息：关于我们、会员团队、会议守则");
+
+  assert.equal(nextDetails.includes('id="footerNotes"'), false, "obsolete footer notes editor should be removed");
+  assert.equal(fixedDetails.includes('id="pathways"'), false, "Pathways editor should be removed because it no longer appears in preview");
+  assert.equal(fixedDetails.includes('id="joinInfo"'), false, "join info editor should be removed because it no longer appears in preview");
+  assert.ok(fixedDetails.includes('id="meetingRules"'), "meeting rules editor should remain because it drives the footer card");
+  assert.ok(fixedDetails.includes("每行一条"), "meeting rules editor should explain that each line maps to one preview rule");
+});
+
+test("export panel separates print actions from json backup actions", () => {
+  const panel = exportPanelTemplate();
+  const groupsRule = cssRule(".export-action-groups");
+  const actionsRule = cssRule(".export-actions");
+
+  assert.ok(panel.includes("导出与备份"), "export panel title should be clearer than only 导出");
+  assert.ok(panel.includes("打印输出"), "print/copy actions should have their own group");
+  assert.ok(panel.includes("数据备份"), "JSON actions should have their own group");
+  assert.match(panel, /<div class="export-actions primary">[\s\S]*?id="printBtnSide"[\s\S]*?id="copyBtn"[\s\S]*?<\/div>/, "print and copy should sit together");
+  assert.match(panel, /<div class="export-actions backup">[\s\S]*?id="exportJsonBtn"[\s\S]*?id="importJsonBtn"[\s\S]*?<\/div>/, "JSON export/import should sit together");
+  assert.match(groupsRule, /display:\s*grid;[\s\S]*?gap:\s*14px;/, "export groups should be visually separated");
+  assert.match(actionsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "paired export buttons should align in two columns");
 });
