@@ -66,6 +66,23 @@ test("timing rule groups read as calm vertical instruction cards", () => {
   assert.match(source, /\.timing-rule-heading\s*\{[\s\S]*?grid-template-columns:\s*26px minmax\(0,\s*1fr\);/, "each rule card should have a clear icon-led heading");
 });
 
+test("sidebar typography and gutters stay visually consistent", () => {
+  const titleRule = cssRule(".template-info-card h3");
+  const bodyRule = cssRule(".template-info-body");
+  const compactBodyRule = cssRule(".template-info-body.compact");
+  const timingBodyRule = cssRule(".timing-rules-body");
+  const infoLineRule = cssRule(".info-line");
+  const teamRowRule = cssRule(".team-row");
+
+  assert.match(source, /--sidebar-card-x:\s*14px;/, "sidebar cards should share one horizontal padding token");
+  assert.match(titleRule, /padding:\s*7px var\(--sidebar-card-x\);/, "card titles should align with body text");
+  assert.match(bodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\) 11px;/, "standard card bodies should use the shared gutter");
+  assert.match(compactBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "compact card bodies should keep the same left and right gutter");
+  assert.match(timingBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "timing card body should align to the shared sidebar gutter");
+  assert.match(infoLineRule, /font-size:\s*10\.8px;[\s\S]*?line-height:\s*1\.38;/, "about text should keep a readable body rhythm");
+  assert.match(teamRowRule, /font-size:\s*10\.4px;[\s\S]*?line-height:\s*1\.28;/, "team rows should be readable without feeling loose");
+});
+
 test("timing rules module contains all three detailed rule groups", () => {
   const sidebar = sidebarTemplate();
 
