@@ -1403,7 +1403,10 @@
 
     .template-meta-icon svg,
     .flow-title-mark svg,
-    .signal-icon svg {
+    .signal-icon svg,
+    .timing-rule-icon svg,
+    .timing-note-icon svg,
+    .rule-bell-icon svg {
       width: 70%;
       height: 70%;
       display: block;
@@ -1427,7 +1430,7 @@
       height: 100%;
       display: grid;
       gap: 10px;
-      grid-template-rows: auto auto auto auto minmax(132px, 1fr);
+      grid-template-rows: 0.92fr 2.36fr 0.68fr 0.78fr;
       align-content: stretch;
       align-self: stretch;
     }
@@ -1498,8 +1501,8 @@
     .template-info-card li {
       margin: 0;
       color: #211a15;
-      font-size: 10.8px;
-      line-height: 1.48;
+      font-size: 10.6px;
+      line-height: 1.34;
       white-space: pre-line;
     }
 
@@ -1646,9 +1649,155 @@
       text-align: center;
     }
 
+    .about-card .template-info-body {
+      gap: 4px;
+    }
+
+    .timing-rules-body {
+      gap: 6px;
+      padding: 8px 10px;
+    }
+
+    .timing-rules-intro {
+      color: #4c4038;
+      font-size: 9.6px;
+      line-height: 1.28;
+      font-weight: 760;
+    }
+
+    .timing-rule-groups {
+      display: grid;
+      gap: 5px;
+    }
+
+    .timing-rule-card {
+      min-width: 0;
+      padding: 5px 6px;
+      display: grid;
+      gap: 3px;
+      border: 1px solid rgba(119, 36, 50, 0.18);
+      border-radius: 8px;
+      background: linear-gradient(180deg, #fffdf8 0%, #fff8f2 100%);
+      box-shadow: 0 1px 3px rgba(31, 20, 10, 0.06);
+    }
+
+    .timing-rule-heading {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 5px;
+      align-items: start;
+    }
+
+    .timing-rule-icon {
+      width: 17px;
+      height: 17px;
+      display: grid;
+      place-items: center;
+      color: #9f2d3d;
+    }
+
+    .timing-rule-heading strong {
+      display: block;
+      color: #8f1f34;
+      font-size: 10.1px;
+      line-height: 1.12;
+      font-weight: 950;
+    }
+
+    .timing-rule-heading small {
+      display: block;
+      margin-top: 1px;
+      color: #665b52;
+      font-size: 7.8px;
+      line-height: 1.16;
+      font-weight: 720;
+    }
+
+    .timing-rule-list {
+      display: grid;
+      gap: 1px;
+    }
+
+    .timing-rule-line {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      align-items: center;
+      gap: 4px;
+      padding-top: 1px;
+      border-top: 1px dashed rgba(106, 88, 66, 0.12);
+    }
+
+    .timing-rule-line:first-child {
+      border-top: 0;
+    }
+
+    .timing-rule-token {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #211a15;
+      font-size: 8.5px;
+      line-height: 1.12;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .timing-rule-token .signal-card {
+      width: 10px;
+      height: 8px;
+      border-radius: 2px;
+      flex: 0 0 auto;
+    }
+
+    .rule-bell-icon {
+      width: 10px;
+      height: 10px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      color: #c21f32;
+    }
+
+    .timing-rule-value {
+      min-width: 0;
+      color: #211a15;
+      font-size: 8.8px;
+      line-height: 1.14;
+      font-weight: 820;
+      overflow-wrap: anywhere;
+    }
+
+    .timing-note {
+      min-width: 0;
+      padding: 5px 7px;
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr);
+      gap: 5px;
+      align-items: start;
+      border-radius: 7px;
+      color: #5f281f;
+      background: #fff6df;
+      box-shadow: inset 0 0 0 1px rgba(159, 45, 61, 0.16);
+      font-size: 8.4px;
+      line-height: 1.25;
+      font-weight: 820;
+    }
+
+    .timing-note-icon {
+      width: 15px;
+      height: 15px;
+      display: grid;
+      place-items: center;
+      color: #9f2d3d;
+    }
+
     .team-grid {
       display: grid;
-      row-gap: 3px;
+      row-gap: 2px;
+      align-content: start;
     }
 
     .team-row {
@@ -2332,6 +2481,24 @@
       .signal-card.yellow { background: #ffd426 !important; }
       .signal-card.red { background: #e51d2a !important; }
 
+      .timing-rule-card {
+        background: #fffaf2 !important;
+        box-shadow: inset 0 0 0 1px rgba(119, 36, 50, 0.12) !important;
+      }
+
+      .timing-rule-icon,
+      .timing-note-icon {
+        color: #9f2d3d !important;
+      }
+
+      .rule-bell-icon {
+        color: #c21f32 !important;
+      }
+
+      .timing-note {
+        background: #fff6df !important;
+      }
+
       .poster-body {
         padding: 0;
       }
@@ -2926,15 +3093,27 @@
     function deriveTimingRule(minutes) {
       const total = Math.max(0, Number(minutes) || 0) * 60;
       if (!total) {
-        return { green: 0, yellow: 0, red: 0, bell: 15, band: "请先输入分钟数" };
+        return {
+          green: 0,
+          yellow: 0,
+          red: 0,
+          band: "请先输入分钟数",
+          greenReminder: "输入时长后显示",
+          yellowReminder: "输入时长后显示",
+          redReminder: "时间到",
+          bellReminder: "按规则响铃"
+        };
       }
       if (minutes <= 3) {
         return {
           green: Math.max(0, total - 60),
           yellow: Math.max(0, total - 30),
           red: total,
-          bell: 15,
-          band: "3分钟及以下"
+          band: "3分钟及以下规则",
+          greenReminder: "剩余 1 分钟",
+          yellowReminder: "剩余 30 秒",
+          redReminder: "时间到",
+          bellReminder: "超时 15 秒"
         };
       }
       if (minutes <= 10) {
@@ -2942,16 +3121,22 @@
           green: Math.max(0, total - 120),
           yellow: Math.max(0, total - 60),
           red: total,
-          bell: 30,
-          band: "3-10分钟"
+          band: "3–10分钟规则",
+          greenReminder: "剩余 2 分钟",
+          yellowReminder: "剩余 1 分钟",
+          redReminder: "时间到",
+          bellReminder: "超时 30 秒"
         };
       }
       return {
         green: Math.max(0, total - 300),
         yellow: Math.max(0, total - 120),
         red: total,
-        bell: 30,
-        band: "10分钟以上"
+        band: "10分钟以上规则",
+        greenReminder: "剩余 5 分钟",
+        yellowReminder: "剩余 2 分钟",
+        redReminder: "时间到",
+        bellReminder: "超时 30 秒"
       };
     }
 
@@ -2959,7 +3144,7 @@
       const minutes = parseDurationMinutes(duration);
       const rule = deriveTimingRule(minutes);
       if (!minutes) return "输入分钟数后自动推导绿牌、黄牌、红牌与铃声。";
-      return `规则说明：${rule.band}，绿牌 ${secondsToClock(rule.green)}，黄牌 ${secondsToClock(rule.yellow)}，红牌 ${secondsToClock(rule.red)}，超时 ${rule.bell} 秒响铃。`;
+      return `规则说明：${rule.band}｜绿牌：${rule.greenReminder}｜黄牌：${rule.yellowReminder}｜红牌：${rule.redReminder}｜响铃：${rule.bellReminder}。`;
     }
 
     function findDefaultByTitle(title) {
@@ -3231,21 +3416,6 @@
         `会议时间：每周 ${weekdayText(state.date)} ${state.startTime}-${state.endTime}`,
         `地点：${state.location}`
       ].filter(Boolean).join("\n");
-      const introOrPosterCard = state.posterData ? `
-            <section class="template-info-card poster-info-card">
-              ${cardTitleHtml("note", "本期海报")}
-              <div class="template-info-body poster-body">
-                <img class="template-poster" src="${escapeHtml(state.posterData)}" alt="本期海报" />
-              </div>
-            </section>
-      ` : `
-            <section class="template-info-card">
-              ${cardTitleHtml("people", "关于我们")}
-              <div class="template-info-body">
-                ${infoLinesHtml(aboutInfo)}
-              </div>
-            </section>
-      `;
       const itemRows = groups.map((group, groupIndex) => {
         return group.items.map((item, itemIndex) => {
           const sectionCell = itemIndex === 0 ? `
@@ -3302,9 +3472,50 @@
 
         <section class="template-main">
           <aside class="template-sidebar">
-            ${introOrPosterCard}
-            <section class="template-info-card">
-              ${cardTitleHtml("qr", "扫码关注我们")}
+            <section class="template-info-card about-card">
+              ${cardTitleHtml("people", "关于我们")}
+              <div class="template-info-body">
+                ${infoLinesHtml(aboutInfo)}
+              </div>
+            </section>
+            <section class="template-info-card timing-rules-card">
+              ${cardTitleHtml("bell", "提示信号与计时规则")}
+              <div class="template-info-body compact timing-rules-body">
+                <p class="timing-rules-intro">计时员将按不同演讲时长举牌提醒，并在超时后响铃。</p>
+                <div class="timing-rule-groups">
+                  <div class="timing-rule-card">
+                    <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>3分钟及以下规则</strong><small>适用于主席致辞、主持串场、三官宣言、短点评等</small></span></div>
+                    <div class="timing-rule-list">
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 30 秒</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 15 秒</span></div>
+                    </div>
+                  </div>
+                  <div class="timing-rule-card">
+                    <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>3–10分钟规则</strong><small>适用于备稿演讲、来宾介绍、即兴点评等</small></span></div>
+                    <div class="timing-rule-list">
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
+                    </div>
+                  </div>
+                  <div class="timing-rule-card">
+                    <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>10分钟以上规则</strong><small>适用于工作坊、专题分享、较长流程说明等</small></span></div>
+                    <div class="timing-rule-list">
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 5 分钟</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-line"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="timing-note"><span class="timing-note-icon">${templateIconSvg("timer")}</span><span>举牌为静音提示，请演讲者留意节奏；红牌后请尽快收尾。</span></div>
+              </div>
+            </section>
+            <section class="template-info-card qr-info-card">
+              ${cardTitleHtml("qr", "拍照关注我们")}
               <div class="template-info-body compact">
                 <div class="qr-row">
                   <div class="qr-item">${wechatQr}<span>取伙</span></div>
@@ -3312,33 +3523,10 @@
                 </div>
               </div>
             </section>
-            <section class="template-info-card">
-              ${cardTitleHtml("bell", "提示信号")}
-              <div class="template-info-body compact signal-list">
-                <div class="signal-row"><span class="signal-key"><span class="signal-card green"></span><span>绿卡</span></span><span class="signal-desc">掌声 1-3 秒</span></div>
-                <div class="signal-row"><span class="signal-key"><span class="signal-card yellow"></span><span>黄卡</span></span><span class="signal-desc">掌声 1-20 秒</span></div>
-                <div class="signal-row"><span class="signal-key"><span class="signal-card red"></span><span>红卡</span></span><span class="signal-desc">停止发言</span></div>
-                <div class="signal-row"><span class="signal-key"><span class="signal-icon">${templateIconSvg("hand")}</span><span>静音</span></span><span class="signal-desc">手机静音</span></div>
-                <div class="signal-row"><span class="signal-key"><span class="signal-icon">${templateIconSvg("timer")}</span><span>计时</span></span><span class="signal-desc">时间到</span></div>
-                <div class="signal-row"><span class="signal-key"><span class="signal-icon">${templateIconSvg("delay")}</span><span>延时</span></span><span class="signal-desc">延时 30 秒</span></div>
-              </div>
-            </section>
-            <section class="template-info-card">
-              ${cardTitleHtml("team", "会长团队")}
+            <section class="template-info-card team-info-card">
+              ${cardTitleHtml("team", "会员团队")}
               <div class="template-info-body team-grid">
                 ${officerGridHtml()}
-              </div>
-            </section>
-            <section class="template-info-card">
-              ${cardTitleHtml("join", "如何加入我们")}
-              <div class="template-info-body">
-                ${infoLinesHtml(state.joinInfo || state.meetingRules)}
-              </div>
-            </section>
-            <section class="template-info-card pathways-card">
-              ${cardTitleHtml("note", "TM-Pathways 6条学习路径")}
-              <div class="template-info-body pathways-body">
-                ${pathwaysHtml(state.pathways)}
               </div>
             </section>
           </aside>
