@@ -10,6 +10,12 @@ function sidebarTemplate() {
   return match[1];
 }
 
+function footerTemplate() {
+  const match = source.match(/<footer class="template-footer">([\s\S]*?)<\/footer>/);
+  assert.ok(match, "renderPreview should contain the printable template footer");
+  return match[1];
+}
+
 function cssRule(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = source.match(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`));
@@ -130,4 +136,32 @@ test("timing rules module contains all three detailed rule groups", () => {
       assert.ok(sidebar.includes(text), `${rule.title} should include: ${text}`);
     }
   }
+});
+
+test("printable footer keeps guest participation as centered tags", () => {
+  const footer = footerTemplate();
+  const guestTagsRule = cssRule(".guest-tags");
+  const guestCardRule = cssRule(".guest-participation");
+
+  assert.ok(footer.includes("来宾可参与环节"), "footer should keep the guest participation title");
+  assert.ok(footer.includes("guestParticipationHtml(state.guestInvitation)"), "guest card should use the tag renderer");
+  for (const text of ["来宾介绍", "即兴演讲", "真情分享", "无需经验，欢迎第一次参加"]) {
+    assert.ok(source.includes(text), `guest card should include: ${text}`);
+  }
+  assert.doesNotMatch(source, /诚邀您一起|成为一半|所有的伟大都源于开始/, "guest card defaults should not include long slogans");
+  assert.match(guestTagsRule, /display:\s*flex;[\s\S]*?justify-content:\s*center;/, "guest tags should align neatly as centered tags");
+  assert.match(guestCardRule, /align-content:\s*center;[\s\S]*?justify-items:\s*center;/, "guest content should be vertically centered");
+});
+
+test("printable footer replaces notes with meeting rules", () => {
+  const footer = footerTemplate();
+  const rulesListRule = cssRule(".meeting-rules-list");
+
+  assert.ok(footer.includes("会议守则"), "footer should render a meeting rules card");
+  assert.equal(footer.includes("<span>备注</span>"), false, "footer should not render the old notes title");
+  assert.ok(footer.includes("meetingRulesHtml(state.meetingRules)"), "meeting rules should use the rules renderer");
+  for (const text of ["手机请调至静音", "请留意时间官提示", "欢迎鼓掌、反馈与投票", "入会咨询请联系会员副会长"]) {
+    assert.ok(source.includes(text), `meeting rules should include: ${text}`);
+  }
+  assert.match(rulesListRule, /align-content:\s*center;[\s\S]*?text-align:\s*left;/, "meeting rules should be vertically centered and readable");
 });

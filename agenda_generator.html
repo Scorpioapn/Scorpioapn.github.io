@@ -2201,6 +2201,12 @@
       white-space: pre-line;
     }
 
+    .footer-card-body {
+      min-height: 42px;
+      display: grid;
+      align-content: center;
+    }
+
     .next-meeting-footer {
       display: grid;
       gap: 4px;
@@ -2223,6 +2229,72 @@
       color: #211a15;
       font-size: 11px;
       line-height: 1.25;
+    }
+
+    .guest-participation {
+      gap: 7px;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .guest-tags {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .guest-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #211a15;
+      font-size: 11.2px;
+      line-height: 1.15;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .guest-note {
+      margin: 0;
+      color: #4c4038;
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 760;
+      white-space: normal;
+    }
+
+    .meeting-rules-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 2px;
+      align-content: center;
+      justify-content: center;
+      text-align: left;
+      color: #211a15;
+      font-size: 10.6px;
+      line-height: 1.24;
+      font-weight: 760;
+    }
+
+    .meeting-rules-list li {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 8px minmax(0, 1fr);
+      gap: 6px;
+      align-items: start;
+      white-space: normal;
+    }
+
+    .meeting-rules-list li::before {
+      content: "•";
+      color: var(--tm-navy);
+      font-weight: 950;
     }
 
     .footer-notes-text {
@@ -2905,6 +2977,14 @@
   <script>
     const STORAGE_KEY = "tm_agenda_generator_v1";
     const OFFICIAL_TOASTMASTERS_LOGO_SRC = "assets/toastmasters-logo-color-png.png";
+    const GUEST_PARTICIPATION_TAGS = ["来宾介绍", "即兴演讲", "真情分享"];
+    const GUEST_PARTICIPATION_NOTE = "无需经验，欢迎第一次参加";
+    const DEFAULT_MEETING_RULES = [
+      "手机请调至静音",
+      "请留意时间官提示",
+      "欢迎鼓掌、反馈与投票",
+      "入会咨询请联系会员副会长"
+    ];
 
     const DEFAULT_DATA = {
       clubName: "畅言中文国际演讲俱乐部",
@@ -2931,9 +3011,10 @@
       pathways: "Pathways 是头马国际演讲教育体系，6条学习路径覆盖不同方向的能力训练。\nDynamic Leadership 动态领导力\nEngaging Humor 运用幽默\nMotivational Strategies 激励策略\nPresentation Mastery 精通演讲\nPersuasive Influence 有说服力的影响\nVisionary Communication 愿景沟通",
       officers: "会长：女侠  秘书长：夏奈\n教育副会长：聪聪  财务官：王兵伟\n会员副会长：Venus斯敏  事务官：Jeff\n公关副会长：水杨酸",
       joinInfo: "入会条件：参加2次以上例会，并完成一次角色或四项演讲/履职分享。\n入会费用：首次缴费包含国际会费、本地会费及资料费。",
-      meetingRules: "1. 请将手机调至静音。\n2. 演讲时请尊重时间官提示。\n3. 会议期间欢迎积极鼓掌、反馈和投票。\n4. 来宾可在会议后联系会员副会长了解入会。",
+      meetingRules: DEFAULT_MEETING_RULES.join("\n"),
       meetingVision: "会议愿景：很开心与大家建立一种愉悦的学习旅程，谢谢大家~",
-      guestInvitation: "【来宾介绍】 【即兴演讲】 【真情分享】\n诚邀您一起，成为一半！\n所有的伟大都源于开始！",
+      guestInvitation: `【${GUEST_PARTICIPATION_TAGS.join("】 【")}】
+${GUEST_PARTICIPATION_NOTE}`,
       items: [
         { id: "s-open", kind: "section", title: "一、开场环节" },
         { id: "i-guest-checkin", kind: "item", time: "19:15", title: "来宾入会，相互认识与交流", detail: "", duration: "10", person: "全体会员" },
@@ -3403,6 +3484,55 @@
       return `${formatDate(nextDate)}（${weekdayText(nextDate)}） ${nextTime}`;
     }
 
+    function guestParticipationHtml(text) {
+      const raw = String(text || "").trim();
+      const parsedTags = [...raw.matchAll(/[【\[]([^】\]]+)[】\]]/g)]
+        .map((match) => match[1].trim())
+        .filter(Boolean);
+      const tags = (parsedTags.length ? parsedTags : GUEST_PARTICIPATION_TAGS).slice(0, 3);
+      const note = raw
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .find((line) => line && !/[【\[]/.test(line) && !/诚邀|一半|伟大|源于开始/.test(line))
+        || GUEST_PARTICIPATION_NOTE;
+
+      return `
+        <div class="footer-card-body guest-participation">
+          <div class="guest-tags">
+            ${tags.map((tag) => `<span class="guest-tag">[${escapeHtml(tag)}]</span>`).join("")}
+          </div>
+          <p class="guest-note">${escapeHtml(note)}</p>
+        </div>
+      `;
+    }
+
+    function normalizeMeetingRuleLine(line) {
+      const text = String(line || "")
+        .trim()
+        .replace(/^[\d一二三四五六七八九十]+[.．、]\s*/, "")
+        .replace(/^[-•]\s*/, "")
+        .replace(/[。.]$/, "");
+      if (!text) return "";
+      if (/手机.*静音/.test(text)) return "手机请调至静音";
+      if (/时间官提示|尊重时间官/.test(text)) return "请留意时间官提示";
+      if (/鼓掌.*反馈.*投票/.test(text)) return "欢迎鼓掌、反馈与投票";
+      if (/入会|会员副会长/.test(text)) return "入会咨询请联系会员副会长";
+      return text;
+    }
+
+    function meetingRulesHtml(text) {
+      const lines = String(text || "")
+        .split(/\n+/)
+        .map(normalizeMeetingRuleLine)
+        .filter(Boolean);
+      const rules = (lines.length ? lines : DEFAULT_MEETING_RULES).slice(0, 4);
+      return `
+        <ul class="footer-card-body meeting-rules-list">
+          ${rules.map((rule) => `<li>${escapeHtml(rule)}</li>`).join("")}
+        </ul>
+      `;
+    }
+
     function parseOfficerEntries(text) {
       const entries = [];
       String(text || "").split(/\n+/).forEach((rawLine) => {
@@ -3480,10 +3610,6 @@
         }).join("");
       }).join("");
 
-      const footerNotes = String(state.footerNotes || "").trim();
-      const footerNotesHtml = footerNotes
-        ? `<p class="footer-notes-text">${escapeHtml(footerNotes)}</p>`
-        : `<div class="note-lines"><span></span><span></span><span></span></div>`;
       els.previewChip.textContent = `第 ${state.meetingNo || "-"} 期`;
       els.printPage.innerHTML = `
         <header class="template-header">
@@ -3601,11 +3727,11 @@
           </section>
           <section class="template-footer-box">
             <h3>${templateIconSvg("people")}<span>来宾可参与环节</span></h3>
-            <p>${escapeHtml(state.guestInvitation || "")}</p>
+            ${guestParticipationHtml(state.guestInvitation)}
           </section>
           <section class="template-footer-box">
-            <h3>${templateIconSvg("note")}<span>备注</span></h3>
-            ${footerNotesHtml}
+            <h3>${templateIconSvg("note")}<span>会议守则</span></h3>
+            ${meetingRulesHtml(state.meetingRules)}
           </section>
         </footer>
       `;
@@ -3861,8 +3987,15 @@
           if (item.detail) lines.push(`  ${item.detail}`);
         }
       });
-      lines.push("", `下期例会主题：${state.nextTheme}`, `下次例会时间：${formatNextMeeting()}`);
-      if (state.footerNotes) lines.push(`备注：${state.footerNotes}`);
+      lines.push(
+        "",
+        `下期例会主题：${state.nextTheme}`,
+        `下次例会时间：${formatNextMeeting()}`,
+        `来宾可参与环节：${GUEST_PARTICIPATION_TAGS.join("、")}`,
+        `来宾说明：${GUEST_PARTICIPATION_NOTE}`,
+        "会议守则：",
+        ...DEFAULT_MEETING_RULES.map((rule) => `- ${rule}`)
+      );
       return lines.join("\n");
     }
 
