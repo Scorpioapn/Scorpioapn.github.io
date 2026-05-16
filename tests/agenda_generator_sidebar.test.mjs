@@ -36,8 +36,8 @@ test("printable sidebar keeps a single aligned four-card grid", () => {
   assert.match(source, /--template-sidebar-width:\s*316px;/, "sidebar should gain a little width for a calmer left column");
   assert.match(
     source,
-    /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.92fr 2\.32fr 0\.66fr 0\.68fr;[\s\S]*?align-content:\s*stretch;/,
-    "sidebar should keep four aligned rows that fill the printable flow height"
+    /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.90fr 2\.22fr 0\.66fr 0\.80fr;[\s\S]*?align-content:\s*stretch;/,
+    "sidebar should keep four aligned rows while giving the member team card more room"
   );
   assert.match(source, /\.template-sidebar\s*\{[\s\S]*?gap:\s*10px;/, "sidebar cards should keep consistent compact gaps");
   assert.match(source, /\.template-info-card\s*\{[\s\S]*?grid-template-rows:\s*auto minmax\(0,\s*1fr\);/, "cards should keep title/body alignment");
@@ -80,7 +80,8 @@ test("sidebar typography and gutters stay visually consistent", () => {
   assert.match(compactBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "compact card bodies should keep the same left and right gutter");
   assert.match(timingBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "timing card body should align to the shared sidebar gutter");
   assert.match(infoLineRule, /font-size:\s*10\.8px;[\s\S]*?line-height:\s*1\.38;/, "about text should keep a readable body rhythm");
-  assert.match(teamRowRule, /font-size:\s*10\.4px;[\s\S]*?line-height:\s*1\.28;/, "team rows should be readable without feeling loose");
+  assert.match(source, /\.team-grid\s*\{[\s\S]*?row-gap:\s*5px;[\s\S]*?align-content:\s*center;/, "team list should have demo-like vertical breathing room");
+  assert.match(teamRowRule, /font-size:\s*10\.4px;[\s\S]*?line-height:\s*1\.38;/, "team rows should be readable without feeling cramped");
 });
 
 test("timing rules module contains all three detailed rule groups", () => {
