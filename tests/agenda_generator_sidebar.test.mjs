@@ -1,5 +1,5 @@
 ﻿import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const source = readFileSync(new URL("../agenda_generator.html", import.meta.url), "utf8");
@@ -25,7 +25,7 @@ function cssRule(selector) {
 
 test("printable sidebar renders the requested information cards in order", () => {
   const sidebar = sidebarTemplate();
-  const expectedOrder = ["关于我们", "提示信号与计时规则", "拍照关注我们", "会员团队"];
+  const expectedOrder = ["关于我们", "提示信号与计时规则", "关注我们", "会员团队"];
   let previousIndex = -1;
 
   for (const label of expectedOrder) {
@@ -50,6 +50,19 @@ test("default member team roster matches the updated club officers", () => {
   ]) {
     assert.ok(source.includes(text), `updated default roster should include: ${text}`);
   }
+});
+
+test("follow-us card uses default QR assets with upload override support", () => {
+  const sidebar = sidebarTemplate();
+
+  assert.ok(sidebar.includes("关注我们"), "QR sidebar card should use the shorter title");
+  assert.equal(sidebar.includes("拍照关注我们"), false, "QR sidebar card should not use the old longer title");
+  assert.ok(existsSync(new URL("../assets/quhuo-qr.png", import.meta.url)), "default 取火 QR asset should exist");
+  assert.ok(existsSync(new URL("../assets/join-consult-qr.png", import.meta.url)), "default 入会咨询 QR asset should exist");
+  assert.match(source, /DEFAULT_WECHAT_QR_SRC\s*=\s*"assets\/quhuo-qr\.png"/, "取火 QR should have a repo asset default");
+  assert.match(source, /DEFAULT_JOIN_QR_SRC\s*=\s*"assets\/join-consult-qr\.png"/, "入会咨询 QR should have a repo asset default");
+  assert.match(source, /qrBoxHtml\(state\.wechatQrData\s*\|\|\s*DEFAULT_WECHAT_QR_SRC\)/, "取火 QR should fall back to the default asset");
+  assert.match(source, /qrBoxHtml\(state\.joinQrData\s*\|\|\s*DEFAULT_JOIN_QR_SRC\)/, "入会咨询 QR should fall back to the default asset");
 });
 test("printable sidebar keeps a single aligned four-card grid", () => {
   assert.match(source, /--template-sidebar-width:\s*316px;/, "sidebar should gain a little width for a calmer left column");

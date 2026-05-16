@@ -2977,6 +2977,8 @@
   <script>
     const STORAGE_KEY = "tm_agenda_generator_v1";
     const OFFICIAL_TOASTMASTERS_LOGO_SRC = "assets/toastmasters-logo-color-png.png";
+    const DEFAULT_WECHAT_QR_SRC = "assets/quhuo-qr.png";
+    const DEFAULT_JOIN_QR_SRC = "assets/join-consult-qr.png";
     const GUEST_PARTICIPATION_TAGS = ["来宾介绍", "即兴演讲", "真情分享"];
     const GUEST_PARTICIPATION_NOTE = "无需经验，欢迎第一次参加";
     const DEFAULT_MEETING_RULES = [
@@ -3333,12 +3335,14 @@ ${GUEST_PARTICIPATION_NOTE}`,
           overlay: "更换二维码",
           updated: "取伙二维码已更新",
           removed: "二维码已移除",
+          defaultSrc: DEFAULT_WECHAT_QR_SRC,
         },
         joinQrData: {
           emptyLabel: "入会咨询二维码",
           overlay: "更换二维码",
           updated: "入会咨询二维码已更新",
           removed: "二维码已移除",
+          defaultSrc: DEFAULT_JOIN_QR_SRC,
         },
       };
       return meta[field] || {
@@ -3354,7 +3358,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         const field = preview.dataset.imagePreview;
         const meta = imageFieldMeta(field);
         const value = state[field] || "";
-        const displayValue = value || (field === "logoData" ? OFFICIAL_TOASTMASTERS_LOGO_SRC : "");
+        const displayValue = value || meta.defaultSrc || (field === "logoData" ? OFFICIAL_TOASTMASTERS_LOGO_SRC : "");
         preview.classList.toggle("has-image", Boolean(displayValue));
         preview.innerHTML = displayValue
           ? `<img src="${escapeHtml(displayValue)}" alt="" /><span class="upload-overlay">${escapeHtml(meta.overlay)}</span>`
@@ -3590,8 +3594,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
     function renderPreview() {
       const groups = buildAgendaGroups();
-      const wechatQr = qrBoxHtml(state.wechatQrData);
-      const joinQr = qrBoxHtml(state.joinQrData);
+      const wechatQr = qrBoxHtml(state.wechatQrData || DEFAULT_WECHAT_QR_SRC);
+      const joinQr = qrBoxHtml(state.joinQrData || DEFAULT_JOIN_QR_SRC);
       const logoHtml = state.logoData
         ? `<img src="${escapeHtml(state.logoData)}" alt="Toastmasters Logo" />`
         : `<img src="${OFFICIAL_TOASTMASTERS_LOGO_SRC}" alt="Toastmasters International Logo" />`;
@@ -3695,7 +3699,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
               </div>
             </section>
             <section class="template-info-card qr-info-card">
-              ${cardTitleHtml("qr", "拍照关注我们")}
+              ${cardTitleHtml("qr", "关注我们")}
               <div class="template-info-body compact">
                 <div class="qr-row">
                   <div class="qr-item">${wechatQr}<span>取伙</span></div>
