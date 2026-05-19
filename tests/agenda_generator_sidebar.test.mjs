@@ -188,19 +188,25 @@ test("timing rules module contains all three detailed rule groups", () => {
   }
 });
 
-test("printable footer keeps guest participation as centered tags", () => {
+test("printable footer keeps guest participation beside the live voting QR", () => {
   const footer = footerTemplate();
   const guestTagsRule = cssRule(".guest-tags");
   const guestCardRule = cssRule(".guest-participation");
+  const voteCardRule = cssRule(".guest-vote-card");
+  const voteImageRule = cssRule(".guest-vote-card img");
 
-  assert.ok(footer.includes("来宾可参与环节"), "footer should keep the guest participation title");
+  assert.ok(footer.includes("来宾可参与方式"), "footer should use the updated guest participation title");
   assert.ok(footer.includes("guestParticipationHtml(state.guestInvitation)"), "guest card should use the tag renderer");
-  for (const text of ["来宾介绍", "即兴演讲", "真情分享", "无需经验，欢迎第一次参加"]) {
+  for (const text of ["来宾介绍", "即兴演讲", "话题分词", "无需经验，欢迎第一次参加", "现场投票"]) {
     assert.ok(source.includes(text), `guest card should include: ${text}`);
   }
+  assert.ok(source.includes("DEFAULT_VOTE_QR_SRC"), "guest card should reference the bundled vote QR asset");
+  assert.ok(existsSync(new URL("../assets/vote-qr.png", import.meta.url)), "vote QR asset should exist");
   assert.doesNotMatch(source, /诚邀您一起|成为一半|所有的伟大都源于开始/, "guest card defaults should not include long slogans");
-  assert.match(guestTagsRule, /display:\s*flex;[\s\S]*?justify-content:\s*center;/, "guest tags should align neatly as centered tags");
-  assert.match(guestCardRule, /align-content:\s*center;[\s\S]*?justify-items:\s*center;/, "guest content should be vertically centered");
+  assert.match(guestTagsRule, /display:\s*flex;[\s\S]*?justify-content:\s*flex-start;/, "guest tags should stay on the left side");
+  assert.match(guestCardRule, /grid-template-columns:\s*minmax\(0,\s*1fr\) 78px;[\s\S]*?align-items:\s*center;/, "guest card should reserve a right column for voting QR");
+  assert.match(voteCardRule, /width:\s*78px;[\s\S]*?border-radius:\s*9px;[\s\S]*?background:\s*#ffffff;/, "vote QR should sit in a small white rounded card");
+  assert.match(voteImageRule, /width:\s*64px;[\s\S]*?height:\s*64px;/, "vote QR image should stay compact in the footer");
 });
 
 test("printable footer renders as three independent reference-style cards", () => {
@@ -223,7 +229,7 @@ test("printable footer renders as three independent reference-style cards", () =
   assert.match(titleRule, /display:\s*flex;[\s\S]*?justify-content:\s*flex-start;/, "footer titles should align to the left");
   assert.match(nextRule, /justify-items:\s*start;[\s\S]*?text-align:\s*left;/, "next meeting content should be left aligned");
   assert.match(nextThemeRule, /color:\s*var\(--tm-maroon\);[\s\S]*?font-size:\s*14px;/, "next meeting theme should be the visual emphasis");
-  assert.match(guestTagRule, /background:\s*#eaf3fb;[\s\S]*?border-radius:\s*999px;[\s\S]*?padding:\s*4px 10px;/, "guest participation labels should look like blue pills");
+  assert.match(guestTagRule, /background:\s*#eaf3fb;[\s\S]*?border-radius:\s*999px;[\s\S]*?padding:\s*4px 8px;/, "guest participation labels should look like compact blue pills");
   assert.match(rulesBulletRule, /background:\s*var\(--tm-maroon\);[\s\S]*?content:\s*"✓";/, "meeting rules should use compact red checked bullets");
 });
 

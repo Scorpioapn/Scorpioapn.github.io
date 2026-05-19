@@ -2191,6 +2191,7 @@
       display: grid;
       grid-template-columns: var(--template-sidebar-width) minmax(0, 1.4fr) minmax(0, 1fr);
       gap: 14px;
+      align-items: stretch;
       background: transparent;
       box-shadow: none;
     }
@@ -2203,6 +2204,8 @@
       background: var(--tm-card);
       text-align: left;
       box-shadow: var(--shadow-card);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
     }
 
     .template-footer-box h3 {
@@ -2267,18 +2270,28 @@
     }
 
     .guest-participation {
-      gap: 9px;
+      grid-template-columns: minmax(0, 1fr) 78px;
+      gap: 10px;
+      align-items: center;
       align-content: center;
-      justify-items: center;
-      text-align: center;
+      justify-items: stretch;
+      text-align: left;
+    }
+
+    .guest-participation-copy {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+      align-content: center;
+      justify-items: start;
     }
 
     .guest-tags {
       display: flex;
       flex-wrap: nowrap;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: center;
-      gap: 9px;
+      gap: 6px;
       min-width: 0;
     }
 
@@ -2289,8 +2302,8 @@
       color: var(--tm-navy);
       background: #eaf3fb;
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 10.6px;
+      padding: 4px 8px;
+      font-size: 9.8px;
       line-height: 1.15;
       font-weight: 850;
       white-space: nowrap;
@@ -2303,6 +2316,34 @@
       line-height: 1.25;
       font-weight: 760;
       white-space: normal;
+    }
+
+    .guest-vote-card {
+      width: 78px;
+      margin: 0;
+      padding: 6px 5px 5px;
+      display: grid;
+      justify-items: center;
+      gap: 3px;
+      border: 1px solid rgba(0, 48, 71, 0.18);
+      border-radius: 9px;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(31, 20, 10, 0.08);
+    }
+
+    .guest-vote-card img {
+      width: 64px;
+      height: 64px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .guest-vote-card figcaption {
+      color: var(--tm-navy);
+      font-size: 9.5px;
+      line-height: 1.1;
+      font-weight: 850;
+      text-align: center;
     }
 
     .meeting-rules-list {
@@ -3015,7 +3056,8 @@
     const OFFICIAL_TOASTMASTERS_LOGO_SRC = "assets/toastmasters-logo-color-png.png";
     const DEFAULT_WECHAT_QR_SRC = "assets/quhuo-qr.png";
     const DEFAULT_JOIN_QR_SRC = "assets/join-consult-qr.png";
-    const GUEST_PARTICIPATION_TAGS = ["来宾介绍", "即兴演讲", "真情分享"];
+    const DEFAULT_VOTE_QR_SRC = "assets/vote-qr.png";
+    const GUEST_PARTICIPATION_TAGS = ["来宾介绍", "即兴演讲", "话题分词"];
     const GUEST_PARTICIPATION_NOTE = "无需经验，欢迎第一次参加";
     const DEFAULT_MEETING_RULES = [
       "手机请调至静音",
@@ -3544,10 +3586,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
     function guestParticipationHtml(text) {
       const raw = String(text || "").trim();
-      const parsedTags = [...raw.matchAll(/[【\[]([^】\]]+)[】\]]/g)]
-        .map((match) => match[1].trim())
-        .filter(Boolean);
-      const tags = (parsedTags.length ? parsedTags : GUEST_PARTICIPATION_TAGS).slice(0, 3);
+      const tags = GUEST_PARTICIPATION_TAGS.slice(0, 3);
       const note = raw
         .split(/\n+/)
         .map((line) => line.trim())
@@ -3556,10 +3595,16 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
       return `
         <div class="footer-card-body guest-participation">
-          <div class="guest-tags">
-            ${tags.map((tag) => `<span class="guest-tag">[${escapeHtml(tag)}]</span>`).join("")}
+          <div class="guest-participation-copy">
+            <div class="guest-tags">
+              ${tags.map((tag) => `<span class="guest-tag">${escapeHtml(tag)}</span>`).join("")}
+            </div>
+            <p class="guest-note">${escapeHtml(note)}</p>
           </div>
-          <p class="guest-note">${escapeHtml(note)}</p>
+          <figure class="guest-vote-card">
+            <img src="${DEFAULT_VOTE_QR_SRC}" alt="现场投票二维码" />
+            <figcaption>现场投票</figcaption>
+          </figure>
         </div>
       `;
     }
@@ -3784,7 +3829,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
             </p>
           </section>
           <section class="template-footer-box">
-            <h3>${templateIconSvg("people")}<span>来宾可参与环节</span></h3>
+            <h3>${templateIconSvg("people")}<span>来宾可参与方式</span></h3>
             ${guestParticipationHtml(state.guestInvitation)}
           </section>
           <section class="template-footer-box">
@@ -4049,7 +4094,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         "",
         `下期例会主题：${state.nextTheme}`,
         `下次例会时间：${formatNextMeeting()}`,
-        `来宾可参与环节：${GUEST_PARTICIPATION_TAGS.join("、")}`,
+        `来宾可参与方式：${GUEST_PARTICIPATION_TAGS.join("、")}`,
         `来宾说明：${GUEST_PARTICIPATION_NOTE}`,
         "会议守则：",
         ...DEFAULT_MEETING_RULES.map((rule) => `- ${rule}`)
