@@ -36,6 +36,73 @@ function cssRule(selector) {
   return match[1];
 }
 
+function functionSource(name) {
+  const match = source.match(new RegExp(`function ${name}\\(.*?\\) \\{([\\s\\S]*?)\\n    \\}`));
+  assert.ok(match, `${name} function should exist`);
+  return match[1];
+}
+
+function functionBlock(name) {
+  const start = source.indexOf(`function ${name}`);
+  assert.notEqual(start, -1, `${name} function should exist`);
+  const open = source.indexOf("{", start);
+  let depth = 0;
+  for (let index = open; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth === 0) return source.slice(start, index + 1);
+  }
+  throw new Error(`${name} function block should close`);
+}
+
+function storageFake(values) {
+  return {
+    getItem(key) {
+      return Object.hasOwn(values, key) ? JSON.stringify(values[key]) : null;
+    }
+  };
+}
+
+function buildDurationParser() {
+  return new Function(`
+    ${functionBlock("normalizeFullWidthDigits")}
+    ${functionBlock("durationToTimekeeperMinutes")}
+    return durationToTimekeeperMinutes;
+  `)();
+}
+
+function buildConflictChecker(storageValues) {
+  return new Function("localStorage", `
+    const TIMEKEEPER_STORAGE_KEYS = {
+      agenda: "tm_timekeeper_agenda_v2",
+      meeting: "tm_timekeeper_meeting_v1",
+      records: "tm_timekeeper_records_v1",
+      syncMeta: "tm_timekeeper_agenda_sync_meta_v1"
+    };
+    const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = ${JSON.stringify([
+      { name: "事务官宣布会议规则", plannedMinutes: 1, durationLabel: "1 分钟" },
+      { name: "主席致词", plannedMinutes: 3, durationLabel: "3 分钟" },
+      { name: "总主持 / 串场", plannedMinutes: 3, durationLabel: "2-3 分钟" },
+      { name: "三官宣言", plannedMinutes: 2, durationLabel: "2 分钟" },
+      { name: "即兴演讲", plannedMinutes: 2, durationLabel: "2 分钟/人" },
+      { name: "备稿演讲", plannedMinutes: 7, durationLabel: "5-7 分钟" },
+      { name: "来宾介绍", plannedMinutes: 5, durationLabel: "5 分钟" },
+      { name: "即兴点评", plannedMinutes: 5, durationLabel: "5 分钟" },
+      { name: "备稿点评", plannedMinutes: 3, durationLabel: "3 分钟" },
+      { name: "三官报告", plannedMinutes: 3, durationLabel: "3 分钟" },
+      { name: "总点评", plannedMinutes: 8, durationLabel: "8 分钟" },
+      { name: "颁奖 / 分享", plannedMinutes: 5, durationLabel: "5 分钟" }
+    ])};
+    ${functionBlock("readStorageJson")}
+    ${functionBlock("comparableTimekeeperAgenda")}
+    ${functionBlock("comparableTimekeeperMeeting")}
+    ${functionBlock("isDefaultTimekeeperAgenda")}
+    ${functionBlock("timekeeperHasSyncConflict")}
+    return timekeeperHasSyncConflict();
+  `)(storageFake(storageValues));
+}
+
 test("printable sidebar renders the requested information cards in order", () => {
   const sidebar = sidebarTemplate();
   const expectedOrder = ["关于我们", "提示信号与计时规则", "关注我们", "会员团队"];
@@ -209,6 +276,117 @@ test("printable footer keeps guest participation beside the live voting QR", () 
   assert.match(voteImageRule, /width:\s*64px;[\s\S]*?height:\s*64px;/, "vote QR image should stay compact in the footer");
 });
 
+test("screen preview uses the same fixed artboard model as print", () => {
+  const frameRule = cssRule(".preview-frame");
+  const sheetRule = cssRule(".template-sheet");
+  const syncScaleMatch = source.match(/function syncPreviewScale\(\) \{([\s\S]*?)\n    \}/);
+
+  assert.match(frameRule, /width:\s*calc\(980px \* var\(--preview-scale,\s*1\)\);/, "preview frame should be sized from the fixed artboard scale");
+  assert.match(frameRule, /height:\s*calc\(1386px \* var\(--preview-scale,\s*1\)\);/, "preview frame should preserve the fixed A4 artboard height");
+  assert.match(frameRule, /overflow:\s*hidden;/, "preview frame should clip the scaled artboard like print output");
+  assert.match(sheetRule, /width:\s*980px;[\s\S]*?height:\s*1386px;[\s\S]*?transform:\s*scale\(var\(--preview-scale,\s*1\)\);/, "screen sheet should keep the same 980 x 1386 layout used by print");
+  assert.ok(syncScaleMatch, "preview scale sync function should exist");
+  assert.doesNotMatch(syncScaleMatch[1], /max-width:\s*920px/, "preview scale should not be limited to mobile widths");
+});
+
+test("agenda builder syncs a copied agenda into timekeeper storage", () => {
+  const buildAgenda = functionSource("buildTimekeeperAgendaItems");
+  const syncAgenda = functionSource("syncTimekeeperAgenda");
+  const openTimekeeper = functionSource("openTimekeeper");
+
+  assert.match(source, /syncMeta:\s*"tm_timekeeper_agenda_sync_meta_v1"/, "timekeeper sync metadata key should exist");
+  assert.match(source, /agenda:\s*"tm_timekeeper_agenda_v2"/, "agenda builder should write the existing timekeeper agenda key");
+  assert.match(source, /meeting:\s*"tm_timekeeper_meeting_v1"/, "agenda builder should write the existing timekeeper meeting key");
+  assert.match(source, /records:\s*"tm_timekeeper_records_v1"/, "sync conflict checks should inspect timekeeper records");
+  assert.match(buildAgenda, /\.filter\(\(item\) => \(item\.kind \|\| "item"\) !== "section"/, "timekeeper sync should skip section headings");
+  assert.match(buildAgenda, /name:\s*item\.title\.trim\(\)/, "agenda title should become the timekeeper item name");
+  assert.match(buildAgenda, /plannedMinutes,\s*\n\s*durationLabel:\s*String\(item\.duration/, "agenda duration should drive minutes and keep its original label");
+  assert.match(buildAgenda, /status:\s*"pending"[\s\S]*?actualStart:\s*null[\s\S]*?actualEnd:\s*null/, "synced items should reset live status fields");
+  assert.match(syncAgenda, /localStorage\.setItem\(TIMEKEEPER_STORAGE_KEYS\.agenda,\s*JSON\.stringify\(agendaItems\)\)/, "sync should write copied agenda items");
+  assert.match(syncAgenda, /const meeting = buildTimekeeperMeeting\(\);[\s\S]*?localStorage\.setItem\(TIMEKEEPER_STORAGE_KEYS\.meeting,\s*JSON\.stringify\(meeting\)\)/, "sync should write meeting metadata");
+  assert.match(syncAgenda, /localStorage\.setItem\(TIMEKEEPER_STORAGE_KEYS\.syncMeta/, "sync should save the copied agenda snapshot for future conflict checks");
+  assert.match(syncAgenda, /syncedMeeting:\s*comparableTimekeeperMeeting\(meeting\)/, "sync metadata should snapshot meeting fields");
+  assert.match(openTimekeeper, /syncTimekeeperAgenda\(\);[\s\S]*?window\.location\.href = "index\.html";/, "open action should try syncing and always navigate to timekeeper");
+  assert.match(source, /openTimekeeperBtn\.addEventListener\("click",\s*openTimekeeper\)/, "timekeeper button should use the sync-aware open handler");
+  assert.match(source, /<a class="nav-button" id="openTimekeeperBtn" href="index\.html"/, "timekeeper entry should keep a native link fallback if JavaScript sync fails");
+});
+
+test("timekeeper sync parses durations and guards live edits", () => {
+  const durationParser = functionSource("durationToTimekeeperMinutes");
+  const conflictCheck = functionSource("timekeeperHasSyncConflict");
+  const meetingBuilder = functionSource("buildTimekeeperMeeting");
+
+  assert.match(durationParser, /rangeMatch[\s\S]*?Number\(rangeMatch\[2\]\)/, "duration ranges like 5-7 should use the upper bound");
+  assert.match(durationParser, /text\.match\(\/\(\\d\+\(\?:\\\.\\d\+\)\?\)\/\)/, "single values like 2min/人 should use the first number");
+  assert.match(durationParser, /\/秒\/\.test\(text\)[\s\S]*?Math\.ceil\(value \/ 60\)/, "second-based durations should convert to at least one minute");
+  assert.match(durationParser, /secondsOnly \? Math\.max\(1,\s*Math\.ceil\(upper \/ 60\)\)/, "second-based ranges should convert the upper bound from seconds");
+  assert.match(conflictCheck, /currentRecords[\s\S]*?currentRecords\.length > 0/, "existing timing records should require confirmation before overwrite");
+  assert.match(conflictCheck, /item\.status && item\.status !== "pending"/, "active or done agenda items should require confirmation");
+  assert.match(conflictCheck, /hasUntrackedAgenda[\s\S]*?!lastSyncedAgenda[\s\S]*?!isDefaultTimekeeperAgenda\(currentAgenda\)/, "pre-existing non-default unsynced agenda data should require confirmation");
+  assert.match(conflictCheck, /JSON\.stringify\(comparableTimekeeperAgenda\(currentAgenda\)\) !== JSON\.stringify\(lastSyncedAgenda\)/, "local edits after last sync should require confirmation");
+  assert.match(conflictCheck, /JSON\.stringify\(comparableTimekeeperMeeting\(currentMeeting\)\) !== JSON\.stringify\(lastSyncedMeeting\)/, "meeting edits after last sync should require confirmation");
+  assert.match(source, /window\.confirm\("时间官已有现场数据或本地调整。同步会覆盖时间官环节和会议信息，但不会清空计时记录，也不会修改原议程单。继续同步吗？"\)/, "conflict confirmation should explain that records and source agenda are preserved");
+  assert.match(meetingBuilder, /timekeeperName:\s*existing\.timekeeperName \|\| ""/, "meeting sync should preserve the existing timekeeper name");
+  assert.match(meetingBuilder, /meetingDate:\s*state\.date/, "meeting sync should copy the agenda date");
+  assert.match(meetingBuilder, /meetingStartTime:\s*state\.startTime/, "meeting sync should copy the agenda start time");
+  assert.match(meetingBuilder, /meetingEndTime:\s*state\.endTime/, "meeting sync should copy the agenda end time");
+});
+
+test("timekeeper duration conversion handles real edge cases", () => {
+  const parseMinutes = buildDurationParser();
+
+  assert.equal(parseMinutes("5-7"), 7, "minute ranges should use the upper bound");
+  assert.equal(parseMinutes("2min/人"), 2, "per-person minute labels should use the first number");
+  assert.equal(parseMinutes("30秒"), 1, "single second values should round up to one minute");
+  assert.equal(parseMinutes("30-45秒"), 1, "second ranges should round the upper bound up to one minute");
+  assert.equal(parseMinutes("90秒"), 2, "long second values should round up by minute");
+  assert.equal(parseMinutes("０５-０７"), 7, "full-width digits should parse correctly");
+});
+
+test("timekeeper conflict detection handles default agenda and meeting edits", () => {
+  const defaultAgenda = [
+    { name: "事务官宣布会议规则", plannedMinutes: 1, durationLabel: "1 分钟", status: "pending" },
+    { name: "主席致词", plannedMinutes: 3, durationLabel: "3 分钟", status: "pending" },
+    { name: "总主持 / 串场", plannedMinutes: 3, durationLabel: "2-3 分钟", status: "pending" },
+    { name: "三官宣言", plannedMinutes: 2, durationLabel: "2 分钟", status: "pending" },
+    { name: "即兴演讲", plannedMinutes: 2, durationLabel: "2 分钟/人", status: "pending" },
+    { name: "备稿演讲", plannedMinutes: 7, durationLabel: "5-7 分钟", status: "pending" },
+    { name: "来宾介绍", plannedMinutes: 5, durationLabel: "5 分钟", status: "pending" },
+    { name: "即兴点评", plannedMinutes: 5, durationLabel: "5 分钟", status: "pending" },
+    { name: "备稿点评", plannedMinutes: 3, durationLabel: "3 分钟", status: "pending" },
+    { name: "三官报告", plannedMinutes: 3, durationLabel: "3 分钟", status: "pending" },
+    { name: "总点评", plannedMinutes: 8, durationLabel: "8 分钟", status: "pending" },
+    { name: "颁奖 / 分享", plannedMinutes: 5, durationLabel: "5 分钟", status: "pending" }
+  ];
+  const syncedAgenda = [{ id: "i-1", name: "开场", plannedMinutes: 2, durationLabel: "2", status: "pending" }];
+  const syncedMeeting = {
+    meetingTitle: "畅言中文 · 第739期例会",
+    meetingDate: "2025-07-15",
+    meetingStartTime: "19:25",
+    meetingEndTime: "21:30"
+  };
+
+  assert.equal(buildConflictChecker({
+    tm_timekeeper_agenda_v2: defaultAgenda,
+    tm_timekeeper_records_v1: []
+  }), false, "first sync should not block on the built-in default timekeeper agenda");
+
+  assert.equal(buildConflictChecker({
+    tm_timekeeper_agenda_v2: [{ name: "现场自定义", plannedMinutes: 9, durationLabel: "9 分钟", status: "pending" }],
+    tm_timekeeper_records_v1: []
+  }), true, "non-default unsynced agenda data should still require confirmation");
+
+  assert.equal(buildConflictChecker({
+    tm_timekeeper_agenda_v2: syncedAgenda,
+    tm_timekeeper_meeting_v1: { ...syncedMeeting, meetingTitle: "现场改过的标题" },
+    tm_timekeeper_records_v1: [],
+    tm_timekeeper_agenda_sync_meta_v1: {
+      syncedAgendaItems: [{ id: "i-1", name: "开场", plannedMinutes: 2, durationLabel: "2" }],
+      syncedMeeting
+    }
+  }), true, "meeting edits after the last sync should require confirmation");
+});
+
 test("printable footer renders as three independent reference-style cards", () => {
   const footerRule = cssRule(".template-footer");
   const cardRule = cssRule(".template-footer-box");
@@ -223,6 +401,7 @@ test("printable footer renders as three independent reference-style cards", () =
   assert.match(footerRule, /gap:\s*14px;/, "footer cards should be separated like independent cards");
   assert.match(footerRule, /background:\s*transparent;/, "footer strip should not look like one connected table");
   assert.match(footerRule, /box-shadow:\s*none;/, "footer wrapper should not carry the card shadow");
+  assert.doesNotMatch(source, /@media print\s*\{[\s\S]*?\.template-footer\s*\{[\s\S]*?background:\s*#fff !important;/, "print should not give the footer wrapper a different background from screen preview");
   assert.match(cardRule, /border:\s*1px solid var\(--tm-border\);[\s\S]*?border-radius:\s*var\(--radius-card\);[\s\S]*?background:\s*var\(--tm-card\);/, "each footer item should be its own bordered white card");
   assert.match(cardRule, /text-align:\s*left;/, "footer cards should follow the reference's left-aligned title rhythm");
   assert.doesNotMatch(source, /\.template-footer-box:last-child\s*\{[\s\S]*?border-right:\s*0;/, "last footer card should keep a complete border");

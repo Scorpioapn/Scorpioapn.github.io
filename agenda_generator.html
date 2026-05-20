@@ -224,6 +224,7 @@
       box-shadow: var(--shadow-1);
       font-size: 14px;
       font-weight: 900;
+      text-decoration: none;
       white-space: nowrap;
       transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
     }
@@ -1067,9 +1068,11 @@
     }
 
     .preview-frame {
-      width: min(100%, 980px);
-      aspect-ratio: 210 / 297;
+      width: calc(980px * var(--preview-scale, 1));
+      height: calc(1386px * var(--preview-scale, 1));
+      aspect-ratio: auto;
       margin: 8px auto 40px;
+      overflow: hidden;
     }
 
     .agenda-sheet {
@@ -1324,6 +1327,12 @@
       border: 1px solid rgba(0, 48, 71, 0.16);
       border-radius: 14px;
       overflow: hidden;
+      width: 980px;
+      height: 1386px;
+      min-height: 0;
+      aspect-ratio: auto;
+      transform: scale(var(--preview-scale, 1));
+      transform-origin: top left;
     }
 
     .template-header {
@@ -2476,19 +2485,7 @@
       }
 
       .preview-frame {
-        width: calc(980px * var(--preview-scale, 1));
-        height: calc(1386px * var(--preview-scale, 1));
-        aspect-ratio: auto;
         margin: 8px auto 40px;
-      }
-
-      .preview-frame .template-sheet {
-        width: 980px;
-        height: 1386px;
-        min-height: 0;
-        aspect-ratio: auto;
-        transform: scale(var(--preview-scale, 1));
-        transform-origin: top left;
       }
     }
 
@@ -2769,10 +2766,6 @@
         background: #8f1f34 !important;
       }
 
-      .template-footer {
-        background: #fff !important;
-        box-shadow: inset 0 0 0 1px rgba(0, 48, 71, 0.24) !important;
-      }
     }
   </style>
 </head>
@@ -2787,10 +2780,10 @@
             <h1>畅言中文议程生成器</h1>
           </div>
           <div class="header-actions">
-            <button class="nav-button" id="openTimekeeperBtn" type="button" title="打开时间官控制台" aria-label="打开时间官控制台">
+            <a class="nav-button" id="openTimekeeperBtn" href="index.html" title="打开时间官控制台" aria-label="打开时间官控制台">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 13l3-2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
               <span class="nav-button-label">时间官</span>
-            </button>
+            </a>
           </div>
         </div>
       </header>
@@ -3053,6 +3046,26 @@
 
   <script>
     const STORAGE_KEY = "tm_agenda_generator_v1";
+    const TIMEKEEPER_STORAGE_KEYS = {
+      agenda: "tm_timekeeper_agenda_v2",
+      meeting: "tm_timekeeper_meeting_v1",
+      records: "tm_timekeeper_records_v1",
+      syncMeta: "tm_timekeeper_agenda_sync_meta_v1"
+    };
+    const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = [
+      { name: "事务官宣布会议规则", plannedMinutes: 1, durationLabel: "1 分钟" },
+      { name: "主席致词", plannedMinutes: 3, durationLabel: "3 分钟" },
+      { name: "总主持 / 串场", plannedMinutes: 3, durationLabel: "2-3 分钟" },
+      { name: "三官宣言", plannedMinutes: 2, durationLabel: "2 分钟" },
+      { name: "即兴演讲", plannedMinutes: 2, durationLabel: "2 分钟/人" },
+      { name: "备稿演讲", plannedMinutes: 7, durationLabel: "5-7 分钟" },
+      { name: "来宾介绍", plannedMinutes: 5, durationLabel: "5 分钟" },
+      { name: "即兴点评", plannedMinutes: 5, durationLabel: "5 分钟" },
+      { name: "备稿点评", plannedMinutes: 3, durationLabel: "3 分钟" },
+      { name: "三官报告", plannedMinutes: 3, durationLabel: "3 分钟" },
+      { name: "总点评", plannedMinutes: 8, durationLabel: "8 分钟" },
+      { name: "颁奖 / 分享", plannedMinutes: 5, durationLabel: "5 分钟" }
+    ];
     const OFFICIAL_TOASTMASTERS_LOGO_SRC = "assets/toastmasters-logo-color-png.png";
     const DEFAULT_WECHAT_QR_SRC = "assets/quhuo-qr.png";
     const DEFAULT_JOIN_QR_SRC = "assets/join-consult-qr.png";
@@ -3254,6 +3267,157 @@ ${GUEST_PARTICIPATION_NOTE}`,
         els.saveStatus.textContent = "保存失败";
         showToast("本机存储空间不足，请移除较大的图片后再试");
       }
+    }
+
+    function readStorageJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        return JSON.parse(raw) ?? fallback;
+      } catch (error) {
+        console.warn(`Failed to read ${key}`, error);
+        return fallback;
+      }
+    }
+
+    function normalizeFullWidthDigits(value) {
+      return String(value ?? "").replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0));
+    }
+
+    function durationToTimekeeperMinutes(duration) {
+      const text = normalizeFullWidthDigits(duration).trim();
+      if (!text) return 2;
+      const secondsOnly = /秒/.test(text) && !/分|分钟|min|minute/i.test(text);
+      const rangeMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:-|–|—|~|至|到)\s*(\d+(?:\.\d+)?)/);
+      if (rangeMatch) {
+        const upper = Number(rangeMatch[2]);
+        return secondsOnly ? Math.max(1, Math.ceil(upper / 60)) : Math.max(1, Math.round(upper));
+      }
+      const numberMatch = text.match(/(\d+(?:\.\d+)?)/);
+      if (!numberMatch) return 2;
+      const value = Number(numberMatch[1]);
+      if (secondsOnly) return Math.max(1, Math.ceil(value / 60));
+      return Math.max(1, Math.round(value));
+    }
+
+    function buildTimekeeperMeeting() {
+      const existing = readStorageJson(TIMEKEEPER_STORAGE_KEYS.meeting, {});
+      const titleParts = [
+        state.clubName || "Toastmasters",
+        state.meetingNo ? `第${state.meetingNo}期例会` : "例会",
+        state.theme ? `主题：${state.theme}` : ""
+      ].filter(Boolean);
+      return {
+        ...existing,
+        meetingTitle: titleParts.join(" · "),
+        timekeeperName: existing.timekeeperName || "",
+        meetingDate: state.date || existing.meetingDate || "",
+        meetingStartTime: state.startTime || existing.meetingStartTime || "",
+        meetingEndTime: state.endTime || existing.meetingEndTime || ""
+      };
+    }
+
+    function buildTimekeeperAgendaItems() {
+      return state.items
+        .filter((item) => (item.kind || "item") !== "section" && String(item.title || "").trim())
+        .map((item, index) => {
+          const plannedMinutes = durationToTimekeeperMinutes(item.duration);
+          return {
+            id: item.id || `agenda-sync-${index + 1}`,
+            name: item.title.trim(),
+            plannedMinutes,
+            durationLabel: String(item.duration || `${plannedMinutes} 分钟`).trim(),
+            status: "pending",
+            actualStart: null,
+            actualEnd: null
+          };
+        });
+    }
+
+    function comparableTimekeeperAgenda(items) {
+      if (!Array.isArray(items)) return [];
+      return items.map((item) => ({
+        id: item.id || "",
+        name: item.name || "",
+        plannedMinutes: Math.max(1, Math.round(Number(item.plannedMinutes || 2))),
+        durationLabel: item.durationLabel || `${Math.max(1, Math.round(Number(item.plannedMinutes || 2)))} 分钟`
+      }));
+    }
+
+    function comparableTimekeeperMeeting(meeting) {
+      return {
+        meetingTitle: meeting?.meetingTitle || "",
+        meetingDate: meeting?.meetingDate || "",
+        meetingStartTime: meeting?.meetingStartTime || "",
+        meetingEndTime: meeting?.meetingEndTime || ""
+      };
+    }
+
+    function isDefaultTimekeeperAgenda(items) {
+      const current = comparableTimekeeperAgenda(items).map(({ name, plannedMinutes, durationLabel }) => ({
+        name,
+        plannedMinutes,
+        durationLabel
+      }));
+      return JSON.stringify(current) === JSON.stringify(TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE);
+    }
+
+    function timekeeperHasSyncConflict() {
+      const currentAgenda = readStorageJson(TIMEKEEPER_STORAGE_KEYS.agenda, []);
+      const currentMeeting = readStorageJson(TIMEKEEPER_STORAGE_KEYS.meeting, {});
+      const currentRecords = readStorageJson(TIMEKEEPER_STORAGE_KEYS.records, []);
+      const syncMeta = readStorageJson(TIMEKEEPER_STORAGE_KEYS.syncMeta, {});
+      const lastSyncedAgenda = Array.isArray(syncMeta.syncedAgendaItems) ? syncMeta.syncedAgendaItems : null;
+      const lastSyncedMeeting = syncMeta.syncedMeeting || null;
+      const hasRecords = Array.isArray(currentRecords) && currentRecords.length > 0;
+      const hasProgress = Array.isArray(currentAgenda) && currentAgenda.some((item) =>
+        (item.status && item.status !== "pending") || item.actualStart || item.actualEnd
+      );
+      const hasUntrackedAgenda = Array.isArray(currentAgenda) && currentAgenda.length > 0 && !lastSyncedAgenda && !isDefaultTimekeeperAgenda(currentAgenda);
+      const hasLocalEdits = Boolean(
+        lastSyncedAgenda &&
+        JSON.stringify(comparableTimekeeperAgenda(currentAgenda)) !== JSON.stringify(lastSyncedAgenda)
+      );
+      const hasMeetingLocalEdits = Boolean(
+        lastSyncedMeeting &&
+        JSON.stringify(comparableTimekeeperMeeting(currentMeeting)) !== JSON.stringify(lastSyncedMeeting)
+      );
+      return hasRecords || hasProgress || hasUntrackedAgenda || hasLocalEdits || hasMeetingLocalEdits;
+    }
+
+    function syncTimekeeperAgenda() {
+      try {
+        const agendaItems = buildTimekeeperAgendaItems();
+        if (!agendaItems.length) {
+          showToast("没有可同步的计时环节");
+          return false;
+        }
+        if (timekeeperHasSyncConflict()) {
+          const confirmed = window.confirm("时间官已有现场数据或本地调整。同步会覆盖时间官环节和会议信息，但不会清空计时记录，也不会修改原议程单。继续同步吗？");
+          if (!confirmed) return false;
+        }
+        const meeting = buildTimekeeperMeeting();
+        localStorage.setItem(TIMEKEEPER_STORAGE_KEYS.agenda, JSON.stringify(agendaItems));
+        localStorage.setItem(TIMEKEEPER_STORAGE_KEYS.meeting, JSON.stringify(meeting));
+        localStorage.setItem(TIMEKEEPER_STORAGE_KEYS.syncMeta, JSON.stringify({
+          sourceStorageKey: STORAGE_KEY,
+          sourceMeetingNo: state.meetingNo || "",
+          syncedAt: new Date().toISOString(),
+          syncedAgendaItems: comparableTimekeeperAgenda(agendaItems),
+          syncedMeeting: comparableTimekeeperMeeting(meeting)
+        }));
+        showToast("议程已同步到时间官");
+        return true;
+      } catch (error) {
+        console.warn("Failed to sync timekeeper agenda", error);
+        showToast("同步失败，将直接打开时间官");
+        return false;
+      }
+    }
+
+    function openTimekeeper() {
+      syncTimekeeperAgenda();
+      window.location.href = "index.html";
     }
 
     function escapeHtml(value) {
@@ -3893,10 +4057,6 @@ ${GUEST_PARTICIPATION_NOTE}`,
       const frame = document.querySelector("#previewFrame");
       const viewport = frame?.parentElement;
       if (!frame || !viewport) return;
-      if (!window.matchMedia("(max-width: 920px)").matches) {
-        frame.style.removeProperty("--preview-scale");
-        return;
-      }
       const styles = window.getComputedStyle(viewport);
       const horizontalPadding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
       const available = Math.max(320, viewport.clientWidth - horizontalPadding);
@@ -4314,9 +4474,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.exportJsonBtn.addEventListener("click", downloadJson);
       els.importJsonBtn.addEventListener("click", () => els.jsonImportInput.click());
       els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
-      els.openTimekeeperBtn.addEventListener("click", () => {
-        window.location.href = "index.html";
-      });
+      els.openTimekeeperBtn.addEventListener("click", openTimekeeper);
       window.addEventListener("resize", syncPreviewScale);
     }
 
