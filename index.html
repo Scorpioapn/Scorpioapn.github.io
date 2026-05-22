@@ -2158,9 +2158,14 @@
       .mobile-icon-button.more {
         display: grid;
         place-items: center;
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 800;
-        letter-spacing: 1px;
+        letter-spacing: 0;
+        background: rgba(0, 122, 255, 0.12);
+      }
+
+      .mobile-icon-button.more::before {
+        content: none;
       }
 
       .content-grid {
@@ -2192,6 +2197,7 @@
       .focus-card.state-overtime {
         min-height: calc(100dvh - 94px - env(safe-area-inset-top, 0px));
         grid-template-rows: auto minmax(300px, 1fr) auto auto;
+        padding-bottom: 152px;
         color: var(--apple-label);
         background: rgba(255, 255, 255, 0.72);
         border-radius: 34px;
@@ -2203,7 +2209,11 @@
       }
 
       .hero-title-row {
-        justify-content: space-between;
+        display: block;
+      }
+
+      .hero-title-row .status-pill {
+        display: none;
       }
 
       .context-kicker {
@@ -2211,7 +2221,10 @@
       }
 
       .context-title {
-        font-size: clamp(28px, 8vw, 42px);
+        font-size: clamp(26px, 7.2vw, 38px);
+        line-height: 1.12;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .context-rule {
@@ -2224,7 +2237,7 @@
       }
 
       .time-display {
-        font-size: clamp(82px, 26vw, 126px);
+        font-size: clamp(70px, 22vw, 104px);
       }
 
       .timer-status {
