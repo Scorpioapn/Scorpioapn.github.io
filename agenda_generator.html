@@ -3044,14 +3044,15 @@
     <button id="toastAction" type="button"></button>
   </div>
 
+  <script src="js/storage.js"></script>
+  <script src="js/time-rules.js"></script>
+  <script src="js/agenda-schema.js"></script>
   <script>
-    const STORAGE_KEY = "tm_agenda_generator_v1";
-    const TIMEKEEPER_STORAGE_KEYS = {
-      agenda: "tm_timekeeper_agenda_v2",
-      meeting: "tm_timekeeper_meeting_v1",
-      records: "tm_timekeeper_records_v1",
-      syncMeta: "tm_timekeeper_agenda_sync_meta_v1"
-    };
+    const SHARED_STORAGE_KEYS = window.TMStorage.STORAGE_KEYS;
+    const STORAGE_KEY = SHARED_STORAGE_KEYS.agendaGenerator;
+    const TIMEKEEPER_STORAGE_KEYS = window.TMStorage.TIMEKEEPER_STORAGE_KEYS;
+    const AgendaSchema = window.TMAgendaSchema;
+    const TimeRules = window.TMTimeRules;
     const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = [
       { name: "事务官宣布会议规则", plannedMinutes: 1, durationLabel: "1 分钟" },
       { name: "主席致词", plannedMinutes: 3, durationLabel: "3 分钟" },
@@ -3213,6 +3214,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     let dragId = null;
     let undoDelete = null;
     let toastTimer = null;
+    let printOverflowWarningVisible = false;
 
     function clone(value) {
       return JSON.parse(JSON.stringify(value));
@@ -3270,14 +3272,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function readStorageJson(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return fallback;
-        return JSON.parse(raw) ?? fallback;
-      } catch (error) {
-        console.warn(`Failed to read ${key}`, error);
-        return fallback;
-      }
+      return window.TMStorage.readJson(key, fallback);
     }
 
     function normalizeFullWidthDigits(value) {
@@ -3285,63 +3280,38 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function durationToTimekeeperMinutes(duration) {
-      const text = normalizeFullWidthDigits(duration).trim();
-      if (!text) return 2;
-      const secondsOnly = /秒/.test(text) && !/分|分钟|min|minute/i.test(text);
-      const rangeMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:-|–|—|~|至|到)\s*(\d+(?:\.\d+)?)/);
-      if (rangeMatch) {
-        const upper = Number(rangeMatch[2]);
-        return secondsOnly ? Math.max(1, Math.ceil(upper / 60)) : Math.max(1, Math.round(upper));
-      }
-      const numberMatch = text.match(/(\d+(?:\.\d+)?)/);
-      if (!numberMatch) return 2;
-      const value = Number(numberMatch[1]);
-      if (secondsOnly) return Math.max(1, Math.ceil(value / 60));
-      return Math.max(1, Math.round(value));
+      return AgendaSchema.parseDurationToMinutes(duration);
+    }
+
+    function buildTimekeeperPayloadForSync() {
+      return AgendaSchema.buildTimekeeperPayload(state, {
+        existingMeeting: readStorageJson(TIMEKEEPER_STORAGE_KEYS.meeting, {})
+      });
     }
 
     function buildTimekeeperMeeting() {
-      const existing = readStorageJson(TIMEKEEPER_STORAGE_KEYS.meeting, {});
-      const titleParts = [
-        state.clubName || "Toastmasters",
-        state.meetingNo ? `第${state.meetingNo}期例会` : "例会",
-        state.theme ? `主题：${state.theme}` : ""
-      ].filter(Boolean);
-      return {
-        ...existing,
-        meetingTitle: titleParts.join(" · "),
-        timekeeperName: existing.timekeeperName || "",
-        meetingDate: state.date || existing.meetingDate || "",
-        meetingStartTime: state.startTime || existing.meetingStartTime || "",
-        meetingEndTime: state.endTime || existing.meetingEndTime || ""
-      };
+      return buildTimekeeperPayloadForSync().meeting;
     }
 
     function buildTimekeeperAgendaItems() {
-      return state.items
-        .filter((item) => (item.kind || "item") !== "section" && String(item.title || "").trim())
-        .map((item, index) => {
-          const plannedMinutes = durationToTimekeeperMinutes(item.duration);
-          return {
-            id: item.id || `agenda-sync-${index + 1}`,
-            name: item.title.trim(),
-            plannedMinutes,
-            durationLabel: String(item.duration || `${plannedMinutes} 分钟`).trim(),
-            status: "pending",
-            actualStart: null,
-            actualEnd: null
-          };
-        });
+      return buildTimekeeperPayloadForSync().agendaItems;
     }
 
     function comparableTimekeeperAgenda(items) {
       if (!Array.isArray(items)) return [];
-      return items.map((item) => ({
-        id: item.id || "",
-        name: item.name || "",
-        plannedMinutes: Math.max(1, Math.round(Number(item.plannedMinutes || 2))),
-        durationLabel: item.durationLabel || `${Math.max(1, Math.round(Number(item.plannedMinutes || 2)))} 分钟`
-      }));
+      return items.map((item, index) => {
+        const normalized = AgendaSchema.normalizeTimekeeperAgendaItem(item, index);
+        return {
+          id: normalized.id || "",
+          sourceId: normalized.sourceId || "",
+          name: normalized.name || "",
+          plannedMinutes: normalized.plannedMinutes,
+          durationLabel: normalized.durationLabel,
+          speaker: normalized.speaker || "",
+          detail: normalized.detail || "",
+          scheduledTime: normalized.scheduledTime || ""
+        };
+      });
     }
 
     function comparableTimekeeperMeeting(meeting) {
@@ -3367,7 +3337,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       const currentMeeting = readStorageJson(TIMEKEEPER_STORAGE_KEYS.meeting, {});
       const currentRecords = readStorageJson(TIMEKEEPER_STORAGE_KEYS.records, []);
       const syncMeta = readStorageJson(TIMEKEEPER_STORAGE_KEYS.syncMeta, {});
-      const lastSyncedAgenda = Array.isArray(syncMeta.syncedAgendaItems) ? syncMeta.syncedAgendaItems : null;
+      const lastSyncedAgenda = Array.isArray(syncMeta.syncedAgendaItems) ? comparableTimekeeperAgenda(syncMeta.syncedAgendaItems) : null;
       const lastSyncedMeeting = syncMeta.syncedMeeting || null;
       const hasRecords = Array.isArray(currentRecords) && currentRecords.length > 0;
       const hasProgress = Array.isArray(currentAgenda) && currentAgenda.some((item) =>
@@ -3387,25 +3357,28 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
     function syncTimekeeperAgenda() {
       try {
-        const agendaItems = buildTimekeeperAgendaItems();
+        const payload = buildTimekeeperPayloadForSync();
+        const agendaItems = payload.agendaItems;
         if (!agendaItems.length) {
           showToast("没有可同步的计时环节");
           return false;
         }
         if (timekeeperHasSyncConflict()) {
-          const confirmed = window.confirm("时间官已有现场数据或本地调整。同步会覆盖时间官环节和会议信息，但不会清空计时记录，也不会修改原议程单。继续同步吗？");
+          const confirmed = window.confirm("时间官已有现场数据或本地调整。同步只会更新未开始环节和会议基础信息，不会清空计时记录，也不会覆盖已完成环节。继续同步吗？");
           if (!confirmed) return false;
         }
-        const meeting = buildTimekeeperMeeting();
-        localStorage.setItem(TIMEKEEPER_STORAGE_KEYS.agenda, JSON.stringify(agendaItems));
-        localStorage.setItem(TIMEKEEPER_STORAGE_KEYS.meeting, JSON.stringify(meeting));
-        localStorage.setItem(TIMEKEEPER_STORAGE_KEYS.syncMeta, JSON.stringify({
+        const currentAgenda = readStorageJson(TIMEKEEPER_STORAGE_KEYS.agenda, []);
+        const mergedAgenda = AgendaSchema.mergeTimekeeperAgendaItems(agendaItems, currentAgenda);
+        const meeting = payload.meeting;
+        window.TMStorage.writeJson(TIMEKEEPER_STORAGE_KEYS.agenda, mergedAgenda);
+        window.TMStorage.writeJson(TIMEKEEPER_STORAGE_KEYS.meeting, meeting);
+        window.TMStorage.writeJson(TIMEKEEPER_STORAGE_KEYS.syncMeta, {
           sourceStorageKey: STORAGE_KEY,
           sourceMeetingNo: state.meetingNo || "",
           syncedAt: new Date().toISOString(),
-          syncedAgendaItems: comparableTimekeeperAgenda(agendaItems),
+          syncedAgendaItems: comparableTimekeeperAgenda(mergedAgenda),
           syncedMeeting: comparableTimekeeperMeeting(meeting)
-        }));
+        });
         showToast("议程已同步到时间官");
         return true;
       } catch (error) {
@@ -3441,12 +3414,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function parseDurationMinutes(value) {
-      const text = String(value || "").trim();
-      if (!text) return 0;
-      const range = text.match(/(\d+(?:\.\d+)?)\s*[-~]\s*(\d+(?:\.\d+)?)/);
-      if (range) return Number(range[2]);
-      const first = text.match(/(\d+(?:\.\d+)?)/);
-      return first ? Number(first[1]) : 0;
+      return AgendaSchema.parseDurationToMinutes(value, 0);
     }
 
     function minutesToTime(totalMinutes) {
@@ -4003,6 +3971,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         </footer>
       `;
       syncPreviewScale();
+      window.requestAnimationFrame(checkPrintOverflow);
     }
 
     function renderAgendaList() {
@@ -4062,6 +4031,17 @@ ${GUEST_PARTICIPATION_NOTE}`,
       const available = Math.max(320, viewport.clientWidth - horizontalPadding);
       const scale = Math.min(1, available / 980);
       frame.style.setProperty("--preview-scale", scale.toFixed(4));
+    }
+
+    function checkPrintOverflow() {
+      const page = els.printPage;
+      if (!page) return false;
+      const hasOverflow = page.scrollHeight > page.clientHeight + 2 || page.scrollWidth > page.clientWidth + 2;
+      if (hasOverflow && !printOverflowWarningVisible) {
+        showToast("当前内容可能超出 A4 页面，请减少文字或缩短议程");
+      }
+      printOverflowWarningVisible = hasOverflow;
+      return hasOverflow;
     }
 
     function showToast(message, actionText, action) {

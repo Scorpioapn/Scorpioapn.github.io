@@ -1,8 +1,13 @@
 ﻿import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { test } from "node:test";
 
+const require = createRequire(import.meta.url);
 const source = readFileSync(new URL("../agenda_generator.html", import.meta.url), "utf8");
+const storageSource = readFileSync(new URL("../js/storage.js", import.meta.url), "utf8");
+const schemaSource = readFileSync(new URL("../js/agenda-schema.js", import.meta.url), "utf8");
+const schema = require("../js/agenda-schema.js");
 
 function sidebarTemplate() {
   const match = source.match(/<aside class="template-sidebar">([\s\S]*?)<\/aside>/);
@@ -65,15 +70,18 @@ function storageFake(values) {
 }
 
 function buildDurationParser() {
-  return new Function(`
-    ${functionBlock("normalizeFullWidthDigits")}
-    ${functionBlock("durationToTimekeeperMinutes")}
-    return durationToTimekeeperMinutes;
-  `)();
+  return schema.parseDurationToMinutes;
 }
 
 function buildConflictChecker(storageValues) {
-  return new Function("localStorage", `
+  const windowFake = {
+    TMStorage: {
+      readJson(key, fallback) {
+        return Object.hasOwn(storageValues, key) ? storageValues[key] : fallback;
+      }
+    }
+  };
+  return new Function("localStorage", "window", "AgendaSchema", `
     const TIMEKEEPER_STORAGE_KEYS = {
       agenda: "tm_timekeeper_agenda_v2",
       meeting: "tm_timekeeper_meeting_v1",
@@ -100,7 +108,7 @@ function buildConflictChecker(storageValues) {
     ${functionBlock("isDefaultTimekeeperAgenda")}
     ${functionBlock("timekeeperHasSyncConflict")}
     return timekeeperHasSyncConflict();
-  `)(storageFake(storageValues));
+  `)(storageFake(storageValues), windowFake, schema);
 }
 
 test("printable sidebar renders the requested information cards in order", () => {
@@ -294,17 +302,24 @@ test("agenda builder syncs a copied agenda into timekeeper storage", () => {
   const syncAgenda = functionSource("syncTimekeeperAgenda");
   const openTimekeeper = functionSource("openTimekeeper");
 
-  assert.match(source, /syncMeta:\s*"tm_timekeeper_agenda_sync_meta_v1"/, "timekeeper sync metadata key should exist");
-  assert.match(source, /agenda:\s*"tm_timekeeper_agenda_v2"/, "agenda builder should write the existing timekeeper agenda key");
-  assert.match(source, /meeting:\s*"tm_timekeeper_meeting_v1"/, "agenda builder should write the existing timekeeper meeting key");
-  assert.match(source, /records:\s*"tm_timekeeper_records_v1"/, "sync conflict checks should inspect timekeeper records");
-  assert.match(buildAgenda, /\.filter\(\(item\) => \(item\.kind \|\| "item"\) !== "section"/, "timekeeper sync should skip section headings");
-  assert.match(buildAgenda, /name:\s*item\.title\.trim\(\)/, "agenda title should become the timekeeper item name");
-  assert.match(buildAgenda, /plannedMinutes,\s*\n\s*durationLabel:\s*String\(item\.duration/, "agenda duration should drive minutes and keep its original label");
-  assert.match(buildAgenda, /status:\s*"pending"[\s\S]*?actualStart:\s*null[\s\S]*?actualEnd:\s*null/, "synced items should reset live status fields");
-  assert.match(syncAgenda, /localStorage\.setItem\(TIMEKEEPER_STORAGE_KEYS\.agenda,\s*JSON\.stringify\(agendaItems\)\)/, "sync should write copied agenda items");
-  assert.match(syncAgenda, /const meeting = buildTimekeeperMeeting\(\);[\s\S]*?localStorage\.setItem\(TIMEKEEPER_STORAGE_KEYS\.meeting,\s*JSON\.stringify\(meeting\)\)/, "sync should write meeting metadata");
-  assert.match(syncAgenda, /localStorage\.setItem\(TIMEKEEPER_STORAGE_KEYS\.syncMeta/, "sync should save the copied agenda snapshot for future conflict checks");
+  assert.match(source, /<script src="js\/storage\.js"><\/script>/, "agenda builder should load shared storage keys");
+  assert.match(source, /<script src="js\/agenda-schema\.js"><\/script>/, "agenda builder should load the shared agenda schema");
+  assert.match(storageSource, /timekeeperAgendaSyncMeta:\s*"tm_timekeeper_agenda_sync_meta_v1"/, "timekeeper sync metadata key should exist");
+  assert.match(storageSource, /timekeeperAgenda:\s*"tm_timekeeper_agenda_v2"/, "agenda builder should write the existing timekeeper agenda key");
+  assert.match(storageSource, /timekeeperMeeting:\s*"tm_timekeeper_meeting_v1"/, "agenda builder should write the existing timekeeper meeting key");
+  assert.match(storageSource, /timekeeperRecords:\s*"tm_timekeeper_records_v1"/, "sync conflict checks should inspect timekeeper records");
+  assert.match(schemaSource, /function convertGeneratorItemToTimekeeperAgenda/, "schema should own generator-to-timekeeper item conversion");
+  assert.match(schemaSource, /\(item\.kind \|\| "item"\) === "section"/, "timekeeper sync should skip section headings");
+  assert.match(schemaSource, /name:\s*String\(item\.title/, "agenda title should become the timekeeper item name");
+  assert.match(schemaSource, /speaker:\s*item\.person/, "agenda person should become the timekeeper speaker field");
+  assert.match(schemaSource, /detail:\s*item\.detail/, "agenda detail should be preserved for timekeeper context");
+  assert.match(schemaSource, /scheduledTime:\s*item\.time/, "agenda time should be preserved for timekeeper context");
+  assert.match(buildAgenda, /buildTimekeeperPayloadForSync\(\)\.agendaItems/, "agenda builder should use the shared payload builder");
+  assert.match(syncAgenda, /mergeTimekeeperAgendaItems\(agendaItems,\s*currentAgenda\)/, "sync should merge into the live agenda instead of replacing every item");
+  assert.match(syncAgenda, /TMStorage\.writeJson\(TIMEKEEPER_STORAGE_KEYS\.agenda,\s*mergedAgenda\)/, "sync should write the merged agenda items");
+  assert.match(syncAgenda, /TMStorage\.writeJson\(TIMEKEEPER_STORAGE_KEYS\.meeting,\s*meeting\)/, "sync should write meeting metadata");
+  assert.match(syncAgenda, /TMStorage\.writeJson\(TIMEKEEPER_STORAGE_KEYS\.syncMeta/, "sync should save the copied agenda snapshot for future conflict checks");
+  assert.doesNotMatch(syncAgenda, /TIMEKEEPER_STORAGE_KEYS\.records[\s\S]*writeJson/, "sync should not clear or rewrite timing records");
   assert.match(syncAgenda, /syncedMeeting:\s*comparableTimekeeperMeeting\(meeting\)/, "sync metadata should snapshot meeting fields");
   assert.match(openTimekeeper, /syncTimekeeperAgenda\(\);[\s\S]*?window\.location\.href = "index\.html";/, "open action should try syncing and always navigate to timekeeper");
   assert.match(source, /openTimekeeperBtn\.addEventListener\("click",\s*openTimekeeper\)/, "timekeeper button should use the sync-aware open handler");
@@ -312,24 +327,22 @@ test("agenda builder syncs a copied agenda into timekeeper storage", () => {
 });
 
 test("timekeeper sync parses durations and guards live edits", () => {
-  const durationParser = functionSource("durationToTimekeeperMinutes");
   const conflictCheck = functionSource("timekeeperHasSyncConflict");
-  const meetingBuilder = functionSource("buildTimekeeperMeeting");
 
-  assert.match(durationParser, /rangeMatch[\s\S]*?Number\(rangeMatch\[2\]\)/, "duration ranges like 5-7 should use the upper bound");
-  assert.match(durationParser, /text\.match\(\/\(\\d\+\(\?:\\\.\\d\+\)\?\)\/\)/, "single values like 2min/人 should use the first number");
-  assert.match(durationParser, /\/秒\/\.test\(text\)[\s\S]*?Math\.ceil\(value \/ 60\)/, "second-based durations should convert to at least one minute");
-  assert.match(durationParser, /secondsOnly \? Math\.max\(1,\s*Math\.ceil\(upper \/ 60\)\)/, "second-based ranges should convert the upper bound from seconds");
+  assert.match(schemaSource, /rangeMatch[\s\S]*?Number\(rangeMatch\[2\]\)/, "duration ranges like 5-7 should use the upper bound");
+  assert.match(schemaSource, /text\.match\(\/\(\\d\+\(\?:\\\.\\d\+\)\?\)\/\)/, "single values like 2min/人 should use the first number");
+  assert.match(schemaSource, /\/秒\/\.test\(text\)[\s\S]*?Math\.ceil\(value \/ 60\)/, "second-based durations should convert to at least one minute");
+  assert.match(schemaSource, /secondsOnly \? Math\.max\(1,\s*Math\.ceil\(upper \/ 60\)\)/, "second-based ranges should convert the upper bound from seconds");
   assert.match(conflictCheck, /currentRecords[\s\S]*?currentRecords\.length > 0/, "existing timing records should require confirmation before overwrite");
   assert.match(conflictCheck, /item\.status && item\.status !== "pending"/, "active or done agenda items should require confirmation");
   assert.match(conflictCheck, /hasUntrackedAgenda[\s\S]*?!lastSyncedAgenda[\s\S]*?!isDefaultTimekeeperAgenda\(currentAgenda\)/, "pre-existing non-default unsynced agenda data should require confirmation");
   assert.match(conflictCheck, /JSON\.stringify\(comparableTimekeeperAgenda\(currentAgenda\)\) !== JSON\.stringify\(lastSyncedAgenda\)/, "local edits after last sync should require confirmation");
   assert.match(conflictCheck, /JSON\.stringify\(comparableTimekeeperMeeting\(currentMeeting\)\) !== JSON\.stringify\(lastSyncedMeeting\)/, "meeting edits after last sync should require confirmation");
-  assert.match(source, /window\.confirm\("时间官已有现场数据或本地调整。同步会覆盖时间官环节和会议信息，但不会清空计时记录，也不会修改原议程单。继续同步吗？"\)/, "conflict confirmation should explain that records and source agenda are preserved");
-  assert.match(meetingBuilder, /timekeeperName:\s*existing\.timekeeperName \|\| ""/, "meeting sync should preserve the existing timekeeper name");
-  assert.match(meetingBuilder, /meetingDate:\s*state\.date/, "meeting sync should copy the agenda date");
-  assert.match(meetingBuilder, /meetingStartTime:\s*state\.startTime/, "meeting sync should copy the agenda start time");
-  assert.match(meetingBuilder, /meetingEndTime:\s*state\.endTime/, "meeting sync should copy the agenda end time");
+  assert.match(source, /window\.confirm\("时间官已有现场数据或本地调整。同步只会更新未开始环节和会议基础信息，不会清空计时记录，也不会覆盖已完成环节。继续同步吗？"\)/, "conflict confirmation should explain that records and completed agenda status are preserved");
+  assert.match(schemaSource, /timekeeperName:\s*existingMeeting\.timekeeperName \|\| ""/, "meeting sync should preserve the existing timekeeper name");
+  assert.match(schemaSource, /meetingDate:\s*generatorState\.date/, "meeting sync should copy the agenda date");
+  assert.match(schemaSource, /meetingStartTime:\s*generatorState\.startTime/, "meeting sync should copy the agenda start time");
+  assert.match(schemaSource, /meetingEndTime:\s*generatorState\.endTime/, "meeting sync should copy the agenda end time");
 });
 
 test("timekeeper duration conversion handles real edge cases", () => {
@@ -385,6 +398,35 @@ test("timekeeper conflict detection handles default agenda and meeting edits", (
       syncedMeeting
     }
   }), true, "meeting edits after the last sync should require confirmation");
+});
+
+test("timekeeper agenda schema preserves live progress while updating pending items", () => {
+  const incoming = [
+    { id: "a", name: "备稿演讲", plannedMinutes: 7, durationLabel: "5-7", speaker: "Maggie", detail: "新题目", scheduledTime: "20:06" },
+    { id: "b", name: "即兴点评", plannedMinutes: 5, durationLabel: "5", speaker: "Rui", scheduledTime: "20:43" }
+  ];
+  const current = [
+    { id: "a", name: "旧备稿", plannedMinutes: 6, durationLabel: "6", status: "done", actualStart: "start", actualEnd: "end", speaker: "旧发言人" },
+    { id: "b", name: "旧点评", plannedMinutes: 4, durationLabel: "4", status: "pending" }
+  ];
+
+  const merged = schema.mergeTimekeeperAgendaItems(incoming, current);
+
+  assert.equal(merged[0].status, "done", "done agenda status should be preserved");
+  assert.equal(merged[0].actualStart, "start", "done agenda actualStart should be preserved");
+  assert.equal(merged[0].actualEnd, "end", "done agenda actualEnd should be preserved");
+  assert.equal(merged[0].speaker, "旧发言人", "live speaker edits should win on completed agenda items");
+  assert.equal(merged[1].name, "即兴点评", "pending agenda items should receive the latest generator name");
+  assert.equal(merged[1].speaker, "Rui", "pending agenda items should receive synced speaker data");
+  assert.equal(merged[1].scheduledTime, "20:43", "pending agenda items should receive synced scheduled time");
+});
+
+test("agenda generator warns when the A4 preview may overflow", () => {
+  const checkOverflow = functionSource("checkPrintOverflow");
+
+  assert.match(source, /window\.requestAnimationFrame\(checkPrintOverflow\)/, "preview render should check A4 overflow after layout");
+  assert.match(checkOverflow, /scrollHeight > page\.clientHeight \+ 2/, "overflow check should compare rendered height with the A4 page height");
+  assert.match(source, /当前内容可能超出 A4 页面，请减少文字或缩短议程/, "overflow warning should use the requested toast copy");
 });
 
 test("printable footer renders as three independent reference-style cards", () => {

@@ -348,6 +348,28 @@
       opacity: 0.82;
     }
 
+    .timer-speaker-field {
+      width: min(420px, 100%);
+      margin: 18px auto 0;
+      text-align: left;
+    }
+
+    .timer-speaker-field label {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .timer-speaker-field input {
+      min-height: 48px;
+      border-radius: 999px;
+      color: var(--md-on-surface);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), 0 8px 20px rgba(0, 0, 0, 0.10);
+    }
+
+    .focus-card.state-yellow .timer-speaker-field label {
+      color: rgba(33, 26, 21, 0.68);
+    }
+
     .control-zone {
       display: grid;
       gap: 14px;
@@ -690,6 +712,17 @@
       color: var(--md-on-surface-variant);
       font-size: 12px;
       line-height: 1.35;
+    }
+
+    .agenda-context-meta {
+      display: none;
+      margin-top: 8px;
+      color: var(--md-primary);
+      font-weight: 800;
+    }
+
+    .agenda-context-meta:not(:empty) {
+      display: block;
     }
 
     .context-fields {
@@ -1222,6 +1255,11 @@
         line-height: 1.45;
       }
 
+      .timer-speaker-field {
+        max-width: 300px;
+        margin-top: 16px;
+      }
+
       .control-zone {
         gap: 16px;
       }
@@ -1577,6 +1615,10 @@
               <div class="time-display" id="timeDisplay">00:00</div>
               <div class="timer-status" id="timerStatus">准备计时</div>
               <div class="timer-subline" id="timerSubline">点击开始后自动锁定当前环节</div>
+              <div class="timer-speaker-field">
+                <label for="speakerNameQuick">发言人姓名（可选）</label>
+                <input id="speakerNameQuick" placeholder="例如：Alex" />
+              </div>
             </div>
           </div>
 
@@ -1606,6 +1648,7 @@
             <div class="rule-chip">
               <strong id="ruleTitle">即兴演讲 · 2 分钟/人</strong>
               <span id="ruleDetail">根据环节时长自动推导绿黄红牌和超时铃声。</span>
+              <span class="agenda-context-meta" id="agendaContextMeta"></span>
             </div>
             <div class="context-fields">
               <div class="field">
@@ -1818,13 +1861,19 @@
     <button class="toast-action" id="toastAction" type="button"></button>
   </div>
 
+  <script src="js/storage.js"></script>
+  <script src="js/time-rules.js"></script>
+  <script src="js/agenda-schema.js"></script>
   <script>
+    const SHARED_STORAGE_KEYS = window.TMStorage.STORAGE_KEYS;
     const STORAGE_KEYS = {
       customRules: "tm_timekeeper_custom_rules_v1",
-      records: "tm_timekeeper_records_v1",
-      meeting: "tm_timekeeper_meeting_v1",
-      agenda: "tm_timekeeper_agenda_v2"
+      records: SHARED_STORAGE_KEYS.timekeeperRecords,
+      meeting: SHARED_STORAGE_KEYS.timekeeperMeeting,
+      agenda: SHARED_STORAGE_KEYS.timekeeperAgenda
     };
+    const TimeRules = window.TMTimeRules;
+    const AgendaSchema = window.TMAgendaSchema;
 
     const UI_MODE_KEY = "tm_timekeeper_ui_mode_v1";
     const COLLAPSE_KEY = "tm_timekeeper_setup_collapse_v1";
@@ -1897,8 +1946,10 @@
       agendaMinuteMinus: $("agendaMinuteMinus"),
       agendaMinutePlus: $("agendaMinutePlus"),
       agendaHint: $("agendaHint"),
+      speakerNameQuick: $("speakerNameQuick"),
       speakerName: $("speakerName"),
       speechTitle: $("speechTitle"),
+      agendaContextMeta: $("agendaContextMeta"),
       recordPreview: $("recordPreview"),
       agendaList: $("agendaList"),
       agendaCount: $("agendaCount"),
@@ -1959,20 +2010,15 @@
     }
 
     function readJson(key, fallback) {
-      try {
-        const value = JSON.parse(localStorage.getItem(key));
-        return value ?? fallback;
-      } catch {
-        return fallback;
-      }
+      return window.TMStorage.readJson(key, fallback);
     }
 
     function saveAgenda() {
-      localStorage.setItem(STORAGE_KEYS.agenda, JSON.stringify(state.agendaItems));
+      window.TMStorage.writeJson(STORAGE_KEYS.agenda, state.agendaItems);
     }
 
     function saveRecords() {
-      localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(state.records));
+      window.TMStorage.writeJson(STORAGE_KEYS.records, state.records);
     }
 
     function saveMeeting() {
@@ -1983,7 +2029,7 @@
         meetingStartTime: els.meetingStartTime.value,
         meetingEndTime: els.meetingEndTime.value
       };
-      localStorage.setItem(STORAGE_KEYS.meeting, JSON.stringify(meeting));
+      window.TMStorage.writeJson(STORAGE_KEYS.meeting, meeting);
       renderMeeting();
       generateReport();
     }
@@ -1999,42 +2045,19 @@
     }
 
     function deriveRule(totalSeconds) {
-      const safeTotal = Math.max(1, Math.round(Number(totalSeconds || 0)));
-      let greenRemaining = 300;
-      let yellowRemaining = 120;
-      let overtimeAlert = 30;
-      if (safeTotal <= 180) {
-        greenRemaining = 60;
-        yellowRemaining = 30;
-        overtimeAlert = 15;
-      } else if (safeTotal <= 600) {
-        greenRemaining = 120;
-        yellowRemaining = 60;
-        overtimeAlert = 30;
-      }
-      return {
-        total: safeTotal,
-        green: Math.max(0, safeTotal - greenRemaining),
-        yellow: Math.max(0, safeTotal - yellowRemaining),
-        red: safeTotal,
-        greenRemaining: Math.min(greenRemaining, safeTotal),
-        yellowRemaining: Math.min(yellowRemaining, safeTotal),
-        overtimeAlert
-      };
+      return TimeRules.deriveRule(totalSeconds);
     }
 
     function enrichAgendaItem(item, index = 0) {
       const mapping = matchAgendaMapping(item.name);
       const plannedMinutes = Math.max(1, Math.round(Number(item.plannedMinutes || mapping?.minutes || 2)));
-      return {
+      return AgendaSchema.normalizeTimekeeperAgendaItem({
+        ...item,
         id: item.id || `agenda-${Date.now()}-${index}`,
         name: item.name || mapping?.name || "未命名环节",
         plannedMinutes,
-        durationLabel: item.durationLabel || mapping?.label || `${plannedMinutes} 分钟`,
-        status: item.status || "pending",
-        actualStart: item.actualStart || null,
-        actualEnd: item.actualEnd || null
-      };
+        durationLabel: item.durationLabel || mapping?.label || `${plannedMinutes} 分钟`
+      }, index);
     }
 
     function getActiveAgenda() {
@@ -2056,10 +2079,7 @@
     }
 
     function formatTime(totalSeconds) {
-      const abs = Math.abs(Math.floor(totalSeconds));
-      const minutes = Math.floor(abs / 60);
-      const seconds = abs % 60;
-      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      return TimeRules.formatTime(totalSeconds);
     }
 
     function formatLongTime(totalSeconds) {
@@ -2071,11 +2091,11 @@
     }
 
     function formatRule(rule) {
-      return `绿牌 ${formatTime(rule.green)} · 黄牌 ${formatTime(rule.yellow)} · 红牌 ${formatTime(rule.red)} · 铃声 +${rule.overtimeAlert}s`;
+      return TimeRules.formatRule(rule);
     }
 
     function formatRemainingRule(rule) {
-      return `绿牌 剩余 ${formatTime(rule.greenRemaining)}，黄牌 剩余 ${formatTime(rule.yellowRemaining)}，红牌 时间到，超时 ${rule.overtimeAlert} 秒响铃`;
+      return TimeRules.formatRemainingRule(rule);
     }
 
     function getTimerState(elapsed = state.timer.elapsed) {
@@ -2134,6 +2154,9 @@
       els.meetingDate.value = meeting.meetingDate || new Date().toISOString().slice(0, 10);
       els.meetingStartTime.value = meeting.meetingStartTime || "19:30";
       els.meetingEndTime.value = meeting.meetingEndTime || "21:30";
+      const activeItem = getActiveAgenda();
+      syncSpeakerInputs(activeItem?.speaker || "", true);
+      els.speechTitle.value = activeItem?.detail || "";
 
       localStorage.setItem(COLLAPSE_KEY, localStorage.getItem(COLLAPSE_KEY) || JSON.stringify({
         "meeting-info": false,
@@ -2169,6 +2192,25 @@
       const current = Math.max(1, Math.round(Number(els.agendaMinutesInput.value || 1)));
       els.agendaMinutesInput.value = Math.max(1, current + delta);
       syncAgendaRuleFromMinutes();
+    }
+
+    function getSpeakerInputValue() {
+      return els.speakerName.value.trim() || els.speakerNameQuick.value.trim();
+    }
+
+    function syncSpeakerInputs(value, skipRender = false) {
+      els.speakerName.value = value;
+      els.speakerNameQuick.value = value;
+      if (!skipRender) renderContext();
+    }
+
+    function agendaContextMetaText(item) {
+      if (!item) return "";
+      return [
+        item.scheduledTime ? `计划 ${item.scheduledTime}` : "",
+        item.speaker ? `发言人 ${item.speaker}` : "",
+        item.detail || ""
+      ].filter(Boolean).join(" · ");
     }
 
     function renderAgendaRail() {
@@ -2215,7 +2257,12 @@
             </button>
             <div>
               <div class="agenda-name">${escapeHtml(item.name)}</div>
-              <div class="agenda-meta">${escapeHtml(item.durationLabel || `${item.plannedMinutes} 分钟`)} · ${formatRule(rule)}</div>
+              <div class="agenda-meta">${escapeHtml([
+                item.scheduledTime || "",
+                item.durationLabel || `${item.plannedMinutes} 分钟`,
+                item.speaker || "",
+                formatRule(rule)
+              ].filter(Boolean).join(" · "))}</div>
             </div>
             <div class="agenda-trailing">
               <span class="agenda-status">${status}</span>
@@ -2241,15 +2288,19 @@
       els.mobileStatusPill.className = `mobile-status-pill state-${timerState}`;
       els.ruleTitle.textContent = `${item.name} · ${item.durationLabel || `${item.plannedMinutes} 分钟`}`;
       els.ruleDetail.textContent = formatRemainingRule(rule);
-      const speaker = els.speakerName.value.trim() || "未填写发言人";
-      const title = els.speechTitle.value.trim();
+      els.agendaContextMeta.textContent = agendaContextMetaText(item);
+      const speaker = getSpeakerInputValue() || item.speaker || "未填写发言人";
+      const title = els.speechTitle.value.trim() || item.detail || "";
+      const speakerPlaceholder = item.speaker ? `默认：${item.speaker}` : "例如：Alex";
+      els.speakerName.placeholder = speakerPlaceholder;
+      els.speakerNameQuick.placeholder = speakerPlaceholder;
       els.recordPreview.textContent = `本次记录：${speaker}${title ? " · " + title : ""}`;
       els.timerStatus.textContent = getStatusLabel(timerState);
       els.timerSubline.textContent = isMultiSpeakerAgenda(item)
         ? "多人环节：可用“下一位发言人”清零秒表，议程保持进行中"
         : "状态色会随绿牌、黄牌、红牌自动切换";
       els.nextSpeakerBtn.style.display = isMultiSpeakerAgenda(item) ? "inline-flex" : "none";
-      els.stageSpeaker.textContent = els.speakerName.value.trim() || "未填写演讲者";
+      els.stageSpeaker.textContent = getSpeakerInputValue() || item.speaker || "未填写演讲者";
       els.stageRule.textContent = item.name;
       els.stageOverlay.className = `stage-overlay ${els.stageOverlay.classList.contains("open") ? "open" : ""} state-${timerState}`;
       els.stageStatus.textContent = getStatusLabel(timerState);
@@ -2394,6 +2445,8 @@
       item.actualEnd = item.actualEnd || new Date().toISOString();
       const next = state.agendaItems.find((agenda) => agenda.status === "pending");
       state.activeAgendaId = next?.id || item.id;
+      syncSpeakerInputs(next?.speaker || "", true);
+      els.speechTitle.value = next?.detail || "";
       resetTimer(false);
       saveAgenda();
       renderAll();
@@ -2418,6 +2471,8 @@
       state.timer.overtimeBeeped = false;
       els.agendaMinutesInput.value = item?.plannedMinutes || 2;
       els.agendaNameInput.value = item?.name || "";
+      syncSpeakerInputs(item?.speaker || "", true);
+      els.speechTitle.value = item?.detail || "";
       els.agendaHint.textContent = formatRemainingRule(rule);
       renderAll();
     }
@@ -2426,9 +2481,12 @@
       const result = getResult(elapsed);
       const record = {
         id: `record-${Date.now()}`,
-        speaker: els.speakerName.value.trim() || "未填写",
-        title: els.speechTitle.value.trim(),
+        speaker: getSpeakerInputValue() || item.speaker || "未填写",
+        title: els.speechTitle.value.trim() || item.detail || "",
         ruleName: item.name,
+        scheduledTime: item.scheduledTime || "",
+        agendaSpeaker: item.speaker || "",
+        agendaDetail: item.detail || "",
         ruleMode: "up",
         duration: elapsed,
         displayDuration: formatTime(elapsed),
@@ -2451,7 +2509,7 @@
           <td>${index + 1}</td>
           <td>${escapeHtml(record.speaker)}</td>
           <td>${escapeHtml(record.title || "-")}</td>
-          <td>${escapeHtml(record.ruleName)}</td>
+          <td>${escapeHtml([record.ruleName || "未命名环节", record.scheduledTime].filter(Boolean).join(" · "))}</td>
           <td>${escapeHtml(record.displayDuration || formatTime(record.duration || 0))}</td>
           <td>${escapeHtml(record.resultLabel || "")}</td>
           <td>${escapeHtml(record.endedAt || "-")}</td>
@@ -2479,14 +2537,19 @@
       lines.push("");
       lines.push("整场议程控时：");
       state.agendaItems.forEach((item, index) => {
-        lines.push(`${index + 1}. ${item.name}｜计划 ${item.durationLabel || `${item.plannedMinutes} 分钟`}｜状态 ${item.status === "done" ? "已完成" : item.status === "active" ? "进行中" : "未开始"}`);
+        const meta = [
+          item.scheduledTime ? `时间 ${item.scheduledTime}` : "",
+          item.speaker ? `发言人 ${item.speaker}` : "",
+          item.detail ? `说明 ${item.detail}` : ""
+        ].filter(Boolean).join("｜");
+        lines.push(`${index + 1}. ${item.name}｜计划 ${item.durationLabel || `${item.plannedMinutes} 分钟`}｜状态 ${item.status === "done" ? "已完成" : item.status === "active" ? "进行中" : "未开始"}${meta ? "｜" + meta : ""}`);
       });
       lines.push("");
       if (!state.records.length) {
         lines.push("暂无计时记录。");
       } else {
         state.records.forEach((record, index) => {
-          lines.push(`${index + 1}. ${record.speaker}${record.title ? "《" + record.title + "》" : ""}｜${record.ruleName}｜用时 ${record.displayDuration || formatTime(record.duration || 0)}｜${record.resultLabel || ""}`);
+          lines.push(`${index + 1}. ${record.speaker || "未填写"}${record.title ? "《" + record.title + "》" : ""}｜${record.ruleName || "未命名环节"}${record.scheduledTime ? "｜计划 " + record.scheduledTime : ""}｜用时 ${record.displayDuration || formatTime(record.duration || 0)}｜${record.resultLabel || ""}`);
         });
       }
       els.reportBox.value = lines.join("\n");
@@ -2509,12 +2572,13 @@
         showToast("暂无记录可导出");
         return;
       }
-      const headers = ["序号", "姓名", "题目", "环节", "用时", "结果", "结束时间"];
+      const headers = ["序号", "姓名", "题目", "环节", "计划时间", "用时", "结果", "结束时间"];
       const rows = state.records.map((record, index) => [
         index + 1,
-        record.speaker,
+        record.speaker || "未填写",
         record.title || "",
-        record.ruleName,
+        record.ruleName || "未命名环节",
+        record.scheduledTime || "",
         record.displayDuration || formatTime(record.duration || 0),
         record.resultLabel || "",
         record.endedAt || ""
@@ -2714,8 +2778,8 @@
 
     function resetAll() {
       if (!confirm("恢复默认会清空议程和记录，但保留页面可继续使用。确定吗？")) return;
-      localStorage.removeItem(STORAGE_KEYS.records);
-      localStorage.removeItem(STORAGE_KEYS.agenda);
+      window.TMStorage.removeKey(STORAGE_KEYS.records);
+      window.TMStorage.removeKey(STORAGE_KEYS.agenda);
       state.records = [];
       state.agendaItems = clone(DEFAULT_AGENDA).map(enrichAgendaItem);
       state.activeAgendaId = state.agendaItems[0]?.id || null;
@@ -2775,7 +2839,9 @@
       [els.meetingTitle, els.timekeeperName, els.meetingDate, els.meetingStartTime, els.meetingEndTime].forEach((input) => {
         input.addEventListener("input", saveMeeting);
       });
-      [els.speakerName, els.speechTitle].forEach((input) => input.addEventListener("input", renderContext));
+      els.speakerName.addEventListener("input", () => syncSpeakerInputs(els.speakerName.value));
+      els.speakerNameQuick.addEventListener("input", () => syncSpeakerInputs(els.speakerNameQuick.value));
+      els.speechTitle.addEventListener("input", renderContext);
 
       els.openReportBtn.addEventListener("click", () => {
         generateReport();

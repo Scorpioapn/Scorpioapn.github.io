@@ -22,6 +22,9 @@ test("timekeeper keeps desktop app static and adds four mobile tabs", () => {
   const mobileCss = cssMediaBlock("max-width: 768px");
 
   assert.match(source, /<main class="main-shell">/, "existing app shell should remain a static HTML app");
+  assert.match(source, /<script src="js\/storage\.js"><\/script>/, "timekeeper should load shared storage keys");
+  assert.match(source, /<script src="js\/time-rules\.js"><\/script>/, "timekeeper should load shared time rule helpers");
+  assert.match(source, /<script src="js\/agenda-schema\.js"><\/script>/, "timekeeper should load shared agenda schema");
   assert.match(source, /data-mobile-panel="timer"/, "timer panel should be marked for mobile tabs");
   assert.match(source, /data-mobile-panel="agenda"/, "agenda panel should be marked for mobile tabs");
   assert.match(source, /data-mobile-panel="context"/, "context panel should be marked for mobile tabs");
@@ -55,4 +58,17 @@ test("timekeeper mobile controls preserve existing timer and agenda behavior", (
   assert.match(source, /agendaMinutePlus\.addEventListener\("click", \(\) => adjustAgendaMinutes\(1\)\)/, "mobile minute stepper should increase minutes through existing input");
   assert.match(source, /mobileExportReportBtn\.addEventListener\("click"[\s\S]*?openModal\(els\.reportModal\)/, "mobile export report should reuse the existing report modal");
   assert.match(source, /mobileShareReportBtn\.addEventListener\("click", copyReport\)/, "mobile share report should reuse existing copy report logic");
+});
+
+test("timekeeper preserves synced agenda context and exposes speaker input on timer", () => {
+  assert.match(source, /id="speakerNameQuick"/, "timer card should expose a quick speaker input");
+  assert.match(source, /function syncSpeakerInputs\(value/, "quick speaker input should share one sync helper with context input");
+  assert.match(source, /speakerNameQuick\.addEventListener\("input"[\s\S]*?syncSpeakerInputs/, "quick speaker input should update the original speakerName field");
+  assert.match(source, /speakerName\.addEventListener\("input"[\s\S]*?syncSpeakerInputs/, "original speakerName field should update the quick input");
+  assert.match(source, /AgendaSchema\.normalizeTimekeeperAgendaItem/, "timekeeper should normalize agenda items through the shared schema");
+  assert.match(source, /agendaContextMeta\.textContent = agendaContextMetaText\(item\)/, "smart context should display synced speaker/detail/scheduled time metadata");
+  assert.match(source, /item\.scheduledTime \? `计划 \$\{item\.scheduledTime\}`/, "smart context should include scheduled time");
+  assert.match(source, /speaker:\s*getSpeakerInputValue\(\) \|\| item\.speaker/, "records should fall back to the synced agenda speaker");
+  assert.match(source, /title:\s*els\.speechTitle\.value\.trim\(\) \|\| item\.detail/, "records should fall back to the synced agenda detail");
+  assert.match(source, /scheduledTime:\s*item\.scheduledTime \|\| ""/, "records should preserve synced scheduled time");
 });
