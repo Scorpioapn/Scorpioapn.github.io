@@ -343,6 +343,8 @@ test("timekeeper sync parses durations and guards live edits", () => {
   assert.match(schemaSource, /meetingDate:\s*generatorState\.date/, "meeting sync should copy the agenda date");
   assert.match(schemaSource, /meetingStartTime:\s*generatorState\.startTime/, "meeting sync should copy the agenda start time");
   assert.match(schemaSource, /meetingEndTime:\s*generatorState\.endTime/, "meeting sync should copy the agenda end time");
+  assert.doesNotMatch(source, /function deriveTimingRule/, "agenda generator should not keep a local duplicate timing-rule implementation");
+  assert.match(functionSource("ruleTextForDuration"), /TimeRules\.deriveRuleForMinutes\(minutes\)/, "rule hint should use shared time-rule data");
 });
 
 test("timekeeper duration conversion handles real edge cases", () => {
@@ -350,10 +352,15 @@ test("timekeeper duration conversion handles real edge cases", () => {
 
   assert.equal(parseMinutes("5-7"), 7, "minute ranges should use the upper bound");
   assert.equal(parseMinutes("2min/人"), 2, "per-person minute labels should use the first number");
+  assert.equal(parseMinutes("20"), 20, "plain minute values should parse directly");
+  assert.equal(parseMinutes("30秒 × 4"), 2, "second-based repeated expressions should convert to total minutes");
+  assert.equal(parseMinutes("30秒 × 4 + 1分钟"), 3, "mixed second/minute expressions should sum all reliable terms");
   assert.equal(parseMinutes("30秒"), 1, "single second values should round up to one minute");
   assert.equal(parseMinutes("30-45秒"), 1, "second ranges should round the upper bound up to one minute");
   assert.equal(parseMinutes("90秒"), 2, "long second values should round up by minute");
   assert.equal(parseMinutes("０５-０７"), 7, "full-width digits should parse correctly");
+  assert.equal(parseMinutes("30秒 × 4 + 1", 9), 9, "ambiguous mixed expressions should return fallback");
+  assert.equal(parseMinutes("30秒 4", 9), 9, "unstructured multi-number labels should return fallback");
 });
 
 test("timekeeper conflict detection handles default agenda and meeting edits", () => {
@@ -412,6 +419,7 @@ test("timekeeper agenda schema preserves live progress while updating pending it
 
   const merged = schema.mergeTimekeeperAgendaItems(incoming, current);
 
+  assert.equal(merged[0].name, "旧备稿", "done agenda names should not be overwritten");
   assert.equal(merged[0].status, "done", "done agenda status should be preserved");
   assert.equal(merged[0].actualStart, "start", "done agenda actualStart should be preserved");
   assert.equal(merged[0].actualEnd, "end", "done agenda actualEnd should be preserved");
@@ -419,6 +427,37 @@ test("timekeeper agenda schema preserves live progress while updating pending it
   assert.equal(merged[1].name, "即兴点评", "pending agenda items should receive the latest generator name");
   assert.equal(merged[1].speaker, "Rui", "pending agenda items should receive synced speaker data");
   assert.equal(merged[1].scheduledTime, "20:43", "pending agenda items should receive synced scheduled time");
+});
+
+test("timekeeper agenda matching avoids ambiguous duplicate names", () => {
+  const incoming = [
+    { id: "new-1", sourceId: "source-1", name: "备稿演讲", scheduledTime: "20:06", speaker: "A" },
+    { id: "new-2", sourceId: "source-2", name: "备稿演讲", scheduledTime: "20:13", speaker: "B" }
+  ];
+  const current = [
+    { id: "current-1", sourceId: "source-1", name: "旧标题", scheduledTime: "20:00", status: "pending" },
+    { id: "current-2", name: "备稿演讲", scheduledTime: "20:13", status: "pending" }
+  ];
+
+  const merged = schema.mergeTimekeeperAgendaItems(incoming, current);
+
+  assert.equal(merged[0].id, "current-1", "sourceId should be the first matching priority");
+  assert.equal(merged[0].speaker, "A", "sourceId match should update the pending item");
+  assert.equal(merged[1].id, "current-2", "scheduledTime + name should match the intended duplicate item");
+  assert.equal(merged[1].speaker, "B", "scheduledTime + name match should update the intended duplicate item");
+
+  const ambiguous = schema.mergeTimekeeperAgendaItems(
+    [
+      { id: "x1", name: "备稿演讲", speaker: "A" },
+      { id: "x2", name: "备稿演讲", speaker: "B" }
+    ],
+    [
+      { id: "old-1", name: "备稿演讲", status: "pending" },
+      { id: "old-2", name: "备稿演讲", status: "pending" }
+    ]
+  );
+  assert.equal(ambiguous[0].id, "x1", "duplicate names without stronger keys should not inherit a possibly wrong existing item");
+  assert.equal(ambiguous[1].id, "x2", "duplicate names without stronger keys should remain independent");
 });
 
 test("agenda generator warns when the A4 preview may overflow", () => {

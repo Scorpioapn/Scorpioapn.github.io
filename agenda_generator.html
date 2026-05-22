@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:," />
   <title>畅言中文议程生成器</title>
   <style>
     :root {
@@ -3430,67 +3431,10 @@ ${GUEST_PARTICIPATION_NOTE}`,
       return hours * 60 + minutes;
     }
 
-    function secondsToClock(seconds) {
-      const safe = Math.max(0, Math.round(seconds));
-      const minutes = Math.floor(safe / 60);
-      const secs = safe % 60;
-      return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-    }
-
-    function deriveTimingRule(minutes) {
-      const total = Math.max(0, Number(minutes) || 0) * 60;
-      if (!total) {
-        return {
-          green: 0,
-          yellow: 0,
-          red: 0,
-          band: "请先输入分钟数",
-          greenReminder: "输入时长后显示",
-          yellowReminder: "输入时长后显示",
-          redReminder: "时间到",
-          bellReminder: "按规则响铃"
-        };
-      }
-      if (minutes <= 3) {
-        return {
-          green: Math.max(0, total - 60),
-          yellow: Math.max(0, total - 30),
-          red: total,
-          band: "3分钟及以下规则",
-          greenReminder: "剩余 1 分钟",
-          yellowReminder: "剩余 30 秒",
-          redReminder: "时间到",
-          bellReminder: "超时 15 秒"
-        };
-      }
-      if (minutes <= 10) {
-        return {
-          green: Math.max(0, total - 120),
-          yellow: Math.max(0, total - 60),
-          red: total,
-          band: "3–10分钟规则",
-          greenReminder: "剩余 2 分钟",
-          yellowReminder: "剩余 1 分钟",
-          redReminder: "时间到",
-          bellReminder: "超时 30 秒"
-        };
-      }
-      return {
-        green: Math.max(0, total - 300),
-        yellow: Math.max(0, total - 120),
-        red: total,
-        band: "10分钟以上规则",
-        greenReminder: "剩余 5 分钟",
-        yellowReminder: "剩余 2 分钟",
-        redReminder: "时间到",
-        bellReminder: "超时 30 秒"
-      };
-    }
-
     function ruleTextForDuration(duration) {
       const minutes = parseDurationMinutes(duration);
-      const rule = deriveTimingRule(minutes);
       if (!minutes) return "输入分钟数后自动推导绿牌、黄牌、红牌与铃声。";
+      const rule = TimeRules.deriveRuleForMinutes(minutes);
       return `规则说明：${rule.band}｜绿牌：${rule.greenReminder}｜黄牌：${rule.yellowReminder}｜红牌：${rule.redReminder}｜响铃：${rule.bellReminder}。`;
     }
 

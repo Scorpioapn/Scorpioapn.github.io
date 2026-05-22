@@ -15,24 +15,40 @@
     let greenRemaining = 300;
     let yellowRemaining = 120;
     let overtimeAlert = 30;
+    let band = "10分钟以上规则";
     if (safeTotal <= 180) {
       greenRemaining = 60;
       yellowRemaining = 30;
       overtimeAlert = 15;
+      band = "3分钟及以下规则";
     } else if (safeTotal <= 600) {
       greenRemaining = 120;
       yellowRemaining = 60;
       overtimeAlert = 30;
+      band = "3–10分钟规则";
     }
+    const greenRemainingSafe = Math.min(greenRemaining, safeTotal);
+    const yellowRemainingSafe = Math.min(yellowRemaining, safeTotal);
     return {
       total: safeTotal,
       green: Math.max(0, safeTotal - greenRemaining),
       yellow: Math.max(0, safeTotal - yellowRemaining),
       red: safeTotal,
-      greenRemaining: Math.min(greenRemaining, safeTotal),
-      yellowRemaining: Math.min(yellowRemaining, safeTotal),
-      overtimeAlert
+      greenRemaining: greenRemainingSafe,
+      yellowRemaining: yellowRemainingSafe,
+      overtimeAlert,
+      band,
+      greenReminder: `剩余 ${formatReminderDuration(greenRemainingSafe)}`,
+      yellowReminder: `剩余 ${formatReminderDuration(yellowRemainingSafe)}`,
+      redReminder: "时间到",
+      bellReminder: `超时 ${overtimeAlert} 秒`
     };
+  }
+
+  function formatReminderDuration(seconds) {
+    const safeSeconds = Math.max(0, Math.round(Number(seconds) || 0));
+    if (safeSeconds > 0 && safeSeconds % 60 === 0) return `${safeSeconds / 60} 分钟`;
+    return `${safeSeconds} 秒`;
   }
 
   function deriveRuleForMinutes(minutes) {

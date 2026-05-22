@@ -12,16 +12,48 @@
   function parseDurationToMinutes(duration, fallback = 2) {
     const text = normalizeFullWidthDigits(duration).trim();
     if (!text) return fallback;
+    const expressionMinutes = parseDurationExpressionToMinutes(text);
+    if (expressionMinutes !== null) return expressionMinutes;
     const secondsOnly = /秒/.test(text) && !/分|分钟|min|minute/i.test(text);
     const rangeMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:-|–|—|~|～|至|到)\s*(\d+(?:\.\d+)?)/);
     if (rangeMatch) {
       const upper = Number(rangeMatch[2]);
       return secondsOnly ? Math.max(1, Math.ceil(upper / 60)) : Math.max(1, Math.round(upper));
     }
+    const allNumbers = text.match(/\d+(?:\.\d+)?/g) || [];
+    if (allNumbers.length > 1) return fallback;
     const numberMatch = text.match(/(\d+(?:\.\d+)?)/);
     if (!numberMatch) return fallback;
     const value = Number(numberMatch[1]);
     return secondsOnly ? Math.max(1, Math.ceil(value / 60)) : Math.max(1, Math.round(value));
+  }
+
+  function parseDurationExpressionToMinutes(text) {
+    if (!/[+＋*×xX]/.test(text)) return null;
+    const normalized = text
+      .replace(/[＋]/g, "+")
+      .replace(/[×xX＊]/g, "*")
+      .replace(/，|,/g, "+");
+    const terms = normalized.split("+").map((term) => term.trim()).filter(Boolean);
+    if (!terms.length) return null;
+    let totalSeconds = 0;
+    for (const term of terms) {
+      const seconds = parseDurationExpressionTerm(term);
+      if (seconds === null) return null;
+      totalSeconds += seconds;
+    }
+    return totalSeconds > 0 ? Math.max(1, Math.ceil(totalSeconds / 60)) : null;
+  }
+
+  function parseDurationExpressionTerm(term) {
+    const match = term.match(/^(\d+(?:\.\d+)?)\s*(秒|分|分钟|min|minute|minutes)\s*(?:[*]\s*(\d+(?:\.\d+)?))?\s*(?:\/\s*\S+)?$/i);
+    if (!match) return null;
+    const value = Number(match[1]);
+    const unit = match[2].toLowerCase();
+    const multiplier = match[3] ? Number(match[3]) : 1;
+    if (!Number.isFinite(value) || !Number.isFinite(multiplier)) return null;
+    const seconds = /秒/.test(unit) ? value : value * 60;
+    return seconds * multiplier;
   }
 
   function normalizeStatus(status) {
@@ -97,21 +129,37 @@
     };
   }
 
-  function agendaMatchKey(item) {
-    const normalized = normalizeTimekeeperAgendaItem(item);
-    return [
-      normalized.id,
-      normalized.sourceId,
-      normalized.name
-    ].filter(Boolean).map((value) => String(value).trim());
-  }
+  function findCurrentMatch(nextItem, currentAgenda, usedIndexes, incomingNameCounts) {
+    const next = normalizeTimekeeperAgendaItem(nextItem);
+    const findFirst = (predicate) => {
+      for (let index = 0; index < currentAgenda.length; index += 1) {
+        if (usedIndexes.has(index)) continue;
+        const current = normalizeTimekeeperAgendaItem(currentAgenda[index], index);
+        if (predicate(current)) return { item: currentAgenda[index], index };
+      }
+      return null;
+    };
 
-  function findCurrentMatch(nextItem, currentAgenda, usedIndexes) {
-    const keys = agendaMatchKey(nextItem);
-    for (let index = 0; index < currentAgenda.length; index += 1) {
-      if (usedIndexes.has(index)) continue;
-      const currentKeys = agendaMatchKey(currentAgenda[index]);
-      if (keys.some((key) => currentKeys.includes(key))) return { item: currentAgenda[index], index };
+    if (next.sourceId) {
+      const sourceMatch = findFirst((current) => current.sourceId === next.sourceId);
+      if (sourceMatch) return sourceMatch;
+    }
+    if (next.id) {
+      const idMatch = findFirst((current) => current.id === next.id);
+      if (idMatch) return idMatch;
+    }
+    if (next.scheduledTime && next.name) {
+      const timeNameMatch = findFirst((current) => current.scheduledTime === next.scheduledTime && current.name === next.name);
+      if (timeNameMatch) return timeNameMatch;
+    }
+    if (next.name && incomingNameCounts.get(next.name) === 1) {
+      const nameMatches = [];
+      for (let index = 0; index < currentAgenda.length; index += 1) {
+        if (usedIndexes.has(index)) continue;
+        const current = normalizeTimekeeperAgendaItem(currentAgenda[index], index);
+        if (current.name === next.name) nameMatches.push({ item: currentAgenda[index], index });
+      }
+      if (nameMatches.length === 1) return nameMatches[0];
     }
     return null;
   }
@@ -124,9 +172,13 @@
   function mergeTimekeeperAgendaItems(nextAgenda, currentAgenda) {
     const incoming = (Array.isArray(nextAgenda) ? nextAgenda : []).map(normalizeTimekeeperAgendaItem);
     const current = (Array.isArray(currentAgenda) ? currentAgenda : []).map(normalizeTimekeeperAgendaItem);
+    const incomingNameCounts = incoming.reduce((counts, item) => {
+      counts.set(item.name, (counts.get(item.name) || 0) + 1);
+      return counts;
+    }, new Map());
     const usedIndexes = new Set();
     const merged = incoming.map((nextItem, index) => {
-      const match = findCurrentMatch(nextItem, current, usedIndexes);
+      const match = findCurrentMatch(nextItem, current, usedIndexes, incomingNameCounts);
       if (!match) return normalizeTimekeeperAgendaItem(nextItem, index);
       usedIndexes.add(match.index);
       const existing = normalizeTimekeeperAgendaItem(match.item, match.index);
@@ -140,16 +192,7 @@
           actualEnd: null
         }, index);
       }
-      return normalizeTimekeeperAgendaItem({
-        ...nextItem,
-        ...existing,
-        speaker: existing.speaker || nextItem.speaker,
-        detail: existing.detail || nextItem.detail,
-        scheduledTime: existing.scheduledTime || nextItem.scheduledTime,
-        status: existing.status,
-        actualStart: existing.actualStart,
-        actualEnd: existing.actualEnd
-      }, index);
+      return normalizeTimekeeperAgendaItem(existing, index);
     });
 
     current.forEach((item, index) => {

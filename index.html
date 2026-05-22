@@ -3,26 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:," />
   <title>头马时间官控制台</title>
   <style>
     :root {
       color-scheme: light;
-      --md-primary: #00527a;
+      --md-primary: var(--apple-blue);
       --md-on-primary: #ffffff;
-      --md-primary-container: #c8e6ff;
-      --md-on-primary-container: #001f2d;
-      --md-secondary: #6a5842;
-      --md-surface: #fff9f0;
-      --md-surface-dim: #eee1d2;
-      --md-surface-container-low: #fff4e7;
-      --md-surface-container: #f9ebdc;
-      --md-surface-container-high: #f1e2d2;
-      --md-on-surface: #211a15;
-      --md-on-surface-variant: #665b52;
-      --md-outline: #837568;
-      --md-green: #2e7d32;
-      --md-yellow: #f4bf2a;
-      --md-red: #b3261e;
+      --md-primary-container: rgba(0, 122, 255, 0.12);
+      --md-on-primary-container: var(--apple-label);
+      --md-secondary: var(--apple-secondary-label);
+      --md-surface: rgba(255, 255, 255, 0.72);
+      --md-surface-dim: var(--apple-bg);
+      --md-surface-container-low: rgba(255, 255, 255, 0.58);
+      --md-surface-container: rgba(255, 255, 255, 0.68);
+      --md-surface-container-high: rgba(255, 255, 255, 0.78);
+      --md-on-surface: var(--apple-label);
+      --md-on-surface-variant: var(--apple-secondary-label);
+      --md-outline: var(--apple-separator);
+      --md-green: var(--apple-green);
+      --md-yellow: var(--apple-yellow);
+      --md-red: var(--apple-red);
       --tm-red: #772432;
       --shadow-1: 0 1px 2px rgba(30, 20, 10, 0.10), 0 1px 3px rgba(30, 20, 10, 0.08);
       --shadow-2: 0 2px 6px rgba(30, 20, 10, 0.12), 0 8px 18px rgba(30, 20, 10, 0.08);
@@ -31,6 +32,17 @@
       --radius-md: 22px;
       --radius-lg: 32px;
       --rail-width: 80px;
+      --apple-bg: #f5f5f7;
+      --apple-bg-elevated: rgba(255, 255, 255, 0.72);
+      --apple-label: #1d1d1f;
+      --apple-secondary-label: #6e6e73;
+      --apple-blue: #007aff;
+      --apple-green: #34c759;
+      --apple-yellow: #ffcc00;
+      --apple-red: #ff3b30;
+      --apple-separator: rgba(60, 60, 67, 0.18);
+      --apple-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --apple-shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.06);
     }
 
     * {
@@ -1031,6 +1043,555 @@
       font-weight: 750;
     }
 
+    /* Apple-style interaction layer */
+    html,
+    body {
+      background: var(--apple-bg);
+      color: var(--apple-label);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      text-rendering: optimizeLegibility;
+    }
+
+    .app-shell {
+      background: var(--apple-bg);
+    }
+
+    .agenda-rail {
+      background: rgba(255, 255, 255, 0.68);
+      border-right: 1px solid var(--apple-separator);
+      box-shadow: none;
+      backdrop-filter: blur(24px);
+    }
+
+    .rail-brand {
+      color: #fff;
+      background: linear-gradient(180deg, #0a84ff, #006edb);
+      border-radius: 16px;
+      box-shadow: var(--apple-shadow-soft);
+    }
+
+    .rail-item {
+      color: var(--apple-secondary-label);
+      border-radius: 18px;
+    }
+
+    .rail-item.active {
+      background: rgba(0, 122, 255, 0.12);
+      color: var(--apple-blue);
+      box-shadow: none;
+    }
+
+    .rail-item.done {
+      color: var(--apple-green);
+    }
+
+    .rail-item.running {
+      background: rgba(0, 122, 255, 0.14);
+      color: var(--apple-blue);
+    }
+
+    .main-shell {
+      background: var(--apple-bg);
+    }
+
+    .story-progress {
+      height: 14px;
+      padding: 6px 18px 0;
+    }
+
+    .progress-segment {
+      background: rgba(60, 60, 67, 0.14);
+    }
+
+    .progress-fill {
+      background: var(--apple-blue);
+    }
+
+    .progress-segment.done .progress-fill {
+      background: var(--apple-green);
+    }
+
+    .content-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+      gap: 16px;
+    }
+
+    .app-shell.inspector-collapsed .content-grid {
+      grid-template-columns: minmax(0, 1fr) 0;
+    }
+
+    .app-shell.inspector-collapsed .side-panel {
+      width: 0;
+      padding: 0;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .timer-hero,
+    .focus-card.state-before,
+    .focus-card.state-idle,
+    .focus-card.state-green,
+    .focus-card.state-yellow,
+    .focus-card.state-red,
+    .focus-card.state-overtime {
+      color: var(--apple-label);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62));
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      box-shadow: var(--apple-shadow);
+      backdrop-filter: blur(28px);
+    }
+
+    .timer-hero {
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      border-radius: 34px;
+    }
+
+    .focus-top {
+      align-items: flex-start;
+    }
+
+    .hero-title-row {
+      display: flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .context-kicker {
+      color: var(--apple-secondary-label);
+      opacity: 1;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .context-title {
+      color: var(--apple-label);
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .context-rule {
+      max-width: 760px;
+      color: var(--apple-secondary-label);
+      font-size: clamp(13px, 1.1vw, 16px);
+      font-weight: 650;
+      opacity: 1;
+    }
+
+    .status-pill,
+    .mobile-status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: var(--apple-blue);
+      background: rgba(0, 122, 255, 0.12);
+      font-size: 13px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .status-pill.state-green,
+    .mobile-status-pill.state-green {
+      color: #1c7c37;
+      background: rgba(52, 199, 89, 0.16);
+    }
+
+    .status-pill.state-yellow,
+    .mobile-status-pill.state-yellow {
+      color: #7a5b00;
+      background: rgba(255, 204, 0, 0.2);
+    }
+
+    .status-pill.state-red,
+    .status-pill.state-overtime,
+    .mobile-status-pill.state-red,
+    .mobile-status-pill.state-overtime {
+      color: var(--apple-red);
+      background: rgba(255, 59, 48, 0.12);
+    }
+
+    .hero-progress {
+      width: min(520px, 100%);
+      height: 6px;
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(60, 60, 67, 0.14);
+    }
+
+    .hero-progress span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--apple-blue);
+      transition: width 220ms linear, background 180ms ease;
+    }
+
+    .hero-progress.state-green span {
+      background: var(--apple-green);
+    }
+
+    .hero-progress.state-yellow span {
+      background: var(--apple-yellow);
+    }
+
+    .hero-progress.state-red span,
+    .hero-progress.state-overtime span {
+      background: var(--apple-red);
+    }
+
+    .top-actions {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .global-chip {
+      min-width: 160px;
+      color: var(--apple-secondary-label);
+      background: rgba(255, 255, 255, 0.58);
+      box-shadow: none;
+      border: 1px solid var(--apple-separator);
+    }
+
+    .time-display,
+    .stage-time {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+      letter-spacing: 0;
+      text-shadow: none;
+    }
+
+    .time-display {
+      color: var(--apple-label);
+      font-weight: 800;
+    }
+
+    .timer-status {
+      color: var(--apple-label);
+      font-weight: 800;
+    }
+
+    .timer-subline {
+      color: var(--apple-secondary-label);
+      opacity: 1;
+      font-weight: 600;
+    }
+
+    .quick-fields {
+      width: min(720px, 100%);
+      margin: 22px auto 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .timer-speaker-field {
+      width: 100%;
+      margin: 0;
+    }
+
+    .timer-speaker-field label,
+    .focus-card.state-yellow .timer-speaker-field label {
+      color: var(--apple-secondary-label);
+    }
+
+    .timer-speaker-field input,
+    input,
+    textarea {
+      color: var(--apple-label);
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--apple-separator);
+      box-shadow: none;
+      backdrop-filter: blur(18px);
+    }
+
+    input:focus,
+    textarea:focus,
+    button:focus-visible {
+      outline: 3px solid rgba(0, 122, 255, 0.22);
+    }
+
+    .next-agenda-preview {
+      justify-self: center;
+      max-width: min(760px, 100%);
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: var(--apple-secondary-label);
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid var(--apple-separator);
+      font-size: 13px;
+      font-weight: 650;
+      text-align: center;
+    }
+
+    .floating-control-dock {
+      justify-self: center;
+      width: min(720px, 100%);
+      padding: 10px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: var(--apple-shadow);
+      backdrop-filter: blur(28px);
+    }
+
+    .primary-actions {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .secondary-actions {
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .filled-button {
+      color: #fff;
+      background: var(--apple-blue);
+      box-shadow: none;
+    }
+
+    .tonal-button,
+    .focus-card.state-yellow .tonal-button {
+      color: var(--apple-blue);
+      background: rgba(0, 122, 255, 0.10);
+      box-shadow: none;
+    }
+
+    .text-button {
+      color: var(--apple-blue);
+      background: transparent;
+    }
+
+    .utility-hidden {
+      display: none !important;
+    }
+
+    .side-panel {
+      transition: opacity 180ms ease;
+    }
+
+    .surface,
+    .surface.high,
+    .rule-chip,
+    .record-preview {
+      background: var(--apple-bg-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: var(--apple-shadow-soft);
+      backdrop-filter: blur(24px);
+    }
+
+    .panel-title h2,
+    .modal-head h2,
+    .rule-chip strong {
+      color: var(--apple-label);
+    }
+
+    .panel-title span,
+    label,
+    .field-helper,
+    .agenda-rule-note,
+    .record-preview,
+    .rule-chip span,
+    .empty-text {
+      color: var(--apple-secondary-label);
+    }
+
+    .agenda-card {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: none;
+      backdrop-filter: blur(18px);
+    }
+
+    .agenda-card.active {
+      background: rgba(0, 122, 255, 0.12);
+      border-color: rgba(0, 122, 255, 0.22);
+    }
+
+    .agenda-card.done {
+      background: rgba(52, 199, 89, 0.10);
+    }
+
+    .agenda-name {
+      color: var(--apple-label);
+      font-weight: 750;
+    }
+
+    .agenda-meta {
+      color: var(--apple-secondary-label);
+      font-weight: 600;
+    }
+
+    .agenda-status {
+      color: var(--apple-secondary-label);
+      background: rgba(118, 118, 128, 0.12);
+    }
+
+    .agenda-card.active .agenda-status {
+      color: var(--apple-blue);
+      background: rgba(0, 122, 255, 0.14);
+    }
+
+    .agenda-card.done .agenda-status {
+      color: #1c7c37;
+      background: rgba(52, 199, 89, 0.14);
+    }
+
+    .agenda-move-actions {
+      display: none;
+      gap: 4px;
+    }
+
+    .agenda-move-actions button {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      color: var(--apple-blue);
+      background: rgba(0, 122, 255, 0.10);
+      font-weight: 800;
+    }
+
+    .sheet-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .sheet-header h2 {
+      margin: 0;
+      color: var(--apple-label);
+      font-size: 20px;
+    }
+
+    .sheet-grabber {
+      display: none;
+      width: 42px;
+      height: 5px;
+      margin: 0 auto 12px;
+      border-radius: 999px;
+      background: rgba(60, 60, 67, 0.28);
+    }
+
+    .action-sheet .sheet-header {
+      display: flex;
+    }
+
+    .action-sheet .sheet-grabber,
+    .agenda-detail-modal .sheet-grabber {
+      display: block;
+    }
+
+    .sheet-scrim {
+      display: none;
+    }
+
+    .action-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      display: none;
+      align-items: end;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    .action-sheet-backdrop.open {
+      display: flex;
+    }
+
+    .action-sheet {
+      width: min(420px, 100%);
+      padding: 12px;
+      border-radius: 28px;
+      background: rgba(248, 248, 250, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: var(--apple-shadow);
+      backdrop-filter: blur(30px);
+    }
+
+    .action-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sheet-action {
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border-radius: 18px;
+      color: var(--apple-label);
+      background: rgba(255, 255, 255, 0.68);
+      text-align: left;
+    }
+
+    .sheet-action span {
+      color: var(--apple-blue);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .sheet-action strong {
+      font-size: 15px;
+      font-weight: 720;
+    }
+
+    .agenda-detail-meta,
+    .agenda-detail-rule {
+      margin: 0 0 12px;
+      color: var(--apple-secondary-label);
+      line-height: 1.55;
+      font-weight: 600;
+    }
+
+    .toast {
+      color: #fff;
+      background: rgba(28, 28, 30, 0.92);
+      box-shadow: var(--apple-shadow);
+      backdrop-filter: blur(24px);
+    }
+
+    .toast-action {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .stage-overlay {
+      background: var(--apple-blue);
+      color: #fff;
+    }
+
+    .stage-overlay.state-green {
+      background: var(--apple-green);
+    }
+
+    .stage-overlay.state-yellow {
+      color: var(--apple-label);
+      background: var(--apple-yellow);
+    }
+
+    .stage-overlay.state-red,
+    .stage-overlay.state-overtime {
+      background: var(--apple-red);
+    }
+
     @media (max-width: 1040px) {
       .content-grid {
         grid-template-columns: 1fr;
@@ -1569,6 +2130,271 @@
       }
     }
 
+    @media (max-width: 768px) {
+      html,
+      body {
+        background: var(--apple-bg);
+      }
+
+      .app-shell {
+        display: block;
+        min-height: 100dvh;
+        padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+        background: var(--apple-bg);
+      }
+
+      .mobile-topbar {
+        background: rgba(245, 245, 247, 0.86);
+        border-bottom: 1px solid rgba(60, 60, 67, 0.08);
+      }
+
+      .mobile-icon-button {
+        color: var(--apple-blue);
+        background: rgba(255, 255, 255, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.76);
+        box-shadow: var(--apple-shadow-soft);
+      }
+
+      .mobile-icon-button.more {
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1px;
+      }
+
+      .content-grid {
+        padding: 0 16px calc(120px + env(safe-area-inset-bottom, 0px));
+      }
+
+      [data-mobile-panel] {
+        display: block !important;
+      }
+
+      .focus-card[data-mobile-panel="timer"] {
+        display: grid !important;
+      }
+
+      .side-panel [data-mobile-panel] {
+        display: none !important;
+      }
+
+      .side-panel [data-mobile-panel].mobile-panel-active {
+        display: block !important;
+      }
+
+      .timer-hero,
+      .focus-card.state-before,
+      .focus-card.state-idle,
+      .focus-card.state-green,
+      .focus-card.state-yellow,
+      .focus-card.state-red,
+      .focus-card.state-overtime {
+        min-height: calc(100dvh - 94px - env(safe-area-inset-top, 0px));
+        grid-template-rows: auto minmax(300px, 1fr) auto auto;
+        color: var(--apple-label);
+        background: rgba(255, 255, 255, 0.72);
+        border-radius: 34px;
+        box-shadow: var(--apple-shadow);
+      }
+
+      .focus-top {
+        text-align: left;
+      }
+
+      .hero-title-row {
+        justify-content: space-between;
+      }
+
+      .context-kicker {
+        display: block;
+      }
+
+      .context-title {
+        font-size: clamp(28px, 8vw, 42px);
+      }
+
+      .context-rule {
+        font-size: 13px;
+      }
+
+      .top-actions,
+      .global-chip {
+        display: none;
+      }
+
+      .time-display {
+        font-size: clamp(82px, 26vw, 126px);
+      }
+
+      .timer-status {
+        font-size: clamp(22px, 6vw, 32px);
+      }
+
+      .quick-fields {
+        width: 100%;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .next-agenda-preview {
+        width: 100%;
+        border-radius: 18px;
+      }
+
+      .floating-control-dock {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        z-index: 24;
+        width: auto;
+      }
+
+      .primary-actions {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .primary-actions .filled-button,
+      .primary-actions .tonal-button {
+        min-height: 56px;
+      }
+
+      .primary-actions .filled-button,
+      .primary-actions #stopBtn {
+        grid-column: auto;
+      }
+
+      .secondary-actions {
+        display: flex;
+        border: 0;
+        background: transparent;
+        gap: 6px;
+      }
+
+      .secondary-actions .text-button {
+        min-height: 44px;
+        border-radius: 999px;
+        padding: 0 14px;
+        font-size: 13px;
+        background: rgba(0, 122, 255, 0.10);
+      }
+
+      .secondary-actions .text-button + .text-button {
+        border-left: 0;
+      }
+
+      #finishAgendaBtn,
+      #stageBtn {
+        display: grid;
+      }
+
+      .app-shell.inspector-collapsed .side-panel,
+      .side-panel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 40;
+        width: auto;
+        max-height: min(78dvh, 720px);
+        overflow-y: auto;
+        display: block;
+        padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+        border-radius: 28px 28px 0 0;
+        opacity: 1;
+        pointer-events: auto;
+        background: rgba(248, 248, 250, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.78);
+        box-shadow: 0 -18px 44px rgba(0, 0, 0, 0.14);
+        transform: translateY(105%);
+        transition: transform 240ms ease;
+        backdrop-filter: blur(30px);
+      }
+
+      .app-shell.sheet-open.inspector-collapsed .side-panel,
+      .app-shell.sheet-open .side-panel {
+        transform: translateY(0) !important;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .sheet-grabber,
+      .sheet-header {
+        display: flex;
+      }
+
+      .sheet-grabber {
+        display: block;
+      }
+
+      .sheet-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 35;
+        background: rgba(0, 0, 0, 0.18);
+      }
+
+      .app-shell.sheet-open .sheet-scrim {
+        display: block;
+      }
+
+      .surface {
+        margin-bottom: 12px;
+        background: rgba(255, 255, 255, 0.72);
+        border-color: rgba(255, 255, 255, 0.78);
+      }
+
+      .mobile-report-tools,
+      .mobile-agenda-actions {
+        display: block;
+      }
+
+      .agenda-card {
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+      }
+
+      .agenda-meta {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .agenda-move-actions {
+        display: inline-flex;
+      }
+
+      .mobile-tabbar {
+        display: none !important;
+      }
+
+      .toast {
+        bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .action-sheet-backdrop {
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .action-sheet {
+        width: 100%;
+      }
+
+      .agenda-detail-backdrop.open {
+        display: flex;
+        align-items: end;
+        justify-content: center;
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .agenda-detail-modal {
+        width: 100%;
+        max-height: 70dvh;
+        border-radius: 28px;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -1581,8 +2407,8 @@
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="agenda-rail" aria-label="议程切片器">
+  <div class="app-shell inspector-collapsed" id="appShell">
+    <aside class="agenda-rail" aria-label="议程侧边栏">
       <div class="rail-brand" aria-hidden="true">TM</div>
       <nav class="rail-list" id="agendaRail"></nav>
     </aside>
@@ -1595,19 +2421,27 @@
           <span></span>
         </button>
         <div class="mobile-status-pill" id="mobileStatusPill">未开始</div>
-        <button class="mobile-icon-button bell" id="mobileBellBtn" type="button" aria-label="测试铃声">♢</button>
+        <button class="mobile-icon-button more" id="mobileMoreBtn" type="button" aria-label="更多操作">•••</button>
       </header>
       <div class="story-progress" id="segmentedProgress" aria-label="议程分段进度"></div>
 
       <div class="content-grid">
-        <section class="focus-card state-idle" id="focusCard" data-mobile-panel="timer">
+        <section class="focus-card timer-hero state-idle" id="focusCard" data-mobile-panel="timer">
           <div class="focus-top">
             <div>
               <p class="context-kicker" id="contextKicker">当前环节</p>
-              <h1 class="context-title" id="contextTitle">即兴演讲</h1>
+              <div class="hero-title-row">
+                <h1 class="context-title" id="contextTitle">即兴演讲</h1>
+                <span class="status-pill" id="heroStatusPill">未开始</span>
+              </div>
               <p class="context-rule" id="contextRule">绿牌 01:00 · 黄牌 01:30 · 红牌 02:00</p>
+              <div class="hero-progress" aria-hidden="true"><span id="heroProgressFill"></span></div>
             </div>
-            <div class="global-chip" id="globalChip">总耗时 00:00:00</div>
+            <div class="top-actions">
+              <button class="icon-button inspector-toggle" id="desktopInspectorBtn" type="button" aria-expanded="false">详情</button>
+              <button class="icon-button" id="desktopMoreBtn" type="button" aria-label="更多操作">•••</button>
+              <div class="global-chip" id="globalChip">总耗时 00:00:00</div>
+            </div>
           </div>
 
           <div class="timer-stage">
@@ -1615,31 +2449,43 @@
               <div class="time-display" id="timeDisplay">00:00</div>
               <div class="timer-status" id="timerStatus">准备计时</div>
               <div class="timer-subline" id="timerSubline">点击开始后自动锁定当前环节</div>
-              <div class="timer-speaker-field">
-                <label for="speakerNameQuick">发言人姓名（可选）</label>
-                <input id="speakerNameQuick" placeholder="例如：Alex" />
+              <div class="quick-fields">
+                <div class="timer-speaker-field">
+                  <label for="speakerNameQuick">发言人姓名（可选）</label>
+                  <input id="speakerNameQuick" placeholder="发言人姓名（可选）" />
+                </div>
+                <div class="timer-speaker-field">
+                  <label for="speechTitleQuick">演讲题目（可选）</label>
+                  <input id="speechTitleQuick" placeholder="演讲题目（可选）" />
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="control-zone">
+          <div class="next-agenda-preview" id="nextAgendaPreview">下一环节：等待议程</div>
+
+          <div class="control-zone floating-control-dock">
             <div class="primary-actions">
-              <button class="filled-button" id="startBtn">开始</button>
+              <button class="filled-button" id="startBtn">开始计时</button>
               <button class="tonal-button" id="pauseBtn" disabled>暂停</button>
-              <button class="tonal-button" id="resumeBtn" disabled>继续</button>
-              <button class="tonal-button" id="stopBtn" disabled>结束并记录</button>
+              <button class="tonal-button utility-hidden" id="resumeBtn" disabled>继续</button>
+              <button class="tonal-button utility-hidden" id="stopBtn" disabled>结束并记录</button>
             </div>
             <div class="secondary-actions">
-              <button class="text-button" id="nextSpeakerBtn">下一位发言人</button>
-              <button class="text-button" id="finishAgendaBtn">完成当前环节</button>
-              <button class="text-button" id="resetBtn">重置秒表</button>
-              <button class="text-button" id="stageBtn">舞台模式</button>
-              <button class="text-button" id="beepBtn">测试铃声</button>
+              <button class="text-button utility-hidden" id="nextSpeakerBtn">下一位发言人</button>
+              <button class="text-button utility-hidden" id="finishAgendaBtn">完成当前环节</button>
+              <button class="text-button" id="agendaSheetBtn" type="button">议程</button>
+              <button class="text-button" id="moreBtn" type="button">更多</button>
             </div>
           </div>
         </section>
 
-        <aside class="side-panel">
+        <aside class="side-panel" id="sidePanel">
+          <div class="sheet-grabber" aria-hidden="true"></div>
+          <div class="sheet-header">
+            <h2 id="sheetTitle">现场详情</h2>
+            <button class="mini-button" id="closeSheetBtn" type="button">完成</button>
+          </div>
           <section class="surface high" data-mobile-panel="context">
             <div class="panel-title">
               <h2>智能上下文</h2>
@@ -1780,24 +2626,62 @@
       </div>
     </main>
 
-    <nav class="mobile-tabbar" id="mobileTabBar" aria-label="移动端页面切换">
-      <button class="mobile-tab active" type="button" data-mobile-tab="timer" aria-pressed="true">
-        <span>◔</span>
-        <strong>计时器</strong>
-      </button>
-      <button class="mobile-tab" type="button" data-mobile-tab="agenda" aria-pressed="false">
-        <span>▤</span>
-        <strong>议程</strong>
-      </button>
-      <button class="mobile-tab" type="button" data-mobile-tab="context" aria-pressed="false">
-        <span>✿</span>
-        <strong>上下文</strong>
-      </button>
-      <button class="mobile-tab" type="button" data-mobile-tab="report" aria-pressed="false">
-        <span>▧</span>
-        <strong>会议与报告</strong>
-      </button>
-    </nav>
+    <div class="sheet-scrim" id="sheetScrim" aria-hidden="true"></div>
+  </div>
+
+  <div class="action-sheet-backdrop" id="moreSheet" aria-hidden="true">
+    <section class="action-sheet" role="dialog" aria-modal="true" aria-labelledby="moreSheetTitle">
+      <div class="sheet-grabber" aria-hidden="true"></div>
+      <div class="sheet-header">
+        <h2 id="moreSheetTitle">更多操作</h2>
+        <button class="mini-button" id="closeMoreBtn" type="button">完成</button>
+      </div>
+      <div class="action-list">
+        <button class="sheet-action" id="moreAgendaBtn" type="button">
+          <span>流程</span>
+          <strong>打开会议流程</strong>
+        </button>
+        <button class="sheet-action" id="moreReportBtn" type="button">
+          <span>报告</span>
+          <strong>查看记录与报告</strong>
+        </button>
+        <button class="sheet-action" id="stageBtn" type="button">
+          <span>舞台</span>
+          <strong>舞台模式</strong>
+        </button>
+        <button class="sheet-action" id="beepBtn" type="button">
+          <span>铃声</span>
+          <strong>测试铃声</strong>
+        </button>
+        <button class="sheet-action" id="resetBtn" type="button">
+          <span>秒表</span>
+          <strong>重置秒表</strong>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop agenda-detail-backdrop" id="agendaDetailModal" aria-hidden="true">
+    <section class="modal agenda-detail-modal" role="dialog" aria-modal="true" aria-labelledby="agendaDetailTitle">
+      <div class="sheet-grabber" aria-hidden="true"></div>
+      <div class="modal-head">
+        <div>
+          <p class="context-kicker">会议流程</p>
+          <h2 id="agendaDetailTitle">环节详情</h2>
+        </div>
+        <button class="icon-button" id="closeAgendaDetailBtn" aria-label="关闭">×</button>
+      </div>
+      <div class="agenda-detail-body">
+        <p class="agenda-detail-meta" id="agendaDetailMeta"></p>
+        <p class="agenda-detail-rule" id="agendaDetailRule"></p>
+        <div class="compact-actions">
+          <button class="mini-button filled" id="agendaSetCurrentBtn" type="button">设为当前环节</button>
+          <button class="mini-button" id="agendaMoveUpBtn" type="button">上移</button>
+          <button class="mini-button" id="agendaMoveDownBtn" type="button">下移</button>
+          <button class="mini-button danger" id="agendaDetailDeleteBtn" type="button">删除</button>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div class="modal-backdrop" id="reportModal" aria-hidden="true">
@@ -1877,6 +2761,7 @@
 
     const UI_MODE_KEY = "tm_timekeeper_ui_mode_v1";
     const COLLAPSE_KEY = "tm_timekeeper_setup_collapse_v1";
+    const INSPECTOR_KEY = "tm_timekeeper_inspector_open_v1";
 
     const DEFAULT_MAPPINGS = [
       { keys: ["事务官"], name: "事务官宣布会议规则", minutes: 1, label: "1 分钟" },
@@ -1911,6 +2796,12 @@
       globalStartedAt: null,
       dragId: null,
       deletedAgenda: null,
+      deletedRecord: null,
+      detailAgendaId: null,
+      activeSheet: null,
+      inspectorOpen: false,
+      postRecordAction: null,
+      postRecordAgendaId: null,
       timer: {
         running: false,
         paused: false,
@@ -1928,16 +2819,20 @@
     const $ = (id) => document.getElementById(id);
 
     const els = {
+      appShell: $("appShell"),
       agendaRail: $("agendaRail"),
       segmentedProgress: $("segmentedProgress"),
       focusCard: $("focusCard"),
       contextKicker: $("contextKicker"),
       contextTitle: $("contextTitle"),
       contextRule: $("contextRule"),
+      heroStatusPill: $("heroStatusPill"),
+      heroProgressFill: $("heroProgressFill"),
       globalChip: $("globalChip"),
       timeDisplay: $("timeDisplay"),
       timerStatus: $("timerStatus"),
       timerSubline: $("timerSubline"),
+      nextAgendaPreview: $("nextAgendaPreview"),
       activeStatus: $("activeStatus"),
       ruleTitle: $("ruleTitle"),
       ruleDetail: $("ruleDetail"),
@@ -1948,6 +2843,7 @@
       agendaHint: $("agendaHint"),
       speakerNameQuick: $("speakerNameQuick"),
       speakerName: $("speakerName"),
+      speechTitleQuick: $("speechTitleQuick"),
       speechTitle: $("speechTitle"),
       agendaContextMeta: $("agendaContextMeta"),
       recordPreview: $("recordPreview"),
@@ -1963,6 +2859,8 @@
       pauseBtn: $("pauseBtn"),
       resumeBtn: $("resumeBtn"),
       stopBtn: $("stopBtn"),
+      agendaSheetBtn: $("agendaSheetBtn"),
+      moreBtn: $("moreBtn"),
       resetBtn: $("resetBtn"),
       nextSpeakerBtn: $("nextSpeakerBtn"),
       finishAgendaBtn: $("finishAgendaBtn"),
@@ -1985,7 +2883,26 @@
       resetAllBtn: $("resetAllBtn"),
       mobileStatusPill: $("mobileStatusPill"),
       mobileMenuBtn: $("mobileMenuBtn"),
-      mobileBellBtn: $("mobileBellBtn"),
+      mobileMoreBtn: $("mobileMoreBtn"),
+      desktopInspectorBtn: $("desktopInspectorBtn"),
+      desktopMoreBtn: $("desktopMoreBtn"),
+      sidePanel: $("sidePanel"),
+      sheetTitle: $("sheetTitle"),
+      closeSheetBtn: $("closeSheetBtn"),
+      sheetScrim: $("sheetScrim"),
+      moreSheet: $("moreSheet"),
+      closeMoreBtn: $("closeMoreBtn"),
+      moreAgendaBtn: $("moreAgendaBtn"),
+      moreReportBtn: $("moreReportBtn"),
+      agendaDetailModal: $("agendaDetailModal"),
+      closeAgendaDetailBtn: $("closeAgendaDetailBtn"),
+      agendaDetailTitle: $("agendaDetailTitle"),
+      agendaDetailMeta: $("agendaDetailMeta"),
+      agendaDetailRule: $("agendaDetailRule"),
+      agendaSetCurrentBtn: $("agendaSetCurrentBtn"),
+      agendaMoveUpBtn: $("agendaMoveUpBtn"),
+      agendaMoveDownBtn: $("agendaMoveDownBtn"),
+      agendaDetailDeleteBtn: $("agendaDetailDeleteBtn"),
       mobileFinishAgendaBtn: $("mobileFinishAgendaBtn"),
       mobileExportReportBtn: $("mobileExportReportBtn"),
       mobileShareReportBtn: $("mobileShareReportBtn"),
@@ -2156,7 +3073,8 @@
       els.meetingEndTime.value = meeting.meetingEndTime || "21:30";
       const activeItem = getActiveAgenda();
       syncSpeakerInputs(activeItem?.speaker || "", true);
-      els.speechTitle.value = activeItem?.detail || "";
+      syncSpeechTitleInputs(activeItem?.detail || "", true);
+      state.inspectorOpen = localStorage.getItem(INSPECTOR_KEY) === "open";
 
       localStorage.setItem(COLLAPSE_KEY, localStorage.getItem(COLLAPSE_KEY) || JSON.stringify({
         "meeting-info": false,
@@ -2176,16 +3094,38 @@
     }
 
     function setMobileTab(tabName) {
-      activeMobileTab = tabName;
-      document.querySelectorAll("[data-mobile-panel]").forEach((panel) => {
-        panel.classList.toggle("mobile-panel-active", panel.dataset.mobilePanel === tabName);
+      activeMobileTab = tabName || "timer";
+      state.activeSheet = activeMobileTab === "timer" ? null : activeMobileTab;
+      document.querySelectorAll(".side-panel [data-mobile-panel]").forEach((panel) => {
+        panel.classList.toggle("mobile-panel-active", panel.dataset.mobilePanel === state.activeSheet);
       });
-      document.querySelectorAll("[data-mobile-tab]").forEach((button) => {
-        const active = button.dataset.mobileTab === tabName;
-        button.classList.toggle("active", active);
-        button.setAttribute("aria-pressed", String(active));
-      });
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      els.sheetTitle.textContent = {
+        agenda: "会议流程",
+        context: "现场上下文",
+        report: "会议与报告"
+      }[state.activeSheet] || "现场详情";
+      els.appShell.classList.toggle("sheet-open", Boolean(state.activeSheet));
+    }
+
+    function closeMobileSheet() {
+      setMobileTab("timer");
+    }
+
+    function openMoreSheet() {
+      els.moreSheet.classList.add("open");
+      els.moreSheet.setAttribute("aria-hidden", "false");
+    }
+
+    function closeMoreSheet() {
+      els.moreSheet.classList.remove("open");
+      els.moreSheet.setAttribute("aria-hidden", "true");
+    }
+
+    function toggleInspector(force) {
+      state.inspectorOpen = typeof force === "boolean" ? force : !state.inspectorOpen;
+      els.appShell.classList.toggle("inspector-collapsed", !state.inspectorOpen);
+      els.desktopInspectorBtn?.setAttribute("aria-expanded", String(state.inspectorOpen));
+      localStorage.setItem(INSPECTOR_KEY, state.inspectorOpen ? "open" : "closed");
     }
 
     function adjustAgendaMinutes(delta) {
@@ -2201,6 +3141,16 @@
     function syncSpeakerInputs(value, skipRender = false) {
       els.speakerName.value = value;
       els.speakerNameQuick.value = value;
+      if (!skipRender) renderContext();
+    }
+
+    function getSpeechTitleInputValue() {
+      return els.speechTitle.value.trim() || els.speechTitleQuick.value.trim();
+    }
+
+    function syncSpeechTitleInputs(value, skipRender = false) {
+      els.speechTitle.value = value;
+      els.speechTitleQuick.value = value;
       if (!skipRender) renderContext();
     }
 
@@ -2243,12 +3193,18 @@
     }
 
     function renderAgendaCards() {
+      const activeItem = getActiveAgenda();
       els.agendaCount.textContent = `${state.agendaItems.length} 个环节`;
       els.agendaList.innerHTML = state.agendaItems.map((item, index) => {
-        const rule = getRuleForAgenda(item);
         const pending = item.status === "pending";
-        const active = item.id === getActiveAgenda()?.id;
-        const status = item.status === "done" ? "完成" : item.status === "active" ? "进行中" : "待开始";
+        const active = item.id === activeItem?.id;
+        const nextPending = !active && item.status === "pending" && state.agendaItems.find((agenda) => agenda.status === "pending")?.id === item.id;
+        const status = item.status === "done" ? "✓" : active ? "Now" : nextPending ? "Next" : "待开始";
+        const meta = [
+          item.scheduledTime || "",
+          item.durationLabel || `${item.plannedMinutes} 分钟`,
+          item.speaker ? `发言人 ${item.speaker}` : ""
+        ].filter(Boolean).join(" · ");
         return `
           <article class="agenda-card ${active ? "active" : ""} ${item.status === "done" ? "done" : ""}" data-agenda-id="${escapeHtml(item.id)}" draggable="${pending ? "true" : "false"}">
             <button class="drag-handle ${pending ? "" : "locked"}" data-drag-handle data-agenda-id="${escapeHtml(item.id)}" aria-label="${pending ? "拖动排序" : "排序已锁定"}">
@@ -2257,20 +3213,26 @@
             </button>
             <div>
               <div class="agenda-name">${escapeHtml(item.name)}</div>
-              <div class="agenda-meta">${escapeHtml([
-                item.scheduledTime || "",
-                item.durationLabel || `${item.plannedMinutes} 分钟`,
-                item.speaker || "",
-                formatRule(rule)
-              ].filter(Boolean).join(" · "))}</div>
+              <div class="agenda-meta">${escapeHtml(meta || "未设置时间")}</div>
             </div>
             <div class="agenda-trailing">
               <span class="agenda-status">${status}</span>
+              <span class="agenda-move-actions" aria-label="移动环节">
+                <button data-agenda-action="up" data-agenda-id="${escapeHtml(item.id)}" aria-label="上移 ${escapeHtml(item.name)}" ${pending ? "" : "disabled"}>↑</button>
+                <button data-agenda-action="down" data-agenda-id="${escapeHtml(item.id)}" aria-label="下移 ${escapeHtml(item.name)}" ${pending ? "" : "disabled"}>↓</button>
+              </span>
               <button class="agenda-delete" data-agenda-action="delete" data-agenda-id="${escapeHtml(item.id)}" aria-label="删除 ${escapeHtml(item.name)}" ${item.status === "active" ? "disabled" : ""}>×</button>
             </div>
           </article>
         `;
       }).join("");
+    }
+    function getNextAgendaPreview(item = getActiveAgenda()) {
+      if (!item) return null;
+      const activeIndex = state.agendaItems.findIndex((agenda) => agenda.id === item.id);
+      return state.agendaItems.slice(activeIndex + 1).find((agenda) => agenda.status !== "done") ||
+        state.agendaItems.find((agenda) => agenda.status === "pending" && agenda.id !== item.id) ||
+        null;
     }
 
     function renderContext() {
@@ -2279,27 +3241,38 @@
       const rule = getRuleForAgenda(item);
       const timerState = getTimerState();
       const statusLabel = item.status === "done" ? "已完成" : item.status === "active" ? "进行中" : "未开始";
-      els.focusCard.className = `focus-card ${activeMobileTab === "timer" ? "mobile-panel-active" : ""} state-${timerState}`;
-      els.contextKicker.textContent = statusLabel;
+      const speaker = getSpeakerInputValue() || item.speaker || "未填写发言人";
+      const title = getSpeechTitleInputValue() || item.detail || "";
+      const speakerPlaceholder = item.speaker ? `默认：${item.speaker}` : "发言人姓名（可选）";
+      const titlePlaceholder = item.detail ? `默认：${item.detail}` : "演讲题目（可选）";
+      const nextAgenda = getNextAgendaPreview(item);
+
+      els.focusCard.className = `focus-card timer-hero state-${timerState}`;
+      els.contextKicker.textContent = "当前环节";
       els.contextTitle.textContent = item.name;
       els.contextRule.textContent = formatRule(rule);
       els.activeStatus.textContent = statusLabel;
+      els.heroStatusPill.textContent = statusLabel;
+      els.heroStatusPill.className = `status-pill state-${timerState}`;
       els.mobileStatusPill.textContent = statusLabel;
       els.mobileStatusPill.className = `mobile-status-pill state-${timerState}`;
       els.ruleTitle.textContent = `${item.name} · ${item.durationLabel || `${item.plannedMinutes} 分钟`}`;
       els.ruleDetail.textContent = formatRemainingRule(rule);
       els.agendaContextMeta.textContent = agendaContextMetaText(item);
-      const speaker = getSpeakerInputValue() || item.speaker || "未填写发言人";
-      const title = els.speechTitle.value.trim() || item.detail || "";
-      const speakerPlaceholder = item.speaker ? `默认：${item.speaker}` : "例如：Alex";
       els.speakerName.placeholder = speakerPlaceholder;
       els.speakerNameQuick.placeholder = speakerPlaceholder;
+      els.speechTitle.placeholder = titlePlaceholder;
+      els.speechTitleQuick.placeholder = titlePlaceholder;
       els.recordPreview.textContent = `本次记录：${speaker}${title ? " · " + title : ""}`;
       els.timerStatus.textContent = getStatusLabel(timerState);
       els.timerSubline.textContent = isMultiSpeakerAgenda(item)
-        ? "多人环节：可用“下一位发言人”清零秒表，议程保持进行中"
-        : "状态色会随绿牌、黄牌、红牌自动切换";
-      els.nextSpeakerBtn.style.display = isMultiSpeakerAgenda(item) ? "inline-flex" : "none";
+        ? "多人环节：记录后可直接切到下一位发言人，议程保持进行中。"
+        : "结束并记录后，可一键完成本环节并进入下一项。";
+      els.nextAgendaPreview.textContent = nextAgenda
+        ? `下一环节：${nextAgenda.name}${nextAgenda.scheduledTime ? " · " + nextAgenda.scheduledTime : ""}`
+        : "下一环节：已到会议尾声";
+      els.nextSpeakerBtn.style.display = "none";
+      els.finishAgendaBtn.style.display = "none";
       els.stageSpeaker.textContent = getSpeakerInputValue() || item.speaker || "未填写演讲者";
       els.stageRule.textContent = item.name;
       els.stageOverlay.className = `stage-overlay ${els.stageOverlay.classList.contains("open") ? "open" : ""} state-${timerState}`;
@@ -2308,18 +3281,26 @@
 
     function renderTimer() {
       const elapsed = state.timer.elapsed;
-      const overtime = Math.max(0, elapsed - getRuleForAgenda().red);
+      const rule = getRuleForAgenda();
+      const timerState = getTimerState();
+      const overtime = Math.max(0, elapsed - rule.red);
+      const progress = Math.min(100, (elapsed / Math.max(1, rule.red)) * 100);
+      const suggested = getSuggestedNextAction();
+
       els.timeDisplay.textContent = overtime > 0 ? `+${formatTime(overtime)}` : formatTime(elapsed);
       els.stageTime.textContent = els.timeDisplay.textContent;
-      els.startBtn.disabled = state.timer.running;
+      els.startBtn.textContent = suggested.label;
+      els.startBtn.disabled = Boolean(suggested.disabled);
+      els.pauseBtn.hidden = !state.timer.running || state.timer.paused;
       els.pauseBtn.disabled = !state.timer.running || state.timer.paused;
       els.resumeBtn.disabled = !state.timer.paused;
       els.stopBtn.disabled = !state.timer.running && elapsed === 0;
+      els.heroProgressFill.style.width = `${progress}%`;
+      els.heroProgressFill.parentElement.className = `hero-progress state-${timerState}`;
       renderContext();
       renderSegmentedProgress();
       updateGlobalChip();
     }
-
     function renderAll() {
       renderMeeting();
       renderAgendaRail();
@@ -2357,6 +3338,25 @@
       state.timer.intervalId = setInterval(tick, 250);
     }
 
+    function getSuggestedNextAction() {
+      const item = getActiveAgenda();
+      if (!item) return { label: "暂无环节", action: null, disabled: true };
+      if (state.timer.paused) return { label: "继续", action: resumeTimer };
+      if (state.timer.running) return { label: "结束并记录", action: stopTimer };
+      if (state.postRecordAgendaId === item.id && state.postRecordAction === "next-speaker") {
+        return { label: "下一位发言人", action: nextSpeaker };
+      }
+      if (state.postRecordAgendaId === item.id && state.postRecordAction === "finish-agenda") {
+        return { label: "完成本环节", action: finishCurrentAgenda };
+      }
+      return { label: "开始计时", action: startTimer };
+    }
+
+    function handlePrimaryAction() {
+      const nextAction = getSuggestedNextAction();
+      if (typeof nextAction.action === "function") nextAction.action();
+    }
+
     function startTimer() {
       const item = getActiveAgenda();
       if (!item) return;
@@ -2365,6 +3365,8 @@
         return;
       }
       if (!state.globalStartedAt) state.globalStartedAt = Date.now();
+      state.postRecordAction = null;
+      state.postRecordAgendaId = null;
       state.timer.running = true;
       state.timer.paused = false;
       state.timer.startedAt = Date.now() - state.timer.elapsed * 1000;
@@ -2406,9 +3408,19 @@
       if (show) showToast("秒表已重置");
     }
 
+    function requestResetTimer() {
+      if ((state.timer.running || state.timer.elapsed > 0) && !confirm("重置当前秒表？尚未记录的本轮计时不会保存。")) return;
+      state.postRecordAction = null;
+      state.postRecordAgendaId = null;
+      resetTimer(true);
+      closeMoreSheet();
+    }
+
     function nextSpeaker() {
       const item = getActiveAgenda();
       if (!item || !isMultiSpeakerAgenda(item)) return;
+      state.postRecordAction = null;
+      state.postRecordAgendaId = null;
       resetTimer(false);
       item.status = "active";
       item.actualStart = item.actualStart || new Date().toISOString();
@@ -2429,8 +3441,21 @@
       if (!item) return;
       const elapsed = state.timer.elapsed;
       const record = elapsed > 0 ? addRecord(elapsed, item) : null;
+      const multiSpeaker = isMultiSpeakerAgenda(item);
       resetTimer(false);
-      showToast(record ? `已记录：${record.speaker}${record.title ? " · " + record.title : ""}` : "已结束");
+      if (record) {
+        state.postRecordAgendaId = item.id;
+        state.postRecordAction = multiSpeaker ? "next-speaker" : "finish-agenda";
+        showToast(
+          `已记录：${record.speaker} · ${record.displayDuration || formatTime(record.duration)} · ${record.resultLabel}`,
+          multiSpeaker ? "下一位" : "完成本环节",
+          multiSpeaker ? nextSpeaker : finishCurrentAgenda
+        );
+      } else {
+        state.postRecordAction = null;
+        state.postRecordAgendaId = null;
+        showToast("已结束");
+      }
       renderAll();
     }
 
@@ -2446,7 +3471,9 @@
       const next = state.agendaItems.find((agenda) => agenda.status === "pending");
       state.activeAgendaId = next?.id || item.id;
       syncSpeakerInputs(next?.speaker || "", true);
-      els.speechTitle.value = next?.detail || "";
+      syncSpeechTitleInputs(next?.detail || "", true);
+      state.postRecordAction = null;
+      state.postRecordAgendaId = null;
       resetTimer(false);
       saveAgenda();
       renderAll();
@@ -2459,6 +3486,8 @@
         return;
       }
       state.activeAgendaId = itemId;
+      state.postRecordAction = null;
+      state.postRecordAgendaId = null;
       const item = getActiveAgenda();
       const rule = getRuleForAgenda(item);
       state.timer.running = false;
@@ -2472,7 +3501,7 @@
       els.agendaMinutesInput.value = item?.plannedMinutes || 2;
       els.agendaNameInput.value = item?.name || "";
       syncSpeakerInputs(item?.speaker || "", true);
-      els.speechTitle.value = item?.detail || "";
+      syncSpeechTitleInputs(item?.detail || "", true);
       els.agendaHint.textContent = formatRemainingRule(rule);
       renderAll();
     }
@@ -2482,7 +3511,7 @@
       const record = {
         id: `record-${Date.now()}`,
         speaker: getSpeakerInputValue() || item.speaker || "未填写",
-        title: els.speechTitle.value.trim() || item.detail || "",
+        title: getSpeechTitleInputValue() || item.detail || "",
         ruleName: item.name,
         scheduledTime: item.scheduledTime || "",
         agendaSpeaker: item.speaker || "",
@@ -2519,11 +3548,25 @@
     }
 
     function deleteRecord(recordId) {
-      state.records = state.records.filter((record) => record.id !== recordId);
+      const index = state.records.findIndex((record) => record.id === recordId);
+      if (index < 0) return;
+      const [record] = state.records.splice(index, 1);
+      state.deletedRecord = { record, index };
       saveRecords();
       renderRecords();
       generateReport();
-      showToast("记录已删除");
+      showToast("记录已删除", "撤销", restoreDeletedRecord);
+    }
+
+    function restoreDeletedRecord() {
+      if (!state.deletedRecord) return;
+      const { record, index } = state.deletedRecord;
+      state.records.splice(Math.min(index, state.records.length), 0, record);
+      state.deletedRecord = null;
+      saveRecords();
+      renderRecords();
+      generateReport();
+      showToast("记录已恢复");
     }
 
     function generateReport() {
@@ -2664,6 +3707,41 @@
       return true;
     }
 
+    function moveAgendaByDelta(itemId, delta) {
+      const index = state.agendaItems.findIndex((item) => item.id === itemId);
+      if (index < 0) return false;
+      const targetIndex = index + delta;
+      if (targetIndex < 0 || targetIndex >= state.agendaItems.length) return false;
+      return reorderAgenda(itemId, state.agendaItems[targetIndex].id);
+    }
+
+    function openAgendaDetail(itemId) {
+      const item = state.agendaItems.find((agenda) => agenda.id === itemId);
+      if (!item) return;
+      state.detailAgendaId = itemId;
+      const rule = getRuleForAgenda(item);
+      const meta = [
+        item.scheduledTime ? `计划时间 ${item.scheduledTime}` : "",
+        item.durationLabel || `${item.plannedMinutes} 分钟`,
+        item.speaker ? `发言人 ${item.speaker}` : "未填写发言人",
+        item.detail ? `题目 ${item.detail}` : "未填写题目"
+      ].filter(Boolean).join(" · ");
+      els.agendaDetailTitle.textContent = item.name;
+      els.agendaDetailMeta.textContent = meta;
+      els.agendaDetailRule.textContent = formatRemainingRule(rule);
+      els.agendaSetCurrentBtn.disabled = item.id === getActiveAgenda()?.id;
+      const pending = item.status === "pending";
+      els.agendaMoveUpBtn.disabled = !pending;
+      els.agendaMoveDownBtn.disabled = !pending;
+      els.agendaDetailDeleteBtn.disabled = item.status === "active";
+      openModal(els.agendaDetailModal);
+    }
+
+    function closeAgendaDetail() {
+      state.detailAgendaId = null;
+      closeModal(els.agendaDetailModal);
+    }
+
     function restoreDeletedAgenda() {
       if (!state.deletedAgenda) return;
       const { item, index } = state.deletedAgenda;
@@ -2790,11 +3868,22 @@
     }
 
     function bindEvents() {
-      document.querySelectorAll("[data-mobile-tab]").forEach((button) => {
-        button.addEventListener("click", () => setMobileTab(button.dataset.mobileTab));
-      });
       els.mobileMenuBtn.addEventListener("click", () => setMobileTab("agenda"));
-      els.mobileBellBtn.addEventListener("click", () => beep(880, 160, 2));
+      els.agendaSheetBtn.addEventListener("click", () => setMobileTab("agenda"));
+      els.moreAgendaBtn.addEventListener("click", () => {
+        closeMoreSheet();
+        setMobileTab("agenda");
+      });
+      els.moreBtn.addEventListener("click", openMoreSheet);
+      els.mobileMoreBtn.addEventListener("click", openMoreSheet);
+      els.desktopMoreBtn.addEventListener("click", openMoreSheet);
+      els.closeMoreBtn.addEventListener("click", closeMoreSheet);
+      els.moreSheet.addEventListener("click", (event) => {
+        if (event.target === els.moreSheet) closeMoreSheet();
+      });
+      els.desktopInspectorBtn.addEventListener("click", () => toggleInspector());
+      els.closeSheetBtn.addEventListener("click", closeMobileSheet);
+      els.sheetScrim.addEventListener("click", closeMobileSheet);
 
       els.agendaRail.addEventListener("click", (event) => {
         const button = event.target.closest("[data-agenda-id]");
@@ -2804,12 +3893,15 @@
       els.agendaList.addEventListener("click", (event) => {
         const actionButton = event.target.closest("[data-agenda-action]");
         if (actionButton) {
+          event.stopPropagation();
           const id = actionButton.dataset.agendaId;
           if (actionButton.dataset.agendaAction === "delete") deleteAgenda(id);
+          if (actionButton.dataset.agendaAction === "up") moveAgendaByDelta(id, -1);
+          if (actionButton.dataset.agendaAction === "down") moveAgendaByDelta(id, 1);
           return;
         }
         const card = event.target.closest(".agenda-card");
-        if (card) selectAgenda(card.dataset.agendaId);
+        if (card) openAgendaDetail(card.dataset.agendaId);
       });
       els.agendaList.addEventListener("dragstart", onDragStart);
       els.agendaList.addEventListener("dragover", onDragOver);
@@ -2817,15 +3909,18 @@
       els.agendaList.addEventListener("drop", onDrop);
       els.agendaList.addEventListener("dragend", onDragEnd);
 
-      els.startBtn.addEventListener("click", startTimer);
+      els.startBtn.addEventListener("click", handlePrimaryAction);
       els.pauseBtn.addEventListener("click", pauseTimer);
       els.resumeBtn.addEventListener("click", resumeTimer);
       els.stopBtn.addEventListener("click", stopTimer);
-      els.resetBtn.addEventListener("click", () => resetTimer(true));
+      els.resetBtn.addEventListener("click", requestResetTimer);
       els.nextSpeakerBtn.addEventListener("click", nextSpeaker);
       els.finishAgendaBtn.addEventListener("click", finishCurrentAgenda);
       els.mobileFinishAgendaBtn.addEventListener("click", finishCurrentAgenda);
-      els.stageBtn.addEventListener("click", () => els.stageOverlay.classList.add("open"));
+      els.stageBtn.addEventListener("click", () => {
+        closeMoreSheet();
+        els.stageOverlay.classList.add("open");
+      });
       els.closeStageBtn.addEventListener("click", () => els.stageOverlay.classList.remove("open"));
       els.beepBtn.addEventListener("click", () => beep(880, 160, 2));
 
@@ -2841,9 +3936,15 @@
       });
       els.speakerName.addEventListener("input", () => syncSpeakerInputs(els.speakerName.value));
       els.speakerNameQuick.addEventListener("input", () => syncSpeakerInputs(els.speakerNameQuick.value));
-      els.speechTitle.addEventListener("input", renderContext);
+      els.speechTitle.addEventListener("input", () => syncSpeechTitleInputs(els.speechTitle.value));
+      els.speechTitleQuick.addEventListener("input", () => syncSpeechTitleInputs(els.speechTitleQuick.value));
 
       els.openReportBtn.addEventListener("click", () => {
+        generateReport();
+        openModal(els.reportModal);
+      });
+      els.moreReportBtn.addEventListener("click", () => {
+        closeMoreSheet();
         generateReport();
         openModal(els.reportModal);
       });
@@ -2876,11 +3977,41 @@
       });
       els.resetAllBtn.addEventListener("click", resetAll);
 
+      els.closeAgendaDetailBtn.addEventListener("click", closeAgendaDetail);
+      els.agendaDetailModal.addEventListener("click", (event) => {
+        if (event.target === els.agendaDetailModal) closeAgendaDetail();
+      });
+      els.agendaSetCurrentBtn.addEventListener("click", () => {
+        if (!state.detailAgendaId) return;
+        selectAgenda(state.detailAgendaId);
+        closeAgendaDetail();
+        closeMobileSheet();
+      });
+      els.agendaMoveUpBtn.addEventListener("click", () => {
+        if (state.detailAgendaId && moveAgendaByDelta(state.detailAgendaId, -1)) openAgendaDetail(state.detailAgendaId);
+      });
+      els.agendaMoveDownBtn.addEventListener("click", () => {
+        if (state.detailAgendaId && moveAgendaByDelta(state.detailAgendaId, 1)) openAgendaDetail(state.detailAgendaId);
+      });
+      els.agendaDetailDeleteBtn.addEventListener("click", () => {
+        if (!state.detailAgendaId) return;
+        const id = state.detailAgendaId;
+        closeAgendaDetail();
+        deleteAgenda(id);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        closeMoreSheet();
+        closeMobileSheet();
+        closeAgendaDetail();
+        closeModal(els.reportModal);
+      });
       document.addEventListener("fullscreenchange", renderContext);
     }
-
     loadData();
     bindEvents();
+    toggleInspector(state.inspectorOpen);
     setMobileTab("timer");
     applyAgendaDefaultsFromName();
     saveMeeting();
