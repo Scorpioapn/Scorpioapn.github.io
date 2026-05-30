@@ -1909,43 +1909,6 @@
       text-align: right;
     }
 
-    .pathways-card {
-      align-self: stretch;
-      height: 100%;
-    }
-
-    .pathways-body {
-      align-content: start;
-      gap: 6px;
-    }
-
-    .pathways-lead {
-      color: #211a15;
-      font-size: 9.2px;
-      line-height: 1.24;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-
-    .pathways-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
-      gap: 2px 8px;
-      align-items: baseline;
-      font-size: 8.8px;
-      line-height: 1.08;
-    }
-
-    .pathways-grid span:nth-child(odd) {
-      color: #211a15;
-      font-weight: 850;
-    }
-
-    .pathways-grid span:nth-child(even) {
-      color: #211a15;
-      font-weight: 900;
-    }
-
     .poster-body {
       position: relative;
       padding: 0;
@@ -3106,18 +3069,14 @@
       manager: "卡卡",
       posterDesigner: "水杨酸",
       logoData: "",
-      posterData: "",
       wechatQrData: "",
       joinQrData: "",
       nextTheme: "夏日穿搭",
       nextMeetingDate: "",
       nextMeetingTime: "",
-      footerNotes: "",
       residentPeople: "女侠\nMaggie\nBell\n聪聪\nVenus斯敏\n纳纳\nIsabel\nRui（Soar High）\nDavid（MAD）\n筠筠\n卡卡\n水杨酸\nJeff",
       clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
-      pathways: "Pathways 是头马国际演讲教育体系，6条学习路径覆盖不同方向的能力训练。\nDynamic Leadership 动态领导力\nEngaging Humor 运用幽默\nMotivational Strategies 激励策略\nPresentation Mastery 精通演讲\nPersuasive Influence 有说服力的影响\nVisionary Communication 愿景沟通",
       officers: DEFAULT_OFFICERS,
-      joinInfo: "入会条件：参加2次以上例会，并完成一次角色或四项演讲/履职分享。\n入会费用：首次缴费包含国际会费、本地会费及资料费。",
       meetingRules: DEFAULT_MEETING_RULES.join("\n"),
       meetingVision: "会议愿景：很开心与大家建立一种愉悦的学习旅程，谢谢大家~",
       guestInvitation: `【${GUEST_PARTICIPATION_TAGS.join("】 【")}】
@@ -3222,12 +3181,23 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function normalizeEscapedNewlines(data) {
-      ["clubIntro", "pathways", "officers", "joinInfo", "meetingRules", "meetingVision", "guestInvitation", "residentPeople", "footerNotes"].forEach((field) => {
+      ["clubIntro", "officers", "meetingRules", "meetingVision", "guestInvitation", "residentPeople"].forEach((field) => {
         if (typeof data[field] === "string") {
           data[field] = data[field].replaceAll("\\n", "\n");
         }
       });
       return data;
+    }
+
+    function stripRemovedDataFields(data) {
+      let removed = false;
+      ["posterData", "footerNotes", "pathways", "joinInfo"].forEach((field) => {
+        if (Object.prototype.hasOwnProperty.call(data, field)) {
+          delete data[field];
+          removed = true;
+        }
+      });
+      return removed;
     }
 
     function loadData() {
@@ -3240,7 +3210,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
           ...parsed,
           items: Array.isArray(parsed.items) && parsed.items.length ? parsed.items : clone(DEFAULT_DATA.items)
         });
-        let migrated = false;
+        let migrated = stripRemovedDataFields(merged);
         if (merged.clubNameEnglish === "Changyan Chinese Toastmasters Club") {
           merged.clubNameEnglish = DEFAULT_DATA.clubNameEnglish;
           migrated = true;
@@ -3415,7 +3385,15 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function parseDurationMinutes(value) {
-      return AgendaSchema.parseDurationToMinutes(value, 0);
+      if (typeof AgendaSchema !== "undefined" && AgendaSchema?.parseDurationToMinutes) {
+        return AgendaSchema.parseDurationToMinutes(value, 0);
+      }
+      const text = String(value || "").trim();
+      if (!text) return 0;
+      const range = text.match(/(\d+(?:\.\d+)?)\s*[-~–—]\s*(\d+(?:\.\d+)?)/);
+      if (range) return Number(range[2]);
+      const first = text.match(/(\d+(?:\.\d+)?)/);
+      return first ? Number(first[1]) : 0;
     }
 
     function minutesToTime(totalMinutes) {
@@ -3477,12 +3455,6 @@ ${GUEST_PARTICIPATION_NOTE}`,
           overlay: "更换 Logo",
           updated: "品牌 Logo 已更新",
           removed: "Logo 已移除",
-        },
-        posterData: {
-          emptyLabel: "当期海报",
-          overlay: "更换海报",
-          updated: "当期海报已更新",
-          removed: "海报已移除",
         },
         wechatQrData: {
           emptyLabel: "取伙二维码",
@@ -3611,35 +3583,6 @@ ${GUEST_PARTICIPATION_NOTE}`,
         if (!match) return `<div class="info-line full"><span class="info-text">${escapeHtml(line)}</span></div>`;
         return `<div class="info-line"><span class="info-label">${escapeHtml(match[1])}</span><span class="info-text">${escapeHtml(match[2])}</span></div>`;
       }).join("")}</div>`;
-    }
-
-    function pathwaysHtml(text) {
-      const raw = String(text || "").trim();
-      const fallbackPaths = [
-        ["Dynamic Leadership", "动态领导力"],
-        ["Engaging Humor", "运用幽默"],
-        ["Motivational Strategies", "激励策略"],
-        ["Presentation Mastery", "精通演讲"],
-        ["Persuasive Influence", "有说服力的影响"],
-        ["Visionary Communication", "愿景沟通"],
-      ];
-      const lines = raw.split(/\n+/).map((line) => line.trim()).filter(Boolean);
-      const pathPairs = fallbackPaths.map(([english, fallbackChinese]) => {
-        const sourceLine = lines.find((line) => line.includes(english));
-        if (!sourceLine) return [english, fallbackChinese];
-        const chinese = sourceLine.replace(english, "").trim() || fallbackChinese;
-        return [english, chinese];
-      });
-      const leadLines = lines.filter((line) => !fallbackPaths.some(([english]) => line.includes(english)));
-      const lead = leadLines.length
-        ? leadLines.join(" ")
-        : "Pathways 是头马国际演讲教育体系，帮助会员按路径训练演讲、反馈与领导力。";
-      return `
-        <p class="pathways-lead">${escapeHtml(lead)}</p>
-        <div class="pathways-grid">
-          ${pathPairs.map(([english, chinese]) => `<span>${escapeHtml(english)}</span><span>${escapeHtml(chinese)}</span>`).join("")}
-        </div>
-      `;
     }
 
     function rowClassForAgenda(item) {
@@ -4221,11 +4164,13 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("JSON 内容不是有效对象");
       }
-      return normalizeEscapedNewlines({
+      const normalized = normalizeEscapedNewlines({
         ...clone(DEFAULT_DATA),
         ...parsed,
         items: Array.isArray(parsed.items) ? parsed.items : clone(DEFAULT_DATA.items)
       });
+      stripRemovedDataFields(normalized);
+      return normalized;
     }
 
     async function importJson(input) {

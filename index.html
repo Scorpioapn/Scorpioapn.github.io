@@ -2772,8 +2772,6 @@
     const TimeRules = window.TMTimeRules;
     const AgendaSchema = window.TMAgendaSchema;
 
-    const UI_MODE_KEY = "tm_timekeeper_ui_mode_v1";
-    const COLLAPSE_KEY = "tm_timekeeper_setup_collapse_v1";
     const INSPECTOR_KEY = "tm_timekeeper_inspector_open_v1";
 
     const DEFAULT_MAPPINGS = [
@@ -2943,12 +2941,34 @@
       return window.TMStorage.readJson(key, fallback);
     }
 
+    function writeJson(key, value, failureMessage = "本机保存失败，请检查浏览器存储空间") {
+      try {
+        if (!window.TMStorage.writeJson(key, value)) throw new Error(`Storage unavailable for ${key}`);
+        return true;
+      } catch (error) {
+        console.warn("Failed to write localStorage", key, error);
+        showToast(failureMessage);
+        return false;
+      }
+    }
+
+    function removeStoredValue(key, failureMessage = "本机数据清理失败，请稍后再试") {
+      try {
+        if (!window.TMStorage.removeKey(key)) throw new Error(`Storage unavailable for ${key}`);
+        return true;
+      } catch (error) {
+        console.warn("Failed to remove localStorage", key, error);
+        showToast(failureMessage);
+        return false;
+      }
+    }
+
     function saveAgenda() {
-      window.TMStorage.writeJson(STORAGE_KEYS.agenda, state.agendaItems);
+      writeJson(STORAGE_KEYS.agenda, state.agendaItems, "议程保存失败，请检查浏览器存储空间");
     }
 
     function saveRecords() {
-      window.TMStorage.writeJson(STORAGE_KEYS.records, state.records);
+      writeJson(STORAGE_KEYS.records, state.records, "计时记录保存失败，请检查浏览器存储空间");
     }
 
     function saveMeeting() {
@@ -2959,7 +2979,7 @@
         meetingStartTime: els.meetingStartTime.value,
         meetingEndTime: els.meetingEndTime.value
       };
-      window.TMStorage.writeJson(STORAGE_KEYS.meeting, meeting);
+      writeJson(STORAGE_KEYS.meeting, meeting, "会议信息保存失败，请检查浏览器存储空间");
       renderMeeting();
       generateReport();
     }
@@ -3088,13 +3108,6 @@
       syncSpeakerInputs(activeItem?.speaker || "", true);
       syncSpeechTitleInputs(activeItem?.detail || "", true);
       state.inspectorOpen = localStorage.getItem(INSPECTOR_KEY) === "open";
-
-      localStorage.setItem(COLLAPSE_KEY, localStorage.getItem(COLLAPSE_KEY) || JSON.stringify({
-        "meeting-info": false,
-        "timekeeper-intro": true,
-        "time-rules": true
-      }));
-      localStorage.setItem(UI_MODE_KEY, localStorage.getItem(UI_MODE_KEY) || "focus");
     }
 
     function renderMeeting() {
@@ -3333,7 +3346,9 @@
         updateGlobalChip();
         return;
       }
-      state.timer.elapsed = Math.floor((Date.now() - state.timer.startedAt - state.timer.pausedMs) / 1000);
+      const nextElapsed = Math.floor((Date.now() - state.timer.startedAt - state.timer.pausedMs) / 1000);
+      if (nextElapsed === state.timer.elapsed) return;
+      state.timer.elapsed = nextElapsed;
       const rule = getRuleForAgenda();
       if (!state.timer.redBeeped && state.timer.elapsed >= rule.red) {
         state.timer.redBeeped = true;
@@ -3869,8 +3884,9 @@
 
     function resetAll() {
       if (!confirm("恢复默认会清空议程和记录，但保留页面可继续使用。确定吗？")) return;
-      window.TMStorage.removeKey(STORAGE_KEYS.records);
-      window.TMStorage.removeKey(STORAGE_KEYS.agenda);
+      const recordsRemoved = removeStoredValue(STORAGE_KEYS.records, "计时记录清理失败，请稍后再试");
+      const agendaRemoved = removeStoredValue(STORAGE_KEYS.agenda, "议程清理失败，请稍后再试");
+      if (!recordsRemoved || !agendaRemoved) return;
       state.records = [];
       state.agendaItems = clone(DEFAULT_AGENDA).map(enrichAgendaItem);
       state.activeAgendaId = state.agendaItems[0]?.id || null;
