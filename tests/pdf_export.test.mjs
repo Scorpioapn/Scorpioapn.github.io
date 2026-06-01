@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { once } from "node:events";
 import { existsSync, readFileSync } from "node:fs";
+import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { test } from "node:test";
 
@@ -36,6 +38,12 @@ function mockResponse() {
       return this;
     }
   };
+}
+
+async function listen(server) {
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  return server.address().port;
 }
 
 test("client builds a server PDF payload from the live print DOM and CSS", () => {
@@ -77,6 +85,7 @@ test("PDF API rejects unsupported methods", async () => {
 
 test("PDF API rejects missing and oversized HTML", async () => {
   const { MAX_PDF_HTML_BYTES, handleRenderAgendaPdfRequest } = await loadApiModule();
+  assert.equal(MAX_PDF_HTML_BYTES, 2 * 1024 * 1024);
 
   const emptyResponse = mockResponse();
   await handleRenderAgendaPdfRequest({ method: "POST", body: { html: "", fileName: "empty.pdf" } }, emptyResponse, {
@@ -94,6 +103,31 @@ test("PDF API rejects missing and oversized HTML", async () => {
   });
   assert.equal(oversizedResponse.statusCode, 413);
   assert.deepEqual(oversizedResponse.body, { error: "PDF 内容过大，请减少图片或内容后重试" });
+});
+
+test("PDF API rejects cross-origin browser requests before rendering", async () => {
+  const { handleRenderAgendaPdfRequest } = await loadApiModule();
+  const response = mockResponse();
+  let renderCalled = false;
+
+  await handleRenderAgendaPdfRequest({
+    method: "POST",
+    headers: {
+      host: "safe.example.com",
+      "x-forwarded-proto": "https",
+      origin: "https://attacker.example.com"
+    },
+    body: { html: "<!doctype html><html><body>Agenda</body></html>", fileName: "agenda.pdf" }
+  }, response, {
+    renderPdfBuffer: async () => {
+      renderCalled = true;
+      return Buffer.from("%PDF-1.7\n");
+    }
+  });
+
+  assert.equal(renderCalled, false);
+  assert.equal(response.statusCode, 403);
+  assert.deepEqual(response.body, { error: "非法来源" });
 });
 
 test("PDF API returns a generated PDF with safe download headers", async () => {
@@ -169,6 +203,145 @@ test("PDF renderer disables JavaScript before rendering submitted HTML", async (
     ["setRequestInterception", true]
   ]);
   assert.deepEqual(calls[2], ["on", "request"]);
+});
+
+test("PDF renderer blocks submitted scripts and external requests in real Chromium", { timeout: 60000 }, async () => {
+  const {
+    configurePdfRenderPage,
+    createPdfChromiumLaunchOptions
+  } = await loadApiModule();
+  const fontPath = "/assets/fonts/noto-sans-sc/noto-sans-sc-latin-400-normal.woff2";
+  const fontBytes = readFileSync(new URL(`..${fontPath}`, import.meta.url));
+  const server = createServer((request, response) => {
+    if (request.url === fontPath) {
+      response.writeHead(200, {
+        "Content-Type": "font/woff2",
+        "Cache-Control": "no-store"
+      });
+      response.end(fontBytes);
+      return;
+    }
+    response.writeHead(404, { "Content-Type": "text/plain" });
+    response.end("not found");
+  });
+  const port = await listen(server);
+  const allowedOrigin = `http://127.0.0.1:${port}`;
+  let browser;
+
+  try {
+    const { puppeteer, options: launchOptions } = await createPdfChromiumLaunchOptions();
+    browser = await puppeteer.launch(launchOptions);
+    const page = await browser.newPage();
+    const requestedUrls = [];
+    const failedUrls = [];
+    const finishedUrls = [];
+    page.on("request", (request) => requestedUrls.push(request.url()));
+    page.on("requestfailed", (request) => failedUrls.push(request.url()));
+    page.on("requestfinished", (request) => finishedUrls.push(request.url()));
+    const renderDocumentUrl = `${allowedOrigin}/__agenda-pdf-render-test.html`;
+    await configurePdfRenderPage(page, allowedOrigin, {
+      renderDocumentUrl,
+      renderDocumentHtml: `<!doctype html>
+<html>
+<head>
+  <style>
+    @font-face {
+      font-family: "IntegrationPdfFont";
+      src: url("${allowedOrigin}${fontPath}") format("woff2");
+      font-weight: 400;
+    }
+    body { font-family: "IntegrationPdfFont", sans-serif; }
+  </style>
+</head>
+<body>
+  <script>
+    document.body.dataset.executed = "yes";
+    document.body.textContent = "script-ran";
+  </script>
+  <main id="marker">script-blocked 中文 Agenda</main>
+  <img src="https://attacker.example.com/pixel.png" alt="">
+</body>
+</html>`
+    });
+
+    await page.goto(renderDocumentUrl, { waitUntil: "networkidle0", timeout: 30000 });
+
+    const scriptExecuted = await page.evaluate(() => document.body.dataset.executed || "");
+    const markerText = await page.$eval("#marker", (node) => node.textContent);
+    const fontStatuses = await page.evaluate(async () => {
+      if (document.fonts?.ready) await document.fonts.ready;
+      return Array.from(document.fonts || [], (font) => ({
+        family: font.family,
+        status: font.status
+      }));
+    });
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      preferCSSPageSize: true,
+      margin: { top: "0", right: "0", bottom: "0", left: "0" }
+    });
+
+    assert.equal(scriptExecuted, "");
+    assert.equal(markerText, "script-blocked 中文 Agenda");
+    assert.ok(requestedUrls.includes(`${allowedOrigin}${fontPath}`));
+    assert.ok(finishedUrls.includes(`${allowedOrigin}${fontPath}`));
+    assert.ok(failedUrls.includes("https://attacker.example.com/pixel.png"));
+    assert.ok(fontStatuses.some((font) => font.family === "IntegrationPdfFont" && font.status === "loaded"));
+    assert.ok(Buffer.isBuffer(Buffer.from(pdf)));
+    assert.equal(Buffer.from(pdf).subarray(0, 4).toString("utf8"), "%PDF");
+    assert.ok(pdf.length > 1000);
+  } finally {
+    if (browser) await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("client leaves image URLs in place when inlining an image fails", async () => {
+  const { buildServerPdfPayload } = loadClientExportModule();
+  const image = {
+    attributes: { src: "assets/missing.png" },
+    getAttribute(name) {
+      return this.attributes[name] || "";
+    },
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    }
+  };
+  const snapshot = {
+    id: "printPage",
+    classList: { add() {} },
+    style: {},
+    setAttribute() {},
+    querySelectorAll(selector) {
+      return selector === "img" ? [image] : [];
+    },
+    outerHTML: '<article id="printPageExportSnapshot"><img src="assets/missing.png"></article>'
+  };
+  const printPage = {
+    cloneNode() {
+      return snapshot;
+    }
+  };
+
+  const payload = await buildServerPdfPayload({
+    printPage,
+    cssText: ".agenda-sheet{}",
+    baseHref: "https://safe.example.com/agenda_generator.html",
+    imageSrcToDataUrl: async () => {
+      throw new Error("missing image");
+    }
+  });
+
+  assert.equal(image.getAttribute("src"), "assets/missing.png");
+  assert.match(payload.html, /assets\/missing\.png/);
+});
+
+test("PDF deployment notes document Chromium pack configuration", () => {
+  const docs = readFileSync(new URL("../docs/pdf-export-deployment.md", import.meta.url), "utf8");
+  assert.match(docs, /CHROMIUM_PACK_URL/);
+  assert.match(docs, /Vercel/);
+  assert.match(docs, /npm test/);
 });
 
 test("agenda preview and server PDF share bundled Noto Sans SC font assets", () => {

@@ -98,11 +98,16 @@ ${cssText}
   }
 
   async function inlineSnapshotImages(snapshot, imageSrcToDataUrl) {
+    if (typeof imageSrcToDataUrl !== "function") return;
     const images = Array.from(snapshot.querySelectorAll("img"));
     await Promise.all(images.map(async (image) => {
       const src = image.getAttribute("src");
       if (!src || src.startsWith("data:")) return;
-      image.setAttribute("src", await imageSrcToDataUrl(src));
+      try {
+        image.setAttribute("src", await imageSrcToDataUrl(src));
+      } catch (error) {
+        image.setAttribute("data-pdf-inline-failed", "true");
+      }
     }));
   }
 

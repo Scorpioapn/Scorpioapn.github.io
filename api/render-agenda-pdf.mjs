@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import { existsSync } from "node:fs";
 
-export const MAX_PDF_HTML_BYTES = 4 * 1024 * 1024;
+export const MAX_PDF_HTML_BYTES = 2 * 1024 * 1024;
 export const DEFAULT_CHROMIUM_PACK_URL = "https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.x64.tar";
 
 function sendJson(response, statusCode, body, extraHeaders = {}) {
@@ -43,6 +43,19 @@ export function requestOrigin(request) {
   return `${proto}://${host}`;
 }
 
+export function isAllowedBrowserRequestOrigin(request, allowedOrigin) {
+  const origin = String(headerValue(request.headers, "origin") || "").trim();
+  if (origin && origin !== allowedOrigin) return false;
+
+  const referer = String(headerValue(request.headers, "referer") || "").trim();
+  if (!referer) return true;
+  try {
+    return new URL(referer).origin === allowedOrigin;
+  } catch (error) {
+    return false;
+  }
+}
+
 export function sanitizePdfFileName(fileName) {
   const raw = String(fileName || "agenda.pdf").trim() || "agenda.pdf";
   const withoutPath = raw.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_");
@@ -66,16 +79,17 @@ function localChromePath() {
   return candidates.find((candidate) => existsSync(candidate)) || "";
 }
 
-async function chromiumLaunchOptions() {
+export async function createPdfChromiumLaunchOptions() {
   const [{ default: puppeteer }, { default: chromium }] = await Promise.all([
     import("puppeteer-core"),
     import("@sparticuz/chromium-min")
   ]);
-  const executablePath = localChromePath() || await chromium.executablePath(process.env.CHROMIUM_PACK_URL || DEFAULT_CHROMIUM_PACK_URL);
+  const chromePath = localChromePath();
+  const executablePath = chromePath || await chromium.executablePath(process.env.CHROMIUM_PACK_URL || DEFAULT_CHROMIUM_PACK_URL);
   return {
     puppeteer,
     options: {
-      args: localChromePath() ? puppeteer.defaultArgs() : chromium.args,
+      args: chromePath ? puppeteer.defaultArgs() : chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath,
       headless: chromium.headless || "new"
@@ -95,26 +109,47 @@ export function isAllowedRenderRequestUrl(requestUrl, allowedOrigin) {
   }
 }
 
-export async function configurePdfRenderPage(page, allowedOrigin) {
+export async function configurePdfRenderPage(page, allowedOrigin, options = {}) {
   await page.setJavaScriptEnabled(false);
   await page.setRequestInterception(true);
-  page.on("request", (request) => {
-    if (isAllowedRenderRequestUrl(request.url(), allowedOrigin)) {
-      request.continue();
-    } else {
-      request.abort();
+  page.on("request", async (request) => {
+    try {
+      if (options.renderDocumentUrl && request.url() === options.renderDocumentUrl) {
+        await request.respond({
+          status: 200,
+          contentType: "text/html; charset=utf-8",
+          body: String(options.renderDocumentHtml || "")
+        });
+        return;
+      }
+
+      if (isAllowedRenderRequestUrl(request.url(), allowedOrigin)) {
+        await request.continue();
+      } else {
+        await request.abort();
+      }
+    } catch (error) {
+      try {
+        await request.abort();
+      } catch (abortError) {
+        // The request may already be handled by Chromium after a race or navigation cancellation.
+      }
     }
   });
 }
 
 export async function renderPdfWithChromium(html, renderOptions = {}) {
-  const { puppeteer, options: launchOptions } = await chromiumLaunchOptions();
+  const { puppeteer, options: launchOptions } = await createPdfChromiumLaunchOptions();
   const browser = await puppeteer.launch(launchOptions);
   try {
     const page = await browser.newPage();
     const allowedOrigin = renderOptions.allowedOrigin || "";
-    await configurePdfRenderPage(page, allowedOrigin);
-    await page.setContent(html, { waitUntil: "networkidle0", timeout: 30000 });
+    const renderDocumentUrl = `${allowedOrigin || "http://127.0.0.1"}/__agenda-pdf-render.html`;
+    await configurePdfRenderPage(page, allowedOrigin, {
+      renderDocumentUrl,
+      renderDocumentHtml: html
+    });
+    await page.goto(renderDocumentUrl, { waitUntil: "networkidle0", timeout: 30000 });
     await page.evaluate(async () => {
       if (document.fonts?.ready) await document.fonts.ready;
     });
@@ -134,6 +169,11 @@ export async function handleRenderAgendaPdfRequest(request, response, dependenci
     return sendJson(response, 405, { error: "只支持 POST 请求" }, { Allow: "POST" });
   }
 
+  const allowedOrigin = requestOrigin(request);
+  if (!isAllowedBrowserRequestOrigin(request, allowedOrigin)) {
+    return sendJson(response, 403, { error: "非法来源" });
+  }
+
   const body = parseBody(request.body);
   const html = String(body.html || "");
   if (!html.trim()) {
@@ -145,7 +185,7 @@ export async function handleRenderAgendaPdfRequest(request, response, dependenci
 
   try {
     const renderPdfBuffer = dependencies.renderPdfBuffer || renderPdfWithChromium;
-    const pdfBuffer = await renderPdfBuffer(html, { allowedOrigin: requestOrigin(request) });
+    const pdfBuffer = await renderPdfBuffer(html, { allowedOrigin });
     response.status(200);
     response.setHeader("Content-Type", "application/pdf");
     response.setHeader("Cache-Control", "no-store");
