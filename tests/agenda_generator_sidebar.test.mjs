@@ -461,11 +461,18 @@ test("timekeeper agenda matching avoids ambiguous duplicate names", () => {
 });
 
 test("agenda generator warns when the A4 preview may overflow", () => {
-  const checkOverflow = functionSource("checkPrintOverflow");
+  const renderPreview = functionBlock("renderPreview");
+  const queueFit = functionBlock("queueFlowLayoutFit");
+  const checkOverflow = functionBlock("checkPrintOverflow");
 
-  assert.match(source, /window\.requestAnimationFrame\(checkPrintOverflow\)/, "preview render should check A4 overflow after layout");
+  assert.match(renderPreview, /queueFlowLayoutFit\(\)/, "preview render should queue a fit and overflow check after layout");
+  assert.match(queueFit, /window\.requestAnimationFrame\(run\)/, "fit queue should run once after the next layout frame");
+  assert.match(queueFit, /window\.setTimeout\(run,\s*120\)/, "fit queue should re-run after delayed layout settles");
+  assert.match(queueFit, /fitFlowLayout\(\)/, "fit queue should try compact preview layouts before warning");
+  assert.match(queueFit, /checkPrintOverflow\(\)/, "fit queue should still warn when compact layouts cannot fit");
   assert.match(checkOverflow, /scrollHeight > page\.clientHeight \+ 2/, "overflow check should compare rendered height with the A4 page height");
-  assert.match(source, /当前内容可能超出 A4 页面，请减少文字或缩短议程/, "overflow warning should use the requested toast copy");
+  assert.match(checkOverflow, /hasFlowOverlap\(\)/, "overflow check should also detect flow rows colliding with the vision bar");
+  assert.match(source, /当前内容可能超出 A4 页面，已使用最紧凑版式；请减少文字或拆分议程/, "overflow warning should explain that compact fitting already ran");
 });
 
 test("printable footer renders as three independent reference-style cards", () => {
@@ -476,10 +483,13 @@ test("printable footer renders as three independent reference-style cards", () =
   const nextThemeRule = cssRule(".next-meeting-footer .next-theme");
   const guestTagRule = cssRule(".guest-tag");
   const rulesBulletRule = cssRule(".meeting-rules-list li::before");
+  const templateRule = cssRule(".template-sheet");
 
   assert.match(footerRule, /grid-template-columns:\s*var\(--template-sidebar-width\) minmax\(0,\s*1\.4fr\) minmax\(0,\s*1fr\);/, "footer should preserve the original three-column alignment");
-  assert.match(footerRule, /margin:\s*0 20px 18px;/, "footer should keep its original outer alignment with the page");
-  assert.match(footerRule, /gap:\s*14px;/, "footer cards should be separated like independent cards");
+  assert.match(footerRule, /margin:\s*var\(--template-footer-margin\);/, "footer should use the shared fitting variable for its outer alignment");
+  assert.match(templateRule, /--template-footer-margin:\s*0 20px 18px;/, "footer should keep its original default outer alignment with the page");
+  assert.match(footerRule, /gap:\s*var\(--template-footer-gap\);/, "footer cards should use the shared fitting variable for spacing");
+  assert.match(templateRule, /--template-footer-gap:\s*14px;/, "footer cards should keep their original default independent-card spacing");
   assert.match(footerRule, /background:\s*transparent;/, "footer strip should not look like one connected table");
   assert.match(footerRule, /box-shadow:\s*none;/, "footer wrapper should not carry the card shadow");
   assert.doesNotMatch(source, /@media print\s*\{[\s\S]*?\.template-footer\s*\{[\s\S]*?background:\s*#fff !important;/, "print should not give the footer wrapper a different background from screen preview");
