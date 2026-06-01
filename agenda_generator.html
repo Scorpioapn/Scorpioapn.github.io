@@ -2977,6 +2977,17 @@
       "会员副会长：Venus斯敏  事务官：Jeff",
       "公关副会长：水杨酸"
     ].join("\n");
+    const OFFICER_ROLE_LABELS = [
+      "教育副会长",
+      "会员副会长",
+      "公关副会长",
+      "公共副会长",
+      "秘书长",
+      "财务官",
+      "事务官",
+      "会长"
+    ];
+    const OFFICER_ROLE_PATTERN = OFFICER_ROLE_LABELS.join("|");
 
     const DEFAULT_DATA = {
       clubName: "畅言中文国际演讲俱乐部",
@@ -3580,6 +3591,17 @@ ${GUEST_PARTICIPATION_NOTE}`,
         const line = rawLine.trim();
         if (!line) return;
         const lineEntries = [];
+        const pairPattern = new RegExp(`(${OFFICER_ROLE_PATTERN})\\s*(?:[\\uFF1A:]|\\s+)\\s*(.+?)(?=\\s+(?:${OFFICER_ROLE_PATTERN})\\s*(?:[\\uFF1A:]|\\s+)|$)`, "g");
+        let pairMatch;
+        while ((pairMatch = pairPattern.exec(line)) !== null) {
+          const role = pairMatch[1].trim();
+          const name = pairMatch[2].trim();
+          if (role && name) lineEntries.push({ role, name });
+        }
+        if (lineEntries.length) {
+          entries.push(...lineEntries);
+          return;
+        }
         const segments = line.split(/\s+(?=[^\uFF1A:\s]+[\uFF1A:])/).map((part) => part.trim()).filter(Boolean);
         segments.forEach((segment) => {
           const match = segment.match(/^(.+?)[\uFF1A:]\s*(.+)$/);
