@@ -655,6 +655,7 @@ test("agenda generator JSON import still enters the cloud sync save path", () =>
 
 test("agenda generator exports a mobile-friendly image PDF from the A4 preview", () => {
   const capturePrintPageCanvas = functionBlock("capturePrintPageCanvas");
+  const renderPrintPageDomCanvas = functionBlock("renderPrintPageDomCanvas");
   const exportAgendaPdf = functionBlock("exportAgendaPdf");
   const saveBlobForDevice = functionBlock("saveBlobForDevice");
 
@@ -662,8 +663,15 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   assert.match(source, /js\/vendor\/jspdf-2\.5\.1\.umd\.min\.js/, "jsPDF should be loaded locally for PDF creation");
   assert.ok(existsSync(new URL("../js/vendor/html2canvas-1.4.1.min.js", import.meta.url)), "local html2canvas vendor file should exist");
   assert.ok(existsSync(new URL("../js/vendor/jspdf-2.5.1.umd.min.js", import.meta.url)), "local jsPDF vendor file should exist");
-  assert.match(capturePrintPageCanvas, /window\.html2canvas\(els\.printPage/, "PDF export should render the existing A4 preview node");
-  assert.match(capturePrintPageCanvas, /classList\.add\("exporting-snapshot"\)/, "capture should temporarily disable preview scaling");
+  assert.doesNotMatch(source, /id="previewRaster"|raster-ready/, "the visible A4 preview should remain the browser DOM preview, not a generated image overlay");
+  assert.match(renderPrintPageDomCanvas, /cloneNode\(true\)/, "PDF export should clone the current DOM preview without replacing it");
+  assert.match(renderPrintPageDomCanvas, /new XMLSerializer\(\)\.serializeToString\(snapshot\)/, "PDF export should serialize the browser DOM preview");
+  assert.match(renderPrintPageDomCanvas, /<foreignObject width="100%" height="100%">/, "PDF export should render the DOM through the browser SVG foreignObject path");
+  assert.match(renderPrintPageDomCanvas, /data:image\/svg\+xml;charset=utf-8,\$\{encodeURIComponent\(svgMarkup\)\}/, "foreignObject should use a data URL so the canvas remains exportable");
+  assert.match(renderPrintPageDomCanvas, /inlineSnapshotImages\(snapshot\)/, "local preview images should be embedded before DOM rendering");
+  assert.match(renderPrintPageDomCanvas, /context\.drawImage\(image, 0, 0, canvas\.width, canvas\.height\)/, "the browser-rendered DOM image should back the PDF canvas");
+  assert.match(capturePrintPageCanvas, /waitForPrintAssets\(els\.printPage\)[\s\S]*?fitFlowLayout\(\)[\s\S]*?renderPrintPageDomCanvas\(\)/, "PDF capture should use the settled visible DOM preview as its source");
+  assert.doesNotMatch(capturePrintPageCanvas, /renderPreview\(\)|syncPreviewScale\(\)/, "PDF capture should not re-render or rescale the visible preview before capture");
   assert.match(exportAgendaPdf, /new jsPDF\(\{ orientation: "portrait", unit: "mm", format: "a4", compress: true \}\)/, "PDF should be a single portrait A4 page");
   assert.match(exportAgendaPdf, /addImage\([\s\S]*?0,\s*0,\s*210,\s*297/, "captured preview image should fill the A4 page");
   assert.match(exportAgendaPdf, /exportCanvasAsPng\(canvas/, "PDF failures after capture should fall back to PNG export");

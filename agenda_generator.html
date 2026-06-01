@@ -5064,8 +5064,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
       }, 120000);
     }
 
-    function waitForPrintAssets() {
-      const imageTasks = Array.from(els.printPage.querySelectorAll("img")).map((image) => {
+    function waitForPrintAssets(target = els.printPage) {
+      const imageTasks = Array.from(target.querySelectorAll("img")).map((image) => {
         if (image.complete) return Promise.resolve();
         return new Promise((resolve) => {
           image.addEventListener("load", resolve, { once: true });
@@ -5080,29 +5080,102 @@ ${GUEST_PARTICIPATION_NOTE}`,
       return new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
     }
 
+    function readStylesheetText() {
+      return Array.from(document.styleSheets).map((sheet) => {
+        try {
+          return Array.from(sheet.cssRules).map((rule) => rule.cssText).join("\n");
+        } catch (error) {
+          return "";
+        }
+      }).join("\n");
+    }
+
+    function readBlobAsDataUrl(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function imageSrcToDataUrl(src) {
+      if (!src || src.startsWith("data:")) return src;
+      const response = await fetch(new URL(src, window.location.href));
+      if (!response.ok) throw new Error("图片资源读取失败");
+      return await readBlobAsDataUrl(await response.blob());
+    }
+
+    async function inlineSnapshotImages(snapshot) {
+      const images = Array.from(snapshot.querySelectorAll("img"));
+      await Promise.all(images.map(async (image) => {
+        image.setAttribute("src", await imageSrcToDataUrl(image.getAttribute("src")));
+      }));
+    }
+
+    async function renderPrintPageDomCanvas(options) {
+      const exportOptions = options || {};
+      const scale = exportOptions.scale || Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+      const width = 980;
+      const height = 1386;
+      const snapshot = els.printPage.cloneNode(true);
+      snapshot.id = "printPageExportSnapshot";
+      snapshot.classList.add("exporting-snapshot");
+      snapshot.setAttribute("aria-hidden", "true");
+      snapshot.style.transform = "none";
+      snapshot.style.width = `${width}px`;
+      snapshot.style.height = `${height}px`;
+      await inlineSnapshotImages(snapshot);
+      const cssText = readStylesheetText().replace(/<\//g, "<\\/");
+      const snapshotMarkup = new XMLSerializer().serializeToString(snapshot);
+      const svgMarkup = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+              <style>${cssText}</style>
+              ${snapshotMarkup}
+            </div>
+          </foreignObject>
+        </svg>
+      `;
+      const image = new Image();
+      image.decoding = "sync";
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error("浏览器 DOM 预览渲染失败"));
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#fffdf8";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      return canvas;
+    }
+
     async function capturePrintPageCanvas() {
-      if (!window.html2canvas) throw new Error("PDF 导出组件还没有加载完成，请稍后重试");
-      renderPreview();
-      await waitForPrintAssets();
+      await waitForPrintAssets(els.printPage);
       fitFlowLayout();
       await nextFrame();
-      els.printPage.classList.add("exporting-snapshot");
-      await nextFrame();
       try {
-        const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+        return await renderPrintPageDomCanvas();
+      } catch (error) {
+        console.error(error);
+        if (!window.html2canvas) throw error;
         return await window.html2canvas(els.printPage, {
           backgroundColor: "#fffdf8",
-          scale,
+          scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
           useCORS: true,
           logging: false,
           width: els.printPage.offsetWidth,
           height: els.printPage.offsetHeight,
           windowWidth: els.printPage.scrollWidth,
-          windowHeight: els.printPage.scrollHeight
+          windowHeight: els.printPage.scrollHeight,
+          scrollX: 0,
+          scrollY: 0
         });
-      } finally {
-        els.printPage.classList.remove("exporting-snapshot");
-        await nextFrame();
       }
     }
 
