@@ -1251,6 +1251,32 @@
       --sidebar-gap: 12px;
       --sidebar-card-x: 14px;
       --sidebar-card-y: 10px;
+      --template-header-min: 132px;
+      --template-header-padding: 20px 26px;
+      --template-main-padding: 18px 20px 14px;
+      --template-main-gap: 16px;
+      --template-sidebar-gap: 10px;
+      --template-footer-margin: 0 20px 18px;
+      --template-footer-gap: 14px;
+      --template-footer-min: 92px;
+      --template-footer-padding: 12px 18px 13px;
+      --flow-title-height: 50px;
+      --flow-title-font: 21px;
+      --flow-title-mark-size: 32px;
+      --flow-th-y: 10px;
+      --flow-td-y: 6px;
+      --flow-td-x: 8px;
+      --flow-td-font: 11px;
+      --flow-td-line: 1.22;
+      --flow-detail-font: 10px;
+      --flow-detail-line: 1.25;
+      --section-label-min: 84px;
+      --section-label-pad-y: 8px;
+      --section-label-font: 13px;
+      --section-symbol-size: 30px;
+      --section-symbol-svg: 28px;
+      --vision-pad-y: 9px;
+      --vision-font: 15px;
       padding: 0;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
@@ -1267,9 +1293,95 @@
       transform-origin: top left;
     }
 
+    .template-sheet.flow-fit-compact {
+      --template-header-min: 124px;
+      --template-header-padding: 18px 24px;
+      --template-main-padding: 15px 18px 11px;
+      --template-main-gap: 14px;
+      --template-sidebar-gap: 8px;
+      --template-footer-margin: 0 20px 14px;
+      --template-footer-min: 84px;
+      --template-footer-padding: 10px 16px 11px;
+      --flow-title-height: 44px;
+      --flow-title-font: 19px;
+      --flow-title-mark-size: 28px;
+      --flow-th-y: 7px;
+      --flow-td-y: 4px;
+      --flow-td-x: 7px;
+      --flow-td-font: 10.2px;
+      --flow-td-line: 1.14;
+      --flow-detail-font: 9.2px;
+      --flow-detail-line: 1.16;
+      --section-label-min: 68px;
+      --section-label-pad-y: 6px;
+      --section-label-font: 12px;
+      --section-symbol-size: 25px;
+      --section-symbol-svg: 23px;
+      --vision-pad-y: 7px;
+      --vision-font: 13.6px;
+    }
+
+    .template-sheet.flow-fit-dense {
+      --template-header-min: 116px;
+      --template-header-padding: 16px 22px;
+      --template-main-padding: 12px 16px 9px;
+      --template-main-gap: 12px;
+      --template-sidebar-gap: 7px;
+      --template-footer-margin: 0 18px 11px;
+      --template-footer-gap: 11px;
+      --template-footer-min: 76px;
+      --template-footer-padding: 9px 14px 10px;
+      --flow-title-height: 39px;
+      --flow-title-font: 17px;
+      --flow-title-mark-size: 25px;
+      --flow-th-y: 5px;
+      --flow-td-y: 3px;
+      --flow-td-x: 6px;
+      --flow-td-font: 9.4px;
+      --flow-td-line: 1.08;
+      --flow-detail-font: 8.6px;
+      --flow-detail-line: 1.1;
+      --section-label-min: 54px;
+      --section-label-pad-y: 5px;
+      --section-label-font: 10.8px;
+      --section-symbol-size: 21px;
+      --section-symbol-svg: 19px;
+      --vision-pad-y: 5px;
+      --vision-font: 12.4px;
+    }
+
+    .template-sheet.flow-fit-micro {
+      --template-header-min: 108px;
+      --template-header-padding: 14px 20px;
+      --template-main-padding: 10px 14px 7px;
+      --template-main-gap: 10px;
+      --template-sidebar-gap: 6px;
+      --template-footer-margin: 0 16px 9px;
+      --template-footer-gap: 9px;
+      --template-footer-min: 68px;
+      --template-footer-padding: 8px 12px 9px;
+      --flow-title-height: 34px;
+      --flow-title-font: 15px;
+      --flow-title-mark-size: 22px;
+      --flow-th-y: 4px;
+      --flow-td-y: 2px;
+      --flow-td-x: 5px;
+      --flow-td-font: 8.6px;
+      --flow-td-line: 1.03;
+      --flow-detail-font: 7.8px;
+      --flow-detail-line: 1.03;
+      --section-label-min: 42px;
+      --section-label-pad-y: 4px;
+      --section-label-font: 9.6px;
+      --section-symbol-size: 18px;
+      --section-symbol-svg: 16px;
+      --vision-pad-y: 4px;
+      --vision-font: 11.2px;
+    }
+
     .template-header {
-      min-height: 132px;
-      padding: 20px 26px;
+      min-height: var(--template-header-min);
+      padding: var(--template-header-padding);
       display: grid;
       grid-template-columns: 152px minmax(0, 1fr) 218px;
       align-items: center;
@@ -1399,17 +1511,17 @@
 
     .template-main {
       min-height: 0;
-      padding: 18px 20px 14px;
+      padding: var(--template-main-padding);
       display: grid;
       grid-template-columns: var(--template-sidebar-width) minmax(0, 1fr);
-      gap: 16px;
+      gap: var(--template-main-gap);
       align-items: stretch;
     }
 
     .template-sidebar {
       height: 100%;
       display: grid;
-      gap: 10px;
+      gap: var(--template-sidebar-gap);
       grid-template-rows: 0.90fr 2.22fr 0.66fr 0.80fr;
       align-content: stretch;
       align-self: stretch;
@@ -1876,7 +1988,7 @@
 
     .flow-title {
       position: relative;
-      height: 50px;
+      height: var(--flow-title-height);
       padding: 0 16px;
       display: flex;
       align-items: center;
@@ -1884,7 +1996,7 @@
       color: #fff;
       background: var(--tm-card);
       font-family: var(--font-display);
-      font-size: 21px;
+      font-size: var(--flow-title-font);
       font-weight: 950;
       overflow: hidden;
     }
@@ -1904,8 +2016,8 @@
     }
 
     .flow-title-mark {
-      width: 32px;
-      height: 32px;
+      width: var(--flow-title-mark-size);
+      height: var(--flow-title-mark-size);
       display: grid;
       place-items: center;
       border-radius: 8px;
@@ -1939,7 +2051,7 @@
     }
 
     .flow-table th {
-      padding: 10px 8px;
+      padding: var(--flow-th-y) 8px;
       color: #fff;
       background: var(--tm-navy);
       border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1950,11 +2062,11 @@
     }
 
     .flow-table td {
-      padding: 6px 8px;
+      padding: var(--flow-td-y) var(--flow-td-x);
       border: 1px solid var(--tm-grid-line);
       color: #211a15;
-      font-size: 11px;
-      line-height: 1.22;
+      font-size: var(--flow-td-font);
+      line-height: var(--flow-td-line);
       vertical-align: middle;
       word-break: break-word;
       overflow-wrap: anywhere;
@@ -1987,29 +2099,29 @@
     }
 
     .section-label {
-      min-height: 84px;
+      min-height: var(--section-label-min);
       display: grid;
       place-items: center;
       align-content: center;
       gap: 5px;
-      padding: 8px 6px;
-      font-size: 13px;
+      padding: var(--section-label-pad-y) 6px;
+      font-size: var(--section-label-font);
       line-height: 1.2;
       color: var(--tm-maroon);
       background: #fff;
     }
 
     .section-symbol {
-      width: 30px;
-      height: 30px;
+      width: var(--section-symbol-size);
+      height: var(--section-symbol-size);
       display: grid;
       place-items: center;
       color: #8f1f34;
     }
 
     .section-symbol svg {
-      width: 28px;
-      height: 28px;
+      width: var(--section-symbol-svg);
+      height: var(--section-symbol-svg);
       display: block;
       stroke: currentColor;
       fill: none;
@@ -2054,8 +2166,8 @@
       display: block;
       margin-top: 2px;
       color: #554941;
-      font-size: 10px;
-      line-height: 1.25;
+      font-size: var(--flow-detail-font);
+      line-height: var(--flow-detail-line);
       white-space: pre-line;
       overflow-wrap: anywhere;
     }
@@ -2081,28 +2193,28 @@
     }
 
     .vision-bar {
-      padding: 9px 14px;
+      padding: var(--vision-pad-y) 14px;
       color: #fff;
       background: var(--tm-maroon);
       text-align: center;
-      font-size: 15px;
+      font-size: var(--vision-font);
       line-height: 1.3;
       font-weight: 950;
     }
 
     .template-footer {
-      margin: 0 20px 18px;
+      margin: var(--template-footer-margin);
       display: grid;
       grid-template-columns: var(--template-sidebar-width) minmax(0, 1.4fr) minmax(0, 1fr);
-      gap: 14px;
+      gap: var(--template-footer-gap);
       align-items: stretch;
       background: transparent;
       box-shadow: none;
     }
 
     .template-footer-box {
-      min-height: 92px;
-      padding: 12px 18px 13px;
+      min-height: var(--template-footer-min);
+      padding: var(--template-footer-padding);
       border: 1px solid var(--tm-border);
       border-radius: var(--radius-card);
       background: var(--tm-card);
@@ -2988,6 +3100,7 @@
       "会长"
     ];
     const OFFICER_ROLE_PATTERN = OFFICER_ROLE_LABELS.join("|");
+    const FLOW_FIT_CLASSES = ["flow-fit-compact", "flow-fit-dense", "flow-fit-micro"];
 
     const DEFAULT_DATA = {
       clubName: "畅言中文国际演讲俱乐部",
@@ -3799,7 +3912,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         </footer>
       `;
       syncPreviewScale();
-      window.requestAnimationFrame(checkPrintOverflow);
+      queueFlowLayoutFit();
     }
 
     function renderAgendaList() {
@@ -3861,12 +3974,56 @@ ${GUEST_PARTICIPATION_NOTE}`,
       frame.style.setProperty("--preview-scale", scale.toFixed(4));
     }
 
+    function hasFlowOverlap() {
+      const page = els.printPage;
+      const flowPanel = page?.querySelector(".flow-panel");
+      const vision = page?.querySelector(".vision-bar");
+      const flowNodes = page ? Array.from(page.querySelectorAll(".flow-table tbody tr, .flow-table tbody td, .flow-table tbody span")) : [];
+      if (!page || !flowPanel || !vision || !flowNodes.length) return false;
+      const maxFlowBottom = Math.max(...flowNodes.map((node) => node.getBoundingClientRect().bottom));
+      const visionTop = vision.getBoundingClientRect().top;
+      const panelBottom = flowPanel.getBoundingClientRect().bottom;
+      const pageBottom = page.getBoundingClientRect().bottom;
+      return maxFlowBottom > visionTop + 1 || panelBottom > pageBottom + 1;
+    }
+
+    function flowLayoutFits() {
+      const page = els.printPage;
+      if (!page) return true;
+      const hasPageOverflow = page.scrollHeight > page.clientHeight + 2 || page.scrollWidth > page.clientWidth + 2;
+      return !hasPageOverflow && !hasFlowOverlap();
+    }
+
+    function fitFlowLayout() {
+      const page = els.printPage;
+      if (!page) return true;
+      for (let index = -1; index < FLOW_FIT_CLASSES.length; index += 1) {
+        page.classList.remove(...FLOW_FIT_CLASSES);
+        if (index >= 0) page.classList.add(FLOW_FIT_CLASSES[index]);
+        if (flowLayoutFits()) return true;
+      }
+      return flowLayoutFits();
+    }
+
+    function queueFlowLayoutFit() {
+      const run = () => {
+        fitFlowLayout();
+        checkPrintOverflow();
+      };
+      window.requestAnimationFrame(run);
+      window.setTimeout(run, 120);
+      if (document.fonts?.ready) document.fonts.ready.then(run).catch(() => {});
+      els.printPage.querySelectorAll("img").forEach((image) => {
+        if (!image.complete) image.addEventListener("load", run, { once: true });
+      });
+    }
+
     function checkPrintOverflow() {
       const page = els.printPage;
       if (!page) return false;
-      const hasOverflow = page.scrollHeight > page.clientHeight + 2 || page.scrollWidth > page.clientWidth + 2;
+      const hasOverflow = page.scrollHeight > page.clientHeight + 2 || page.scrollWidth > page.clientWidth + 2 || hasFlowOverlap();
       if (hasOverflow && !printOverflowWarningVisible) {
-        showToast("当前内容可能超出 A4 页面，请减少文字或缩短议程");
+        showToast("当前内容可能超出 A4 页面，已使用最紧凑版式；请减少文字或拆分议程");
       }
       printOverflowWarningVisible = hasOverflow;
       return hasOverflow;
