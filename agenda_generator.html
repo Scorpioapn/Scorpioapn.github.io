@@ -386,6 +386,24 @@
       flex-wrap: wrap;
     }
 
+    .mobile-cancel-agenda-btn {
+      display: none;
+    }
+
+    .mobile-editor-scrim {
+      display: none;
+    }
+
+    .mobile-taskbar,
+    .mobile-quick-add {
+      display: none;
+    }
+
+    .mobile-quick-add[hidden],
+    .agenda-overflow-menu[hidden] {
+      display: none !important;
+    }
+
     .export-panel .helper-text {
       margin-bottom: 0;
     }
@@ -415,10 +433,63 @@
       align-items: center;
     }
 
+    .export-actions.primary {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .export-actions.sync-actions {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    }
+
     .export-actions .button {
       width: 100%;
       min-height: 48px;
       padding-inline: 12px;
+    }
+
+    .cloud-sync-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid rgba(106, 88, 66, 0.16);
+      border-radius: 20px;
+      background: rgba(255, 251, 247, 0.74);
+    }
+
+    .cloud-sync-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sync-status-chip[data-status="synced"] {
+      color: #075e47;
+      background: #dcefe6;
+    }
+
+    .sync-status-chip[data-status="syncing"],
+    .sync-status-chip[data-status="offline"] {
+      color: #6f4b00;
+      background: #fff0c8;
+    }
+
+    .sync-status-chip[data-status="error"] {
+      color: var(--md-error);
+      background: #fff3f1;
+    }
+
+    .sync-version {
+      min-height: 18px;
+      color: var(--md-secondary);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .sync-link-input {
+      min-height: 42px;
+      padding-inline: 12px;
+      font-size: 12px;
     }
 
     .button {
@@ -440,6 +511,13 @@
     .button:hover {
       transform: translateY(-1px);
       box-shadow: var(--shadow-2);
+    }
+
+    .button:disabled {
+      cursor: progress;
+      opacity: 0.68;
+      transform: none;
+      box-shadow: var(--shadow-1);
     }
 
     .button.filled {
@@ -753,9 +831,52 @@
     }
 
     .agenda-actions {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+
+    .agenda-menu-actions,
+    .agenda-mobile-sort,
+    .mobile-sort-toggle {
+      display: none;
+    }
+
+    .agenda-overflow-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 20;
+      min-width: 132px;
+      padding: 8px;
+      display: grid;
+      gap: 6px;
+      border-radius: 18px;
+      background: var(--md-surface);
+      box-shadow: var(--shadow-3);
+      transform: translateY(-4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .agenda-row.actions-open .agenda-overflow-menu {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .agenda-overflow-menu .mini-button {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      display: inline-flex;
+      justify-content: flex-start;
+      gap: 8px;
+      border-radius: 14px;
+      font-size: 13px;
+      box-shadow: none;
     }
 
     .mini-button {
@@ -1291,6 +1412,10 @@
       aspect-ratio: auto;
       transform: scale(var(--preview-scale, 1));
       transform-origin: top left;
+    }
+
+    .template-sheet.exporting-snapshot {
+      transform: none !important;
     }
 
     .template-sheet.flow-fit-compact {
@@ -2497,6 +2622,14 @@
     }
 
     @media (max-width: 620px) {
+      body {
+        padding-bottom: calc(78px + env(safe-area-inset-bottom));
+      }
+
+      body.mobile-agenda-editor-open {
+        overflow: hidden;
+      }
+
       .editor-header,
       .editor-scroll,
       .preview-toolbar,
@@ -2511,6 +2644,11 @@
 
       .field-grid {
         grid-template-columns: 1fr;
+      }
+
+      .surface-panel,
+      .preview-shell {
+        scroll-margin-top: 10px;
       }
 
       .upload-grid {
@@ -2532,18 +2670,306 @@
         white-space: nowrap;
       }
 
+      .mobile-taskbar {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        z-index: 70;
+        min-height: 58px;
+        padding: 6px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+        border-radius: 24px;
+        background: rgba(255, 251, 247, 0.96);
+        box-shadow: 0 16px 36px rgba(54, 42, 32, 0.22);
+        backdrop-filter: blur(18px);
+      }
+
+      .mobile-taskbar a {
+        min-width: 0;
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        border-radius: 18px;
+        color: var(--md-secondary);
+        font-size: 13px;
+        font-weight: 950;
+        text-decoration: none;
+      }
+
+      .mobile-taskbar a[aria-current="page"] {
+        color: var(--md-primary);
+        background: var(--md-primary-container);
+      }
+
+      .mobile-taskbar svg {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 auto;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .mobile-quick-add {
+        position: fixed;
+        right: 18px;
+        bottom: calc(82px + env(safe-area-inset-bottom));
+        z-index: 65;
+        min-height: 52px;
+        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 999px;
+        color: var(--md-on-primary);
+        background: var(--md-primary);
+        box-shadow: 0 14px 32px rgba(0, 82, 122, 0.32);
+        font-weight: 950;
+      }
+
+      .mobile-quick-add[hidden] {
+        display: none !important;
+      }
+
+      .mobile-quick-add svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      body.mobile-agenda-editor-open .mobile-quick-add {
+        display: none;
+      }
+
+      body.mobile-agenda-editor-open .mobile-taskbar {
+        display: none;
+      }
+
+      .mobile-editor-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 58;
+        display: block;
+        background: rgba(33, 26, 21, 0.34);
+        backdrop-filter: blur(2px);
+      }
+
+      .mobile-editor-scrim[hidden] {
+        display: none;
+      }
+
+      .agenda-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      }
+
+      .agenda-toolbar .button {
+        width: 100%;
+        padding-inline: 12px;
+      }
+
+      .export-actions.primary {
+        grid-template-columns: 1fr;
+      }
+
+      .export-actions.sync-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar-actions .export-pdf-button {
+        flex: 1 1 150px;
+        min-height: 52px;
+      }
+
+      .toolbar-actions .print-button {
+        flex: 1 1 130px;
+      }
+
+      .mobile-sort-toggle {
+        width: 48px;
+        padding: 0;
+        display: inline-grid;
+        place-items: center;
+      }
+
+      .mobile-sort-toggle.selected {
+        color: var(--md-on-primary-container);
+        background: var(--md-primary-container);
+      }
+
+      .mobile-sort-toggle svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .agenda-form-card {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        max-height: min(88dvh, 720px);
+        margin: 0;
+        padding: 18px 16px 0;
+        border-radius: 28px 28px 0 0;
+        overflow-y: auto;
+        box-shadow: 0 -18px 42px rgba(54, 42, 32, 0.28);
+      }
+
+      .agenda-form-card[hidden] {
+        display: none;
+      }
+
+      .agenda-form-card .field-grid {
+        gap: 12px;
+      }
+
+      .agenda-form-card .textarea {
+        min-height: 96px;
+      }
+
+      .agenda-form-card .rule-hint {
+        margin-bottom: 0;
+      }
+
+      .agenda-form-card .actions-row {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        margin: 14px -16px 0;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+        background: linear-gradient(180deg, rgba(249, 235, 220, 0.88), var(--md-surface-container) 28%);
+        border-top: 1px solid rgba(106, 88, 66, 0.14);
+      }
+
+      .agenda-form-card .actions-row .button {
+        width: 100%;
+      }
+
+      .mobile-cancel-agenda-btn {
+        display: inline-flex;
+      }
+
       .agenda-row {
-        grid-template-columns: 32px minmax(0, 1fr);
+        min-height: 58px;
+        grid-template-columns: 24px minmax(0, 1fr) 42px;
+        gap: 8px;
+        padding: 10px 10px;
+        border-radius: 20px;
+      }
+
+      .agenda-row.section {
+        min-height: 52px;
+        grid-template-columns: 24px minmax(0, 1fr) 42px;
+      }
+
+      .drag-handle {
+        width: 24px;
+        height: 38px;
+        font-size: 18px;
+      }
+
+      .agenda-main.button {
+        min-height: 38px;
+      }
+
+      .agenda-title {
+        margin-bottom: 2px;
+        font-size: 16px;
+      }
+
+      .agenda-meta {
+        font-size: 12px;
       }
 
       .agenda-actions {
-        grid-column: 2;
-        justify-content: flex-start;
+        justify-content: flex-end;
       }
 
       .agenda-edit-affordance {
-        opacity: 1;
-        transform: none;
+        display: none;
+      }
+
+      .agenda-direct-actions {
+        display: none;
+      }
+
+      .agenda-menu-actions {
+        display: flex;
+      }
+
+      .agenda-more-button {
+        width: 42px;
+        height: 42px;
+      }
+
+      .agenda-overflow-menu {
+        right: 0;
+      }
+
+      .agenda-mobile-sort {
+        grid-column: 1 / -1;
+        display: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding-left: 32px;
+      }
+
+      .agenda-list.sort-mode .agenda-mobile-sort {
+        display: grid;
+      }
+
+      .agenda-list.sort-mode .agenda-actions {
+        display: none;
+      }
+
+      .agenda-sort-button {
+        width: 100%;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 16px;
+        color: var(--md-primary);
+        background: var(--md-primary-container);
+        font-size: 13px;
+        font-weight: 950;
+        box-shadow: none;
+      }
+
+      .agenda-sort-button:disabled {
+        color: rgba(33, 26, 21, 0.34);
+        background: rgba(106, 88, 66, 0.10);
+      }
+
+      .agenda-sort-button svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .agenda-sheet:not(.template-sheet) {
@@ -2582,7 +3008,10 @@
 
       .editor-shell,
       .preview-toolbar,
-      .toast {
+      .toast,
+      .mobile-taskbar,
+      .mobile-quick-add,
+      .mobile-editor-scrim {
         display: none !important;
       }
 
@@ -2796,7 +3225,7 @@
       </header>
 
       <div class="editor-scroll">
-        <section class="surface-panel raised" aria-labelledby="meetingInfoTitle">
+        <section class="surface-panel raised" id="meetingInfoPanel" aria-labelledby="meetingInfoTitle">
           <div class="panel-title">
             <h2 id="meetingInfoTitle">会议信息</h2>
             <span class="meta" id="saveStatus">已自动保存</span>
@@ -2841,7 +3270,7 @@
           </div>
         </section>
 
-        <section class="surface-panel" aria-labelledby="agendaListTitle">
+        <section class="surface-panel" id="agendaPanel" aria-labelledby="agendaListTitle">
           <div class="panel-title">
             <h2 id="agendaListTitle">当前议程</h2>
             <span class="meta" id="agendaCount">0 个项目</span>
@@ -2852,6 +3281,9 @@
               添加项目
             </button>
             <button class="button tonal" id="addAgendaSectionBtn" type="button">添加分组</button>
+            <button class="button subtle mobile-sort-toggle" id="mobileSortToggleBtn" type="button" title="排序模式" aria-label="排序模式" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+            </button>
           </div>
           <p class="helper-text agenda-toolbar-note">项目是一行议程；分组只做章节标题，不占用时间。项目时间会按会议开始时间与每项时长自动计算；点击项目或分组可编辑，拖动左侧手柄可排序。</p>
 
@@ -2887,12 +3319,14 @@
             </div>
             <div class="rule-hint" id="ruleHint"></div>
             <div class="actions-row">
+              <button class="button subtle mobile-cancel-agenda-btn" id="cancelAgendaBtn" type="button">取消</button>
               <button class="button filled" id="saveAgendaBtn" type="button">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                 保存项目
               </button>
             </div>
           </div>
+          <button class="mobile-editor-scrim" id="mobileEditorScrim" type="button" aria-label="关闭编辑面板" hidden></button>
 
           <details class="people-maintenance">
             <summary><span>会议常驻人员名单</span><small>用于负责人下拉</small></summary>
@@ -2990,7 +3424,7 @@
           </details>
         </section>
 
-        <section class="surface-panel export-panel" aria-labelledby="templateTitle">
+        <section class="surface-panel export-panel" id="exportPanel" aria-labelledby="templateTitle">
           <div class="panel-title">
             <h2 id="templateTitle">导出与备份</h2>
             <span class="meta">打印 / 备份</span>
@@ -3000,7 +3434,8 @@
             <div class="export-action-group">
               <span class="export-group-title">打印输出</span>
               <div class="export-actions primary">
-                <button class="button filled" id="printBtnSide" type="button">打印 A4</button>
+                <button class="button filled export-pdf-button" id="exportPdfBtnSide" type="button">导出 PDF</button>
+                <button class="button tonal print-button" id="printBtnSide" type="button">打印 A4</button>
                 <button class="button tonal" id="copyBtn" type="button">复制文字版</button>
               </div>
             </div>
@@ -3011,13 +3446,28 @@
                 <button class="button subtle" id="importJsonBtn" type="button">导入 JSON</button>
               </div>
             </div>
+            <div class="export-action-group cloud-sync-group" id="cloudSyncPanel">
+              <span class="export-group-title">多设备同步</span>
+              <p class="helper-text">创建公开同步链接后，手机和电脑打开同一链接即可接力编辑。</p>
+              <div class="cloud-sync-card">
+                <div class="cloud-sync-status-row">
+                  <span class="status-chip sync-status-chip" id="cloudSyncStatus" data-status="local">本机草稿</span>
+                  <span class="sync-version" id="cloudSyncVersion"></span>
+                </div>
+                <input class="input sync-link-input" id="cloudSyncLink" type="text" readonly aria-label="同步链接" placeholder="创建后显示同步链接" />
+                <div class="export-actions sync-actions">
+                  <button class="button tonal" id="createSyncDraftBtn" type="button">创建同步草稿</button>
+                  <button class="button subtle" id="copySyncLinkBtn" type="button" disabled>复制同步链接</button>
+                </div>
+              </div>
+            </div>
             <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" />
           </div>
         </section>
       </div>
     </aside>
 
-    <main class="preview-shell" aria-label="A4 预览区">
+    <main class="preview-shell" id="previewPanel" aria-label="A4 预览区">
       <header class="preview-toolbar">
         <div class="preview-title">
           <h2>A4 实时预览</h2>
@@ -3025,7 +3475,8 @@
         </div>
         <div class="toolbar-actions">
           <span class="status-chip" id="previewChip">第 739 期</span>
-          <button class="button filled" id="printBtn" type="button">打印 A4</button>
+          <button class="button filled export-pdf-button" id="exportPdfBtn" type="button">导出 PDF</button>
+          <button class="button tonal print-button" id="printBtn" type="button">打印 A4</button>
           <button class="button tonal" id="copyBtnTop" type="button">复制文字版</button>
         </div>
       </header>
@@ -3037,6 +3488,30 @@
     </main>
   </div>
 
+  <button class="mobile-quick-add" id="mobileQuickAddBtn" type="button" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    项目
+  </button>
+
+  <nav class="mobile-taskbar" aria-label="手机快捷导航">
+    <a href="#meetingInfoPanel" data-mobile-nav="meetingInfoPanel" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10"/><path d="M7 9h10"/><path d="M7 14h6"/><rect x="4" y="3" width="16" height="18" rx="3"/></svg>
+      信息
+    </a>
+    <a href="#agendaPanel" data-mobile-nav="agendaPanel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12"/><path d="M8 12h12"/><path d="M8 18h12"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>
+      议程
+    </a>
+    <a href="#previewPanel" data-mobile-nav="previewPanel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
+      预览
+    </a>
+    <a href="#exportPanel" data-mobile-nav="exportPanel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      导出
+    </a>
+  </nav>
+
   <div class="toast" id="toast" role="status" aria-live="polite">
     <span id="toastText"></span>
     <button id="toastAction" type="button"></button>
@@ -3045,11 +3520,17 @@
   <script src="js/storage.js"></script>
   <script src="js/time-rules.js"></script>
   <script src="js/agenda-schema.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/vendor/supabase-js-v2.umd.min.js"></script>
+  <script src="js/agenda-cloud-sync.js"></script>
+  <script src="js/vendor/html2canvas-1.4.1.min.js"></script>
+  <script src="js/vendor/jspdf-2.5.1.umd.min.js"></script>
   <script>
     const SHARED_STORAGE_KEYS = window.TMStorage.STORAGE_KEYS;
     const STORAGE_KEY = SHARED_STORAGE_KEYS.agendaGenerator;
     const TIMEKEEPER_STORAGE_KEYS = window.TMStorage.TIMEKEEPER_STORAGE_KEYS;
     const AgendaSchema = window.TMAgendaSchema;
+    const CloudSync = window.TMAgendaCloudSync;
     const TimeRules = window.TMTimeRules;
     const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = [
       { name: "事务官宣布会议规则", plannedMinutes: 1, durationLabel: "1 分钟" },
@@ -3199,6 +3680,13 @@ ${GUEST_PARTICIPATION_NOTE}`,
       ruleHint: document.querySelector("#ruleHint"),
       saveAgendaBtn: document.querySelector("#saveAgendaBtn"),
       clearAgendaFormBtn: document.querySelector("#clearAgendaFormBtn"),
+      cancelAgendaBtn: document.querySelector("#cancelAgendaBtn"),
+      mobileEditorScrim: document.querySelector("#mobileEditorScrim"),
+      mobileQuickAddBtn: document.querySelector("#mobileQuickAddBtn"),
+      mobileSortToggleBtn: document.querySelector("#mobileSortToggleBtn"),
+      mobileNavLinks: document.querySelectorAll("[data-mobile-nav]"),
+      exportPdfBtn: document.querySelector("#exportPdfBtn"),
+      exportPdfBtnSide: document.querySelector("#exportPdfBtnSide"),
       printBtn: document.querySelector("#printBtn"),
       printBtnSide: document.querySelector("#printBtnSide"),
       copyBtn: document.querySelector("#copyBtn"),
@@ -3206,6 +3694,11 @@ ${GUEST_PARTICIPATION_NOTE}`,
       exportJsonBtn: document.querySelector("#exportJsonBtn"),
       importJsonBtn: document.querySelector("#importJsonBtn"),
       jsonImportInput: document.querySelector("#jsonImportInput"),
+      cloudSyncStatus: document.querySelector("#cloudSyncStatus"),
+      cloudSyncVersion: document.querySelector("#cloudSyncVersion"),
+      cloudSyncLink: document.querySelector("#cloudSyncLink"),
+      createSyncDraftBtn: document.querySelector("#createSyncDraftBtn"),
+      copySyncLinkBtn: document.querySelector("#copySyncLinkBtn"),
       openTimekeeperBtn: document.querySelector("#openTimekeeperBtn"),
       toast: document.querySelector("#toast"),
       toastText: document.querySelector("#toastText"),
@@ -3215,9 +3708,22 @@ ${GUEST_PARTICIPATION_NOTE}`,
     let state = loadData();
     let editingId = null;
     let dragId = null;
+    let mobileSortMode = false;
     let undoDelete = null;
     let toastTimer = null;
+    let lastAgendaTrigger = null;
+    let activeMobilePanel = "meetingInfoPanel";
+    let lastExportUrl = null;
     let printOverflowWarningVisible = false;
+    let cloudSyncController = null;
+
+    const CLOUD_SYNC_STATUS_LABELS = {
+      local: "本机草稿",
+      syncing: "正在同步",
+      synced: "已同步",
+      offline: "离线，稍后同步",
+      error: "同步失败"
+    };
 
     function clone(value) {
       return JSON.parse(JSON.stringify(value));
@@ -3278,6 +3784,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         saveData.timer = window.setTimeout(() => {
           els.saveStatus.textContent = "本机已保存";
         }, 900);
+        queueCloudSave();
       } catch (error) {
         console.warn("Failed to save agenda data", error);
         els.saveStatus.textContent = "保存失败";
@@ -3916,14 +4423,19 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function renderAgendaList() {
+      const sortModeActive = mobileSortMode && isMobileViewport();
       els.agendaCount.textContent = `${itemCount()} 个项目`;
+      els.agendaList.classList.toggle("sort-mode", sortModeActive);
+      els.mobileSortToggleBtn?.setAttribute("aria-pressed", String(sortModeActive));
+      els.mobileSortToggleBtn?.classList.toggle("selected", sortModeActive);
       els.agendaList.innerHTML = state.items.map((item, index) => {
         const isSection = item.kind === "section";
         const meta = isSection
           ? "分组标题"
           : `${item.time || "未定时间"} · ${item.duration || "未定时长"} · ${item.person || "未定参与者"}`;
+        const rowType = isSection ? "分组" : "项目";
         return `
-          <div class="agenda-row ${isSection ? "section" : ""} ${editingId === item.id ? "selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
+          <div class="agenda-row ${isSection ? "section" : ""} ${editingId === item.id ? "selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="${sortModeActive ? "false" : "true"}">
             <div class="drag-handle" title="拖动排序" aria-hidden="true">⋮</div>
             <button class="agenda-main button subtle" type="button" data-action="edit" data-id="${escapeHtml(item.id)}">
               <div class="agenda-title">${escapeHtml(item.title || "未命名")}</div>
@@ -3933,12 +4445,37 @@ ${GUEST_PARTICIPATION_NOTE}`,
                 点击编辑
               </span>
             </button>
-            <div class="agenda-actions">
+            <div class="agenda-actions agenda-direct-actions">
               <button class="mini-button" type="button" data-action="duplicate" data-id="${escapeHtml(item.id)}" title="复制该项目" aria-label="复制该项目">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="2"/><path d="M6 14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"/></svg>
               </button>
               <button class="mini-button danger" type="button" data-action="delete" data-id="${escapeHtml(item.id)}" title="删除该项目" aria-label="删除该项目">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <div class="agenda-actions agenda-menu-actions">
+              <button class="mini-button agenda-more-button" type="button" data-action="toggle-menu" data-id="${escapeHtml(item.id)}" title="更多操作" aria-label="更多操作" aria-expanded="false" aria-controls="agenda-menu-${escapeHtml(item.id)}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </button>
+              <div class="agenda-overflow-menu" id="agenda-menu-${escapeHtml(item.id)}" role="menu" hidden aria-hidden="true">
+                <button class="mini-button" type="button" data-action="duplicate" data-id="${escapeHtml(item.id)}" role="menuitem" aria-label="复制${rowType}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="2"/><path d="M6 14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"/></svg>
+                  复制
+                </button>
+                <button class="mini-button danger" type="button" data-action="delete" data-id="${escapeHtml(item.id)}" role="menuitem" aria-label="删除${rowType}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  删除
+                </button>
+              </div>
+            </div>
+            <div class="agenda-mobile-sort" aria-label="${escapeHtml(item.title || rowType)}排序">
+              <button class="agenda-sort-button" type="button" data-action="move-up" data-id="${escapeHtml(item.id)}" ${index === 0 ? "disabled" : ""}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5-6 6"/><path d="m12 5 6 6"/><path d="M12 19V6"/></svg>
+                上移
+              </button>
+              <button class="agenda-sort-button" type="button" data-action="move-down" data-id="${escapeHtml(item.id)}" ${index === state.items.length - 1 ? "disabled" : ""}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-6-6"/><path d="m12 19 6-6"/><path d="M12 5v13"/></svg>
+                下移
               </button>
             </div>
           </div>
@@ -3961,6 +4498,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       renderPreview();
       renderAgendaList();
       renderRuleHint();
+      syncMobileEditorState();
     }
 
     function syncPreviewScale() {
@@ -4039,6 +4577,196 @@ ${GUEST_PARTICIPATION_NOTE}`,
       toastTimer = window.setTimeout(() => els.toast.classList.remove("open"), actionText ? 6500 : 2800);
     }
 
+    function setCloudSyncStatus(status, detail = "") {
+      if (!els.cloudSyncStatus) return;
+      const label = CLOUD_SYNC_STATUS_LABELS[status] || CLOUD_SYNC_STATUS_LABELS.local;
+      els.cloudSyncStatus.textContent = detail === "missing-config" ? "同步失败" : label;
+      els.cloudSyncStatus.dataset.status = status;
+      if (els.cloudSyncVersion) {
+        const version = cloudSyncController?.getVersion?.();
+        const draftId = cloudSyncController?.getDraftId?.();
+        els.cloudSyncVersion.textContent = draftId && version ? `v${version}` : "";
+      }
+      if (detail === "missing-config") {
+        showToast("请先在 js/supabase-config.js 填入 Supabase URL 和 publishable key");
+      }
+    }
+
+    function renderCloudSyncLink(url) {
+      if (els.cloudSyncLink) els.cloudSyncLink.value = url || "";
+      if (els.copySyncLinkBtn) els.copySyncLinkBtn.disabled = !url;
+      if (els.createSyncDraftBtn) {
+        els.createSyncDraftBtn.textContent = url ? "同步草稿已创建" : "创建同步草稿";
+        els.createSyncDraftBtn.disabled = Boolean(url);
+      }
+    }
+
+    function applyCloudDraftPayload(payload) {
+      state = normalizeImportedData(payload);
+      editingId = null;
+      dragId = null;
+      undoDelete = null;
+      autoScheduleAgenda();
+      saveData();
+      renderAll();
+      showToast("已应用云端最新草稿");
+    }
+
+    function queueCloudSave() {
+      cloudSyncController?.scheduleSave();
+    }
+
+    async function createCloudDraft() {
+      if (!cloudSyncController) return;
+      try {
+        await cloudSyncController.createDraft();
+        showToast("同步草稿已创建，可以复制链接到另一台设备");
+      } catch (error) {
+        const missingConfig = error.message === "Supabase sync is not configured";
+        if (!missingConfig) console.error(error);
+        setCloudSyncStatus("error", missingConfig ? "missing-config" : "");
+        if (!missingConfig) showToast("同步草稿创建失败，请稍后重试");
+      }
+    }
+
+    async function copyCloudSyncLink() {
+      const link = cloudSyncController?.getDraftLink();
+      if (!link) {
+        showToast("请先创建同步草稿");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(link);
+      } catch (error) {
+        els.cloudSyncLink?.select();
+        document.execCommand("copy");
+      }
+      showToast("同步链接已复制");
+    }
+
+    function initCloudSync() {
+      const initialDraftId = CloudSync.getDraftIdFromSearch(window.location.search);
+      cloudSyncController = CloudSync.createAgendaCloudSync({
+        config: window.TMAgendaSupabaseConfig,
+        supabaseLibrary: window.supabase,
+        storage: localStorage,
+        initialDraftId,
+        getPayload: () => clone(state),
+        normalizeRemotePayload: normalizeImportedData,
+        applyRemotePayload: applyCloudDraftPayload,
+        setStatus: setCloudSyncStatus,
+        renderLink: renderCloudSyncLink,
+        nowHref: () => window.location.href,
+        setBrowserUrl: (url) => window.history.replaceState(null, "", url),
+        online: () => navigator.onLine,
+        onError: (error) => {
+          console.error(error);
+          showToast(navigator.onLine ? "云端同步失败" : "当前离线，恢复网络后会继续同步");
+        }
+      });
+      window.addEventListener("online", () => cloudSyncController?.retryPendingSave());
+      window.addEventListener("offline", () => {
+        if (cloudSyncController?.getDraftId?.()) setCloudSyncStatus("offline");
+      });
+      cloudSyncController.init().catch((error) => {
+        console.error(error);
+        setCloudSyncStatus(navigator.onLine ? "error" : "offline");
+        showToast("云端草稿加载失败，已保留本机内容");
+      });
+    }
+
+    function isMobileViewport() {
+      return window.matchMedia("(max-width: 620px)").matches;
+    }
+
+    function updateMobileQuickAddVisibility(targetId = activeMobilePanel) {
+      if (!els.mobileQuickAddBtn) return;
+      const shouldShow = isMobileViewport()
+        && targetId === "agendaPanel"
+        && !mobileSortMode
+        && els.agendaFormCard.hidden;
+      els.mobileQuickAddBtn.hidden = !shouldShow;
+    }
+
+    function rememberAgendaTrigger() {
+      lastAgendaTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
+
+    function restoreAgendaTriggerFocus() {
+      if (!isMobileViewport() || !lastAgendaTrigger || !document.contains(lastAgendaTrigger)) {
+        lastAgendaTrigger = null;
+        return;
+      }
+      try {
+        lastAgendaTrigger.focus({ preventScroll: true });
+      } catch (error) {
+        lastAgendaTrigger.focus();
+      }
+      lastAgendaTrigger = null;
+    }
+
+    function syncMobileEditorState() {
+      const isOpen = !els.agendaFormCard.hidden;
+      const isMobileOpen = isOpen && isMobileViewport();
+      document.body.classList.toggle("mobile-agenda-editor-open", isMobileOpen);
+      if (els.mobileEditorScrim) els.mobileEditorScrim.hidden = !isMobileOpen;
+      if (isMobileOpen) {
+        els.agendaFormCard.setAttribute("role", "dialog");
+        els.agendaFormCard.setAttribute("aria-modal", "true");
+        els.agendaFormCard.setAttribute("aria-labelledby", "agendaFormTitle");
+      } else {
+        els.agendaFormCard.removeAttribute("role");
+        els.agendaFormCard.removeAttribute("aria-modal");
+        els.agendaFormCard.removeAttribute("aria-labelledby");
+      }
+      updateMobileQuickAddVisibility();
+    }
+
+    function focusAgendaTitle() {
+      window.requestAnimationFrame(() => {
+        try {
+          els.agendaTitle.focus({ preventScroll: isMobileViewport() });
+        } catch (error) {
+          els.agendaTitle.focus();
+        }
+      });
+    }
+
+    function closeAgendaMenus() {
+      els.agendaList.querySelectorAll(".agenda-row.actions-open").forEach((row) => {
+        row.classList.remove("actions-open");
+        row.querySelector(".agenda-more-button")?.setAttribute("aria-expanded", "false");
+        const menu = row.querySelector(".agenda-overflow-menu");
+        if (menu) {
+          menu.hidden = true;
+          menu.setAttribute("aria-hidden", "true");
+        }
+      });
+    }
+
+    function toggleAgendaMenu(button) {
+      const row = button.closest(".agenda-row");
+      const willOpen = row && !row.classList.contains("actions-open");
+      closeAgendaMenus();
+      if (willOpen) {
+        row.classList.add("actions-open");
+        button.setAttribute("aria-expanded", "true");
+        const menu = row.querySelector(".agenda-overflow-menu");
+        if (menu) {
+          menu.hidden = false;
+          menu.setAttribute("aria-hidden", "false");
+        }
+      }
+    }
+
+    function setMobileSortMode(enabled) {
+      mobileSortMode = enabled && isMobileViewport();
+      closeAgendaMenus();
+      renderAgendaList();
+      updateMobileQuickAddVisibility();
+      showToast(mobileSortMode ? "排序模式已开启" : "排序模式已关闭");
+    }
+
     function syncAgendaKindFields() {
       const isSection = els.agendaKind.value === "section";
       [els.agendaTime, els.agendaDuration, els.agendaPerson, els.agendaDetail].forEach((input) => {
@@ -4050,6 +4778,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function openAgendaForm(kind = "item") {
+      rememberAgendaTrigger();
       editingId = null;
       els.agendaFormCard.hidden = false;
       els.agendaKind.value = kind;
@@ -4062,7 +4791,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.saveAgendaBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>${kind === "section" ? "保存分组" : "保存项目"}`;
       renderAgendaList();
       renderRuleHint();
-      els.agendaTitle.focus();
+      syncMobileEditorState();
+      focusAgendaTitle();
     }
 
     function clearAgendaForm() {
@@ -4078,11 +4808,14 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>保存项目';
       renderAgendaList();
       renderRuleHint();
+      syncMobileEditorState();
+      restoreAgendaTriggerFocus();
     }
 
     function editAgendaItem(id) {
       const item = state.items.find((entry) => entry.id === id);
       if (!item) return;
+      rememberAgendaTrigger();
       editingId = id;
       els.agendaFormCard.hidden = false;
       els.agendaKind.value = item.kind || "item";
@@ -4092,10 +4825,11 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.agendaPerson.value = item.person || "";
       els.agendaDetail.value = item.detail || "";
       syncAgendaKindFields();
-      els.saveAgendaBtn.textContent = "保存修改";
+      els.saveAgendaBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>保存修改';
       renderAgendaList();
       renderRuleHint();
-      els.agendaTitle.focus();
+      syncMobileEditorState();
+      focusAgendaTitle();
     }
 
     function readAgendaForm() {
@@ -4176,6 +4910,18 @@ ${GUEST_PARTICIPATION_NOTE}`,
       showToast("顺序已更新");
     }
 
+    function moveAgendaItem(id, direction) {
+      const sourceIndex = state.items.findIndex((item) => item.id === id);
+      const targetIndex = sourceIndex + direction;
+      if (sourceIndex < 0 || targetIndex < 0 || targetIndex >= state.items.length) return;
+      const [moved] = state.items.splice(sourceIndex, 1);
+      state.items.splice(targetIndex, 0, moved);
+      autoScheduleAgenda();
+      saveData();
+      renderAll();
+      showToast(direction < 0 ? "项目已上移" : "项目已下移");
+    }
+
     function autoScheduleAgenda() {
       let cursor = timeToMinutes(state.startTime);
       let changed = false;
@@ -4246,6 +4992,156 @@ ${GUEST_PARTICIPATION_NOTE}`,
         document.execCommand("copy");
         temp.remove();
         showToast("文字版议程已复制");
+      }
+    }
+
+    function exportBaseName() {
+      const meetingNo = String(state.meetingNo || "agenda").trim() || "agenda";
+      const safeMeetingNo = meetingNo.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "");
+      return `畅言中文第${safeMeetingNo}期议程`;
+    }
+
+    function setPdfExportBusy(isBusy) {
+      [els.exportPdfBtn, els.exportPdfBtnSide].filter(Boolean).forEach((button) => {
+        if (!button.dataset.idleLabel) button.dataset.idleLabel = button.textContent.trim();
+        button.disabled = isBusy;
+        button.textContent = isBusy ? "生成中..." : button.dataset.idleLabel;
+      });
+    }
+
+    function supportsDownloadAttribute() {
+      return "download" in HTMLAnchorElement.prototype;
+    }
+
+    function openPendingExportWindow(label) {
+      try {
+        const previewWindow = window.open("", "_blank");
+        if (!previewWindow) return null;
+        previewWindow.opener = null;
+        previewWindow.document.title = `正在生成${label}`;
+        previewWindow.document.body.style.cssText = "margin:0;padding:24px;font:16px system-ui,sans-serif;background:#fffdf8;color:#211a15;";
+        previewWindow.document.body.textContent = `正在生成${label}，完成后会在这里打开预览。`;
+        return previewWindow;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function releaseLastExportUrl() {
+      if (lastExportUrl) {
+        URL.revokeObjectURL(lastExportUrl);
+        lastExportUrl = null;
+      }
+    }
+
+    function saveBlobForDevice(blob, filename, options = null) {
+      const exportOptions = options || {};
+      releaseLastExportUrl();
+      const url = URL.createObjectURL(blob);
+      lastExportUrl = url;
+      const openPreview = () => window.open(url, "_blank", "noopener");
+      const kind = exportOptions.kind || "文件";
+      const generatedMessage = exportOptions.successMessage || `${kind}已生成；手机上也可以打开预览保存`;
+      const previewMessage = exportOptions.previewMessage || `${kind}已打开预览页，请用系统分享或保存到文件`;
+      if (exportOptions.previewWindow && !exportOptions.previewWindow.closed) {
+        exportOptions.previewWindow.location.href = url;
+        showToast(previewMessage);
+      } else if (supportsDownloadAttribute()) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.rel = "noopener";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        showToast(generatedMessage, "打开预览", openPreview);
+      } else {
+        openPreview();
+        showToast(previewMessage);
+      }
+      window.setTimeout(() => {
+        if (lastExportUrl === url) releaseLastExportUrl();
+      }, 120000);
+    }
+
+    function waitForPrintAssets() {
+      const imageTasks = Array.from(els.printPage.querySelectorAll("img")).map((image) => {
+        if (image.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          image.addEventListener("load", resolve, { once: true });
+          image.addEventListener("error", resolve, { once: true });
+        });
+      });
+      const fontTask = document.fonts?.ready?.catch(() => {}) || Promise.resolve();
+      return Promise.all([fontTask, ...imageTasks]);
+    }
+
+    function nextFrame() {
+      return new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+    }
+
+    async function capturePrintPageCanvas() {
+      if (!window.html2canvas) throw new Error("PDF 导出组件还没有加载完成，请稍后重试");
+      renderPreview();
+      await waitForPrintAssets();
+      fitFlowLayout();
+      await nextFrame();
+      els.printPage.classList.add("exporting-snapshot");
+      await nextFrame();
+      try {
+        const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+        return await window.html2canvas(els.printPage, {
+          backgroundColor: "#fffdf8",
+          scale,
+          useCORS: true,
+          logging: false,
+          width: els.printPage.offsetWidth,
+          height: els.printPage.offsetHeight,
+          windowWidth: els.printPage.scrollWidth,
+          windowHeight: els.printPage.scrollHeight
+        });
+      } finally {
+        els.printPage.classList.remove("exporting-snapshot");
+        await nextFrame();
+      }
+    }
+
+    function canvasToBlob(canvas, type = "image/png") {
+      return new Promise((resolve) => canvas.toBlob(resolve, type));
+    }
+
+    async function exportCanvasAsPng(canvas, previewWindow = null, successMessage = null) {
+      const blob = await canvasToBlob(canvas, "image/png");
+      if (!blob) throw new Error("PNG 导出失败");
+      saveBlobForDevice(blob, `${exportBaseName()}.png`, { kind: "PNG", previewWindow, successMessage });
+    }
+
+    async function exportAgendaPdf() {
+      let canvas = null;
+      const previewWindow = supportsDownloadAttribute() ? null : openPendingExportWindow("PDF");
+      setPdfExportBusy(true);
+      try {
+        canvas = await capturePrintPageCanvas();
+        const jsPDF = window.jspdf?.jsPDF;
+        if (!jsPDF) throw new Error("PDF 生成组件还没有加载完成，请稍后重试");
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 210, 297, undefined, "FAST");
+        saveBlobForDevice(pdf.output("blob"), `${exportBaseName()}.pdf`, { kind: "PDF", previewWindow });
+      } catch (error) {
+        if (previewWindow && !previewWindow.closed) previewWindow.close();
+        console.error(error);
+        if (canvas) {
+          try {
+            await exportCanvasAsPng(canvas, null, "PDF 生成失败，已改为导出 PNG；手机上也可以打开预览保存");
+          } catch (pngError) {
+            console.error(pngError);
+            showToast(error.message || "PDF 导出失败，请稍后重试");
+          }
+        } else {
+          showToast(error.message || "PDF 导出失败，请稍后重试");
+        }
+      } finally {
+        setPdfExportBusy(false);
       }
     }
 
@@ -4344,6 +5240,61 @@ ${GUEST_PARTICIPATION_NOTE}`,
       }
     }
 
+    function setActiveMobileNav(targetId) {
+      activeMobilePanel = targetId || activeMobilePanel;
+      els.mobileNavLinks.forEach((link) => {
+        const isActive = link.dataset.mobileNav === targetId;
+        if (isActive) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+      updateMobileQuickAddVisibility(activeMobilePanel);
+    }
+
+    function bindMobileNavState() {
+      els.mobileNavLinks.forEach((link) => {
+        link.addEventListener("click", () => setActiveMobileNav(link.dataset.mobileNav));
+      });
+      const hashTarget = window.location.hash.slice(1);
+      if (Array.from(els.mobileNavLinks).some((link) => link.dataset.mobileNav === hashTarget)) {
+        setActiveMobileNav(hashTarget);
+      } else {
+        setActiveMobileNav(activeMobilePanel);
+      }
+      window.addEventListener("hashchange", () => {
+        const nextTarget = window.location.hash.slice(1);
+        if (Array.from(els.mobileNavLinks).some((link) => link.dataset.mobileNav === nextTarget)) {
+          setActiveMobileNav(nextTarget);
+        }
+      });
+
+      const panels = Array.from(els.mobileNavLinks)
+        .map((link) => document.querySelector(`#${link.dataset.mobileNav}`))
+        .filter(Boolean);
+      if (!panels.length) return;
+
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver((entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (visible?.target?.id) setActiveMobileNav(visible.target.id);
+        }, { rootMargin: "-20% 0px -55% 0px", threshold: [0.05, 0.25, 0.5] });
+        panels.forEach((panel) => observer.observe(panel));
+        return;
+      }
+
+      window.addEventListener("scroll", () => {
+        const current = panels.reduce((best, panel) => {
+          const distance = Math.abs(panel.getBoundingClientRect().top);
+          return !best || distance < best.distance ? { id: panel.id, distance } : best;
+        }, null);
+        if (current) setActiveMobileNav(current.id);
+      }, { passive: true });
+    }
+
     function bindEvents() {
       document.querySelectorAll("[data-field]").forEach((input) => {
         input.addEventListener("input", () => {
@@ -4358,6 +5309,11 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
       els.addAgendaItemBtn.addEventListener("click", () => openAgendaForm("item"));
       els.addAgendaSectionBtn.addEventListener("click", () => openAgendaForm("section"));
+      els.mobileQuickAddBtn?.addEventListener("click", () => {
+        document.querySelector("#agendaPanel")?.scrollIntoView({ block: "start" });
+        openAgendaForm("item");
+      });
+      els.mobileSortToggleBtn?.addEventListener("click", () => setMobileSortMode(!mobileSortMode));
       els.agendaKind.addEventListener("change", () => {
         syncAgendaKindFields();
         renderRuleHint();
@@ -4366,6 +5322,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.agendaDuration.addEventListener("input", renderRuleHint);
       els.saveAgendaBtn.addEventListener("click", saveAgendaFromForm);
       els.clearAgendaFormBtn.addEventListener("click", clearAgendaForm);
+      els.cancelAgendaBtn?.addEventListener("click", clearAgendaForm);
+      els.mobileEditorScrim?.addEventListener("click", clearAgendaForm);
       document.querySelectorAll("[data-image-field]").forEach((input) => {
         input.addEventListener("change", () => handleImageUpload(input));
       });
@@ -4393,11 +5351,23 @@ ${GUEST_PARTICIPATION_NOTE}`,
         if (!button) return;
         const id = button.dataset.id;
         const action = button.dataset.action;
+        if (action === "toggle-menu") {
+          event.stopPropagation();
+          toggleAgendaMenu(button);
+          return;
+        }
+        closeAgendaMenus();
         if (action === "edit") editAgendaItem(id);
         if (action === "delete") deleteAgendaItem(id);
         if (action === "duplicate") duplicateAgendaItem(id);
+        if (action === "move-up") moveAgendaItem(id, -1);
+        if (action === "move-down") moveAgendaItem(id, 1);
       });
       els.agendaList.addEventListener("dragstart", (event) => {
+        if (mobileSortMode && isMobileViewport()) {
+          event.preventDefault();
+          return;
+        }
         const row = event.target.closest(".agenda-row");
         if (!row) return;
         dragId = row.dataset.id;
@@ -4426,18 +5396,39 @@ ${GUEST_PARTICIPATION_NOTE}`,
         document.querySelectorAll(".agenda-row").forEach((row) => row.classList.remove("dragging", "drop-target"));
       });
 
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".agenda-menu-actions")) closeAgendaMenus();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        closeAgendaMenus();
+        if (!els.agendaFormCard.hidden) clearAgendaForm();
+      });
+      bindMobileNavState();
+      updateMobileQuickAddVisibility();
+      [els.exportPdfBtn, els.exportPdfBtnSide].filter(Boolean).forEach((button) => button.addEventListener("click", exportAgendaPdf));
       [els.printBtn, els.printBtnSide].forEach((button) => button.addEventListener("click", () => window.print()));
       [els.copyBtn, els.copyBtnTop].forEach((button) => button.addEventListener("click", copyPlainText));
       els.exportJsonBtn.addEventListener("click", downloadJson);
       els.importJsonBtn.addEventListener("click", () => els.jsonImportInput.click());
       els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
+      els.createSyncDraftBtn?.addEventListener("click", createCloudDraft);
+      els.copySyncLinkBtn?.addEventListener("click", copyCloudSyncLink);
       els.openTimekeeperBtn.addEventListener("click", openTimekeeper);
-      window.addEventListener("resize", syncPreviewScale);
+      window.addEventListener("resize", () => {
+        if (!isMobileViewport() && mobileSortMode) {
+          mobileSortMode = false;
+          renderAgendaList();
+        }
+        syncMobileEditorState();
+        syncPreviewScale();
+      });
     }
 
     bindEvents();
     if (autoScheduleAgenda()) saveData();
     renderAll();
+    initCloudSync();
   </script>
 </body>
 </html>

@@ -29,7 +29,7 @@ function fixedInfoDetails(summaryText) {
 }
 
 function exportPanelTemplate() {
-  const match = source.match(/<section class="surface-panel export-panel" aria-labelledby="templateTitle">([\s\S]*?)<\/section>/);
+  const match = source.match(/<section class="surface-panel export-panel"[^>]*aria-labelledby="templateTitle"[^>]*>([\s\S]*?)<\/section>/);
   assert.ok(match, "export panel should use the optimized export-panel layout");
   return match[1];
 }
@@ -39,6 +39,29 @@ function cssRule(selector) {
   const match = source.match(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`));
   assert.ok(match, `${selector} CSS rule should exist`);
   return match[1];
+}
+
+function cssMediaBlock(query) {
+  const blocks = [];
+  let searchFrom = 0;
+  while (true) {
+    const start = source.indexOf(`@media (${query})`, searchFrom);
+    if (start === -1) break;
+    const open = source.indexOf("{", start);
+    let depth = 0;
+    for (let index = open; index < source.length; index += 1) {
+      const char = source[index];
+      if (char === "{") depth += 1;
+      if (char === "}") depth -= 1;
+      if (depth === 0) {
+        blocks.push(source.slice(open + 1, index));
+        searchFrom = index + 1;
+        break;
+      }
+    }
+  }
+  assert.ok(blocks.length, `${query} media query should exist`);
+  return blocks.join("\n");
 }
 
 function functionSource(name) {
@@ -282,6 +305,63 @@ test("printable footer keeps guest participation beside the live voting QR", () 
   assert.match(guestCardRule, /grid-template-columns:\s*minmax\(0,\s*1fr\) 78px;[\s\S]*?align-items:\s*center;/, "guest card should reserve a right column for voting QR");
   assert.match(voteCardRule, /width:\s*78px;[\s\S]*?border-radius:\s*9px;[\s\S]*?background:\s*#ffffff;/, "vote QR should sit in a small white rounded card");
   assert.match(voteImageRule, /width:\s*64px;[\s\S]*?height:\s*64px;/, "vote QR image should stay compact in the footer");
+});
+
+test("agenda generator adds task-oriented mobile navigation and bottom sheet editing", () => {
+  const mobileCss = cssMediaBlock("max-width: 620px");
+
+  for (const id of ["meetingInfoPanel", "agendaPanel", "previewPanel", "exportPanel"]) {
+    assert.match(source, new RegExp(`id="${id}"`), `${id} anchor should exist for mobile task navigation`);
+    assert.match(source, new RegExp(`data-mobile-nav="${id}"`), `${id} should be represented in the mobile taskbar`);
+  }
+  assert.match(source, /class="mobile-taskbar"/, "mobile taskbar should be rendered outside the desktop editor flow");
+  assert.match(source, /id="mobileQuickAddBtn"/, "mobile quick add button should exist");
+  assert.match(source, /id="mobileQuickAddBtn"[^>]*hidden/, "mobile quick add should start hidden until the agenda tab is active");
+  assert.match(source, /id="mobileEditorScrim"/, "mobile bottom sheet should have a dismiss scrim");
+  assert.match(source, /id="cancelAgendaBtn"/, "mobile editor should expose an explicit cancel button");
+
+  assert.match(mobileCss, /\.mobile-taskbar\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/, "mobile taskbar should be fixed with four task entries");
+  assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*calc\(82px/, "quick add should sit above the taskbar");
+  assert.match(mobileCss, /body\.mobile-agenda-editor-open \.mobile-taskbar\s*\{[\s\S]*?display:\s*none;/, "taskbar should not cover mobile sheet save/cancel actions");
+  assert.match(mobileCss, /\.agenda-form-card\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*0;[\s\S]*?max-height:\s*min\(88dvh,\s*720px\);/, "agenda form should become a mobile bottom sheet");
+  assert.match(mobileCss, /\.agenda-form-card \.actions-row\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?bottom:\s*0;/, "mobile save/cancel actions should stay fixed at the bottom of the sheet");
+});
+
+test("agenda generator mobile list hides risky actions behind a menu and adds sort buttons", () => {
+  const mobileCss = cssMediaBlock("max-width: 620px");
+  const renderList = functionBlock("renderAgendaList");
+  const bindEventsSource = functionBlock("bindEvents");
+
+  assert.match(renderList, /agenda-direct-actions/, "desktop duplicate/delete buttons should remain as direct actions");
+  assert.match(renderList, /agenda-menu-actions/, "mobile agenda rows should render a compact more menu");
+  assert.match(renderList, /data-action="toggle-menu"/, "mobile rows should have a menu toggle action");
+  assert.match(renderList, /aria-expanded="false"[\s\S]*?aria-controls="agenda-menu-\$\{escapeHtml\(item\.id\)\}"/, "menu toggles should expose expanded state and controls");
+  assert.match(renderList, /class="agenda-overflow-menu"[\s\S]*?hidden aria-hidden="true"/, "overflow menu content should be hidden from focus and screen readers by default");
+  assert.match(renderList, /data-action="move-up"[\s\S]*?上移/, "mobile sort mode should render an up action");
+  assert.match(renderList, /data-action="move-down"[\s\S]*?下移/, "mobile sort mode should render a down action");
+  assert.match(source, /function moveAgendaItem\(id,\s*direction\)/, "mobile sort controls should use a dedicated move helper");
+  assert.match(bindEventsSource, /setMobileSortMode\(!mobileSortMode\)/, "sort toggle should switch mobile sort mode");
+  assert.match(bindEventsSource, /toggleAgendaMenu\(button\)/, "menu toggle should not reuse edit/delete handling");
+  assert.match(bindEventsSource, /mobileSortMode && isMobileViewport\(\)/, "desktop drag should not stay disabled after leaving mobile sort mode");
+  assert.match(bindEventsSource, /event\.key !== "Escape"[\s\S]*?clearAgendaForm\(\)/, "Escape should close mobile editor and menus");
+  assert.match(bindEventsSource, /moveAgendaItem\(id,\s*-1\)/, "up action should move the agenda item up");
+  assert.match(bindEventsSource, /moveAgendaItem\(id,\s*1\)/, "down action should move the agenda item down");
+
+  assert.match(mobileCss, /\.agenda-direct-actions\s*\{[\s\S]*?display:\s*none;/, "mobile should hide direct duplicate/delete actions");
+  assert.match(mobileCss, /\.agenda-menu-actions\s*\{[\s\S]*?display:\s*flex;/, "mobile should show the compact menu action");
+  assert.match(mobileCss, /\.agenda-list\.sort-mode \.agenda-mobile-sort\s*\{[\s\S]*?display:\s*grid;/, "sort mode should reveal explicit up/down controls");
+});
+
+test("agenda generator gives the mobile editor dialog semantics and scoped quick add", () => {
+  const syncMobileEditorState = functionBlock("syncMobileEditorState");
+  const updateQuickAdd = functionBlock("updateMobileQuickAddVisibility");
+  const setActiveMobileNav = functionBlock("setActiveMobileNav");
+
+  assert.match(syncMobileEditorState, /setAttribute\("role",\s*"dialog"\)/, "mobile sheet should become a dialog while open");
+  assert.match(syncMobileEditorState, /setAttribute\("aria-modal",\s*"true"\)/, "mobile sheet should be modal for assistive technology while open");
+  assert.match(syncMobileEditorState, /removeAttribute\("role"\)/, "dialog semantics should be removed outside the mobile open state");
+  assert.match(updateQuickAdd, /targetId === "agendaPanel"[\s\S]*?!mobileSortMode[\s\S]*?els\.agendaFormCard\.hidden/, "quick add should only appear in the agenda task when safe");
+  assert.match(setActiveMobileNav, /updateMobileQuickAddVisibility\(activeMobilePanel\)/, "mobile task changes should refresh quick add visibility");
 });
 
 test("screen preview uses the same fixed artboard model as print", () => {
@@ -531,12 +611,63 @@ test("export panel separates print actions from json backup actions", () => {
   const panel = exportPanelTemplate();
   const groupsRule = cssRule(".export-action-groups");
   const actionsRule = cssRule(".export-actions");
+  const primaryActionsRule = cssRule(".export-actions.primary");
 
   assert.ok(panel.includes("导出与备份"), "export panel title should be clearer than only 导出");
   assert.ok(panel.includes("打印输出"), "print/copy actions should have their own group");
   assert.ok(panel.includes("数据备份"), "JSON actions should have their own group");
-  assert.match(panel, /<div class="export-actions primary">[\s\S]*?id="printBtnSide"[\s\S]*?id="copyBtn"[\s\S]*?<\/div>/, "print and copy should sit together");
+  assert.match(panel, /<div class="export-actions primary">[\s\S]*?id="exportPdfBtnSide"[\s\S]*?id="printBtnSide"[\s\S]*?id="copyBtn"[\s\S]*?<\/div>/, "PDF, print, and copy should sit together");
+  assert.match(source, /id="exportPdfBtn"/, "preview toolbar should include a PDF export action beside print");
   assert.match(panel, /<div class="export-actions backup">[\s\S]*?id="exportJsonBtn"[\s\S]*?id="importJsonBtn"[\s\S]*?<\/div>/, "JSON export/import should sit together");
   assert.match(groupsRule, /display:\s*grid;[\s\S]*?gap:\s*14px;/, "export groups should be visually separated");
   assert.match(actionsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "paired export buttons should align in two columns");
+  assert.match(primaryActionsRule, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/, "primary export buttons should align in three columns on desktop");
+});
+
+test("agenda generator exposes multi-device Supabase draft sync controls", () => {
+  const panel = exportPanelTemplate();
+  const saveDataSource = functionBlock("saveData");
+  const initCloudSyncSource = functionBlock("initCloudSync");
+
+  assert.match(source, /js\/supabase-config\.js/, "Supabase config should be loaded before app initialization");
+  assert.match(source, /js\/vendor\/supabase-js-v2\.umd\.min\.js/, "Supabase JS v2 should be loaded as a browser script");
+  assert.match(source, /js\/agenda-cloud-sync\.js/, "cloud sync controller should be loaded");
+  assert.ok(existsSync(new URL("../js/supabase-config.js", import.meta.url)), "Supabase config placeholder should exist");
+  assert.ok(existsSync(new URL("../js/vendor/supabase-js-v2.umd.min.js", import.meta.url)), "local Supabase JS vendor file should exist");
+  assert.ok(existsSync(new URL("../js/agenda-cloud-sync.js", import.meta.url)), "cloud sync module should exist");
+
+  assert.match(panel, /id="cloudSyncPanel"[\s\S]*?多设备同步/, "export panel should include a multi-device sync section");
+  assert.match(panel, /id="createSyncDraftBtn"[\s\S]*?创建同步草稿/, "sync panel should create a cloud draft");
+  assert.match(panel, /id="copySyncLinkBtn"[\s\S]*?复制同步链接/, "sync panel should copy the draft link");
+  assert.match(panel, /id="cloudSyncStatus"[\s\S]*?本机草稿/, "sync panel should show local/sync status");
+  assert.match(saveDataSource, /queueCloudSave\(\)/, "local saves should enter the cloud save debounce when a draft is active");
+  assert.match(initCloudSyncSource, /CloudSync\.getDraftIdFromSearch\(window\.location\.search\)/, "draft URL parameter should bootstrap cloud loading");
+  assert.match(initCloudSyncSource, /applyRemotePayload:\s*applyCloudDraftPayload/, "remote draft payloads should update the editor state");
+});
+
+test("agenda generator JSON import still enters the cloud sync save path", () => {
+  const importJsonSource = functionBlock("importJson");
+  const saveDataSource = functionBlock("saveData");
+
+  assert.match(importJsonSource, /saveData\(\);[\s\S]*?renderAll\(\)/, "JSON import should keep using the common save/render path");
+  assert.match(saveDataSource, /queueCloudSave\(\)/, "the common save path should queue cloud sync after localStorage");
+});
+
+test("agenda generator exports a mobile-friendly image PDF from the A4 preview", () => {
+  const capturePrintPageCanvas = functionBlock("capturePrintPageCanvas");
+  const exportAgendaPdf = functionBlock("exportAgendaPdf");
+  const saveBlobForDevice = functionBlock("saveBlobForDevice");
+
+  assert.match(source, /js\/vendor\/html2canvas-1\.4\.1\.min\.js/, "html2canvas should be loaded locally for image capture");
+  assert.match(source, /js\/vendor\/jspdf-2\.5\.1\.umd\.min\.js/, "jsPDF should be loaded locally for PDF creation");
+  assert.ok(existsSync(new URL("../js/vendor/html2canvas-1.4.1.min.js", import.meta.url)), "local html2canvas vendor file should exist");
+  assert.ok(existsSync(new URL("../js/vendor/jspdf-2.5.1.umd.min.js", import.meta.url)), "local jsPDF vendor file should exist");
+  assert.match(capturePrintPageCanvas, /window\.html2canvas\(els\.printPage/, "PDF export should render the existing A4 preview node");
+  assert.match(capturePrintPageCanvas, /classList\.add\("exporting-snapshot"\)/, "capture should temporarily disable preview scaling");
+  assert.match(exportAgendaPdf, /new jsPDF\(\{ orientation: "portrait", unit: "mm", format: "a4", compress: true \}\)/, "PDF should be a single portrait A4 page");
+  assert.match(exportAgendaPdf, /addImage\([\s\S]*?0,\s*0,\s*210,\s*297/, "captured preview image should fill the A4 page");
+  assert.match(exportAgendaPdf, /exportCanvasAsPng\(canvas/, "PDF failures after capture should fall back to PNG export");
+  assert.match(saveBlobForDevice, /supportsDownloadAttribute\(\)[\s\S]*?link\.download = filename/, "download-capable browsers should receive a file download");
+  assert.match(saveBlobForDevice, /window\.open\(url,\s*"_blank"/, "non-download or toast fallback should open a preview tab");
+  assert.match(source, /畅言中文第\$\{safeMeetingNo\}期议程/, "export filename should follow the requested meeting title format");
 });
