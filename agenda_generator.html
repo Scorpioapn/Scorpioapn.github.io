@@ -6,6 +6,60 @@
   <link rel="icon" href="data:," />
   <title>畅言中文议程生成器</title>
   <style>
+    @font-face {
+      font-family: 'TMAgendaSans';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 400;
+      src: url('assets/fonts/noto-sans-sc/noto-sans-sc-latin-400-normal.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    @font-face {
+      font-family: 'TMAgendaSans';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 700;
+      src: url('assets/fonts/noto-sans-sc/noto-sans-sc-latin-700-normal.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    @font-face {
+      font-family: 'TMAgendaSans';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 900;
+      src: url('assets/fonts/noto-sans-sc/noto-sans-sc-latin-900-normal.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    @font-face {
+      font-family: 'TMAgendaSans';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 400;
+      src: url('assets/fonts/noto-sans-sc/noto-sans-sc-chinese-simplified-400-normal.woff2') format('woff2');
+      unicode-range: U+2E80-2EFF, U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+    }
+
+    @font-face {
+      font-family: 'TMAgendaSans';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 700;
+      src: url('assets/fonts/noto-sans-sc/noto-sans-sc-chinese-simplified-700-normal.woff2') format('woff2');
+      unicode-range: U+2E80-2EFF, U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+    }
+
+    @font-face {
+      font-family: 'TMAgendaSans';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 900;
+      src: url('assets/fonts/noto-sans-sc/noto-sans-sc-chinese-simplified-900-normal.woff2') format('woff2');
+      unicode-range: U+2E80-2EFF, U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+    }
+
     :root {
       color-scheme: light;
       --md-primary: #00527a;
@@ -59,8 +113,8 @@
       --sidebar-gap: 12px;
       --sidebar-card-x: 14px;
       --sidebar-card-y: 10px;
-      --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
-      --font-display: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+      --font-ui: 'TMAgendaSans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      --font-display: 'TMAgendaSans', "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
       --font-number: "DIN Alternate", "Segoe UI", "Roboto Mono", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
     }
 
@@ -3523,6 +3577,7 @@
   <script src="js/supabase-config.js"></script>
   <script src="js/vendor/supabase-js-v2.umd.min.js"></script>
   <script src="js/agenda-cloud-sync.js"></script>
+  <script src="js/agenda-pdf-export.js"></script>
   <script src="js/vendor/html2canvas-1.4.1.min.js"></script>
   <script src="js/vendor/jspdf-2.5.1.umd.min.js"></script>
   <script>
@@ -3532,6 +3587,7 @@
     const AgendaSchema = window.TMAgendaSchema;
     const CloudSync = window.TMAgendaCloudSync;
     const TimeRules = window.TMTimeRules;
+    const PdfExport = window.TMAgendaPdfExport;
     const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = [
       { name: "事务官宣布会议规则", plannedMinutes: 1, durationLabel: "1 分钟" },
       { name: "主席致词", plannedMinutes: 3, durationLabel: "3 分钟" },
@@ -5113,6 +5169,45 @@ ${GUEST_PARTICIPATION_NOTE}`,
       }));
     }
 
+    async function buildServerPdfPayload() {
+      if (!PdfExport?.buildServerPdfPayload) {
+        throw new Error("PDF 生成组件还没有加载完成，请稍后重试");
+      }
+      await waitForPrintAssets(els.printPage);
+      fitFlowLayout();
+      await nextFrame();
+      return await PdfExport.buildServerPdfPayload({
+        printPage: els.printPage,
+        cssText: readStylesheetText(),
+        fileName: `${exportBaseName()}.pdf`,
+        baseHref: window.location.href,
+        imageSrcToDataUrl,
+        serializer: new XMLSerializer()
+      });
+    }
+
+    async function sendAgendaPdfToServer(previewWindow) {
+      const payload = await buildServerPdfPayload();
+      const { endpoint, options } = PdfExport.createServerPdfRequestOptions(payload);
+      const response = await fetch(endpoint, options);
+      if (!response.ok) {
+        let detail = "";
+        try {
+          detail = (await response.json()).error || "";
+        } catch (error) {
+          detail = "";
+        }
+        throw new Error(detail || `矢量 PDF 生成失败（${response.status}）`);
+      }
+      const blob = await response.blob();
+      if (!blob || !blob.size) throw new Error("PDF 生成失败，请稍后重试");
+      saveBlobForDevice(blob, payload.fileName, {
+        kind: "PDF",
+        previewWindow,
+        successMessage: "矢量 PDF 已生成；手机上也可以打开预览保存"
+      });
+    }
+
     async function renderPrintPageDomCanvas(options) {
       const exportOptions = options || {};
       const scale = exportOptions.scale || Math.min(3, Math.max(2, window.devicePixelRatio || 1));
@@ -5189,17 +5284,19 @@ ${GUEST_PARTICIPATION_NOTE}`,
       saveBlobForDevice(blob, `${exportBaseName()}.png`, { kind: "PNG", previewWindow, successMessage });
     }
 
-    async function exportAgendaPdf() {
+    async function exportImagePdfFallback(previewWindow, reason) {
       let canvas = null;
-      const previewWindow = supportsDownloadAttribute() ? null : openPendingExportWindow("PDF");
-      setPdfExportBusy(true);
       try {
         canvas = await capturePrintPageCanvas();
         const jsPDF = window.jspdf?.jsPDF;
         if (!jsPDF) throw new Error("PDF 生成组件还没有加载完成，请稍后重试");
         const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
         pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 210, 297, undefined, "FAST");
-        saveBlobForDevice(pdf.output("blob"), `${exportBaseName()}.pdf`, { kind: "PDF", previewWindow });
+        saveBlobForDevice(pdf.output("blob"), `${exportBaseName()}.pdf`, {
+          kind: "PDF",
+          previewWindow,
+          successMessage: "矢量 PDF 生成失败，已改为导出兼容 PDF；手机上也可以打开预览保存"
+        });
       } catch (error) {
         if (previewWindow && !previewWindow.closed) previewWindow.close();
         console.error(error);
@@ -5211,8 +5308,19 @@ ${GUEST_PARTICIPATION_NOTE}`,
             showToast(error.message || "PDF 导出失败，请稍后重试");
           }
         } else {
-          showToast(error.message || "PDF 导出失败，请稍后重试");
+          showToast(reason?.message || error.message || "PDF 导出失败，请稍后重试");
         }
+      }
+    }
+
+    async function exportAgendaPdf() {
+      const previewWindow = supportsDownloadAttribute() ? null : openPendingExportWindow("PDF");
+      setPdfExportBusy(true);
+      try {
+        await sendAgendaPdfToServer(previewWindow);
+      } catch (error) {
+        console.error(error);
+        await exportImagePdfFallback(previewWindow, error);
       } finally {
         setPdfExportBusy(false);
       }

@@ -653,12 +653,16 @@ test("agenda generator JSON import still enters the cloud sync save path", () =>
   assert.match(saveDataSource, /queueCloudSave\(\)/, "the common save path should queue cloud sync after localStorage");
 });
 
-test("agenda generator exports a mobile-friendly image PDF from the A4 preview", () => {
+test("agenda generator exports a vector PDF through Vercel with image PDF fallback", () => {
   const capturePrintPageCanvas = functionBlock("capturePrintPageCanvas");
   const renderPrintPageDomCanvas = functionBlock("renderPrintPageDomCanvas");
+  const buildServerPdfPayload = functionBlock("buildServerPdfPayload");
+  const sendAgendaPdfToServer = functionBlock("sendAgendaPdfToServer");
+  const exportImagePdfFallback = functionBlock("exportImagePdfFallback");
   const exportAgendaPdf = functionBlock("exportAgendaPdf");
   const saveBlobForDevice = functionBlock("saveBlobForDevice");
 
+  assert.match(source, /js\/agenda-pdf-export\.js/, "server PDF export helper should be loaded before the app script");
   assert.match(source, /js\/vendor\/html2canvas-1\.4\.1\.min\.js/, "html2canvas should be loaded locally for image capture");
   assert.match(source, /js\/vendor\/jspdf-2\.5\.1\.umd\.min\.js/, "jsPDF should be loaded locally for PDF creation");
   assert.ok(existsSync(new URL("../js/vendor/html2canvas-1.4.1.min.js", import.meta.url)), "local html2canvas vendor file should exist");
@@ -672,9 +676,13 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   assert.match(renderPrintPageDomCanvas, /context\.drawImage\(image, 0, 0, canvas\.width, canvas\.height\)/, "the browser-rendered DOM image should back the PDF canvas");
   assert.match(capturePrintPageCanvas, /waitForPrintAssets\(els\.printPage\)[\s\S]*?fitFlowLayout\(\)[\s\S]*?renderPrintPageDomCanvas\(\)/, "PDF capture should use the settled visible DOM preview as its source");
   assert.doesNotMatch(capturePrintPageCanvas, /renderPreview\(\)|syncPreviewScale\(\)/, "PDF capture should not re-render or rescale the visible preview before capture");
-  assert.match(exportAgendaPdf, /new jsPDF\(\{ orientation: "portrait", unit: "mm", format: "a4", compress: true \}\)/, "PDF should be a single portrait A4 page");
-  assert.match(exportAgendaPdf, /addImage\([\s\S]*?0,\s*0,\s*210,\s*297/, "captured preview image should fill the A4 page");
-  assert.match(exportAgendaPdf, /exportCanvasAsPng\(canvas/, "PDF failures after capture should fall back to PNG export");
+  assert.match(buildServerPdfPayload, /waitForPrintAssets\(els\.printPage\)[\s\S]*?fitFlowLayout\(\)[\s\S]*?PdfExport\.buildServerPdfPayload/, "server PDF payload should use the settled live DOM preview");
+  assert.match(sendAgendaPdfToServer, /PdfExport\.createServerPdfRequestOptions\(payload\)[\s\S]*?fetch\(endpoint, options\)/, "server PDF export should post the DOM payload to the Vercel API");
+  assert.match(sendAgendaPdfToServer, /response\.blob\(\)[\s\S]*?saveBlobForDevice\(blob, payload\.fileName/, "server PDF export should save the returned PDF blob");
+  assert.match(exportAgendaPdf, /sendAgendaPdfToServer\(previewWindow\)[\s\S]*?exportImagePdfFallback\(previewWindow, error\)/, "export should fall back to the image PDF path if the vector service fails");
+  assert.match(exportImagePdfFallback, /new jsPDF\(\{ orientation: "portrait", unit: "mm", format: "a4", compress: true \}\)/, "fallback PDF should remain a single portrait A4 page");
+  assert.match(exportImagePdfFallback, /addImage\([\s\S]*?0,\s*0,\s*210,\s*297/, "fallback captured preview image should fill the A4 page");
+  assert.match(exportImagePdfFallback, /exportCanvasAsPng\(canvas/, "fallback PDF failures after capture should fall back to PNG export");
   assert.match(saveBlobForDevice, /supportsDownloadAttribute\(\)[\s\S]*?link\.download = filename/, "download-capable browsers should receive a file download");
   assert.match(saveBlobForDevice, /window\.open\(url,\s*"_blank"/, "non-download or toast fallback should open a preview tab");
   assert.match(source, /畅言中文第\$\{safeMeetingNo\}期议程/, "export filename should follow the requested meeting title format");
