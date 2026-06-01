@@ -147,6 +147,30 @@ test("PDF API derives allowed asset origin from request headers instead of submi
   assert.deepEqual(renderOptions, { allowedOrigin: "https://safe.example.com" });
 });
 
+test("PDF renderer disables JavaScript before rendering submitted HTML", async () => {
+  const { configurePdfRenderPage } = await loadApiModule();
+  const calls = [];
+  const page = {
+    async setJavaScriptEnabled(value) {
+      calls.push(["setJavaScriptEnabled", value]);
+    },
+    async setRequestInterception(value) {
+      calls.push(["setRequestInterception", value]);
+    },
+    on(eventName) {
+      calls.push(["on", eventName]);
+    }
+  };
+
+  await configurePdfRenderPage(page, "https://safe.example.com");
+
+  assert.deepEqual(calls.slice(0, 2), [
+    ["setJavaScriptEnabled", false],
+    ["setRequestInterception", true]
+  ]);
+  assert.deepEqual(calls[2], ["on", "request"]);
+});
+
 test("agenda preview and server PDF share bundled Noto Sans SC font assets", () => {
   assert.match(agendaGeneratorSource, /font-family:\s*'TMAgendaSans'/);
   assert.match(agendaGeneratorSource, /assets\/fonts\/noto-sans-sc\/noto-sans-sc-chinese-simplified-400-normal\.woff2/);

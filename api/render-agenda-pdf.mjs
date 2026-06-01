@@ -95,20 +95,25 @@ export function isAllowedRenderRequestUrl(requestUrl, allowedOrigin) {
   }
 }
 
+export async function configurePdfRenderPage(page, allowedOrigin) {
+  await page.setJavaScriptEnabled(false);
+  await page.setRequestInterception(true);
+  page.on("request", (request) => {
+    if (isAllowedRenderRequestUrl(request.url(), allowedOrigin)) {
+      request.continue();
+    } else {
+      request.abort();
+    }
+  });
+}
+
 export async function renderPdfWithChromium(html, renderOptions = {}) {
   const { puppeteer, options: launchOptions } = await chromiumLaunchOptions();
   const browser = await puppeteer.launch(launchOptions);
   try {
     const page = await browser.newPage();
     const allowedOrigin = renderOptions.allowedOrigin || "";
-    await page.setRequestInterception(true);
-    page.on("request", (request) => {
-      if (isAllowedRenderRequestUrl(request.url(), allowedOrigin)) {
-        request.continue();
-      } else {
-        request.abort();
-      }
-    });
+    await configurePdfRenderPage(page, allowedOrigin);
     await page.setContent(html, { waitUntil: "networkidle0", timeout: 30000 });
     await page.evaluate(async () => {
       if (document.fonts?.ready) await document.fonts.ready;
