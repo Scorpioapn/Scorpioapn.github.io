@@ -565,10 +565,6 @@
       display: none;
     }
 
-    .more-tools {
-      position: relative;
-    }
-
     .fixed-info summary {
       min-height: 48px;
       padding: 0 18px;
@@ -585,71 +581,6 @@
 
     .fixed-info summary::-webkit-details-marker {
       display: none;
-    }
-
-    .action-menu {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      z-index: 20;
-      width: min(342px, calc(100vw - 40px));
-      padding: 8px;
-      display: grid;
-      gap: 4px;
-      border-radius: var(--radius-md);
-      background: var(--md-surface);
-      box-shadow: var(--shadow-3);
-    }
-
-    .action-menu[hidden] {
-      display: none;
-    }
-
-    .menu-action {
-      width: 100%;
-      min-height: 64px;
-      padding: 12px 14px;
-      display: grid;
-      grid-template-columns: 32px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      border-radius: 18px;
-      color: var(--md-on-surface);
-      background: transparent;
-      text-align: left;
-      transition: background 160ms ease;
-    }
-
-    .menu-action:hover {
-      background: var(--md-surface-container-low);
-    }
-
-    .menu-action svg {
-      width: 22px;
-      height: 22px;
-      color: var(--md-primary);
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2.3;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .menu-action strong {
-      display: block;
-      color: var(--md-primary);
-      font-size: 14px;
-      line-height: 1.2;
-      font-weight: 900;
-    }
-
-    .menu-action span {
-      display: block;
-      margin-top: 3px;
-      color: var(--md-on-surface-variant);
-      font-size: 12px;
-      line-height: 1.35;
-      font-weight: 700;
     }
 
     .fixed-info {
@@ -2809,17 +2740,8 @@
               添加项目
             </button>
             <button class="button tonal" id="addAgendaSectionBtn" type="button">添加分组</button>
-            <div class="more-tools">
-              <button class="button" id="moreActionsBtn" type="button" aria-expanded="false" aria-controls="moreActionsMenu">更多操作</button>
-              <div class="action-menu" id="moreActionsMenu" hidden>
-                <button class="menu-action" id="rescheduleBtn" type="button">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h7"/><path d="m16 14 3 3 3-3"/><path d="M19 7v10"/></svg>
-                  <span><strong>按时长自动排时间</strong><span>从会议开始时间出发，按每个项目的时长重新计算开始时间。</span></span>
-                </button>
-              </div>
-            </div>
           </div>
-          <p class="helper-text agenda-toolbar-note">项目是一行议程；分组只做章节标题，不占用时间。点击项目或分组可编辑，拖动左侧手柄可排序。</p>
+          <p class="helper-text agenda-toolbar-note">项目是一行议程；分组只做章节标题，不占用时间。项目时间会按会议开始时间与每项时长自动计算；点击项目或分组可编辑，拖动左侧手柄可排序。</p>
 
           <div class="agenda-form-card" id="agendaFormCard" hidden>
             <div class="panel-title compact">
@@ -2831,8 +2753,8 @@
             <input id="agendaKind" type="hidden" value="item" />
             <div class="field-grid">
               <div class="field">
-                <label for="agendaTime">时间</label>
-                <input class="input" id="agendaTime" type="time" />
+                <label for="agendaTime">时间（自动）</label>
+                <input class="input" id="agendaTime" type="time" readonly aria-readonly="true" title="按会议开始时间和时长自动计算" />
               </div>
               <div class="field">
                 <label for="agendaDuration">时长</label>
@@ -3153,9 +3075,6 @@ ${GUEST_PARTICIPATION_NOTE}`,
       ruleHint: document.querySelector("#ruleHint"),
       saveAgendaBtn: document.querySelector("#saveAgendaBtn"),
       clearAgendaFormBtn: document.querySelector("#clearAgendaFormBtn"),
-      moreActionsBtn: document.querySelector("#moreActionsBtn"),
-      moreActionsMenu: document.querySelector("#moreActionsMenu"),
-      rescheduleBtn: document.querySelector("#rescheduleBtn"),
       printBtn: document.querySelector("#printBtn"),
       printBtnSide: document.querySelector("#printBtnSide"),
       copyBtn: document.querySelector("#copyBtn"),
@@ -4027,6 +3946,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         state.items.push(item);
         showToast(item.kind === "section" ? "已添加分组" : "已添加项目");
       }
+      autoScheduleAgenda();
       saveData();
       renderPreview();
       clearAgendaForm();
@@ -4038,6 +3958,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       const [item] = state.items.splice(index, 1);
       undoDelete = { item, index };
       if (editingId === id) clearAgendaForm();
+      autoScheduleAgenda();
       saveData();
       renderPreview();
       renderAgendaList();
@@ -4045,6 +3966,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         if (!undoDelete) return;
         state.items.splice(undoDelete.index, 0, undoDelete.item);
         undoDelete = null;
+        autoScheduleAgenda();
         saveData();
         renderAll();
         showToast("已恢复");
@@ -4056,6 +3978,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (index < 0) return;
       const cloneItem = { ...clone(state.items[index]), id: newId("copy") };
       state.items.splice(index + 1, 0, cloneItem);
+      autoScheduleAgenda();
       saveData();
       renderAll();
       showToast("已复制一条项目");
@@ -4068,23 +3991,25 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (sourceIndex < 0 || targetIndex < 0) return;
       const [moved] = state.items.splice(sourceIndex, 1);
       state.items.splice(targetIndex, 0, moved);
+      autoScheduleAgenda();
       saveData();
       renderAll();
       showToast("顺序已更新");
     }
 
-    function rescheduleAgenda() {
+    function autoScheduleAgenda() {
       let cursor = timeToMinutes(state.startTime);
+      let changed = false;
       state.items = state.items.map((item) => {
         if (item.kind === "section") return item;
         const duration = parseDurationMinutes(item.duration);
-        const next = { ...item, time: minutesToTime(cursor) };
+        const time = minutesToTime(cursor);
         cursor += Math.max(0, Math.round(duration));
-        return next;
+        if (item.time === time) return item;
+        changed = true;
+        return { ...item, time };
       });
-      saveData();
-      renderAll();
-      showToast("已按时长重排时间");
+      return changed;
     }
 
     function applyTitleDefault() {
@@ -4183,6 +4108,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         dragId = null;
         undoDelete = null;
         input.value = "";
+        autoScheduleAgenda();
         saveData();
         renderAll();
         showToast("JSON 已导入");
@@ -4190,11 +4116,6 @@ ${GUEST_PARTICIPATION_NOTE}`,
         input.value = "";
         showToast(error.message || "JSON 导入失败");
       }
-    }
-
-    function setMoreMenu(open) {
-      els.moreActionsMenu.hidden = !open;
-      els.moreActionsBtn.setAttribute("aria-expanded", String(open));
     }
 
     function imageFileToDataUrl(file) {
@@ -4248,9 +4169,11 @@ ${GUEST_PARTICIPATION_NOTE}`,
       document.querySelectorAll("[data-field]").forEach((input) => {
         input.addEventListener("input", () => {
           state[input.dataset.field] = input.value;
+          const scheduleChanged = input.dataset.field === "startTime" && autoScheduleAgenda();
           saveData();
           if (input.dataset.field === "residentPeople") renderResidentPeople();
           renderPreview();
+          if (scheduleChanged) renderAgendaList();
         });
       });
 
@@ -4264,20 +4187,6 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.agendaDuration.addEventListener("input", renderRuleHint);
       els.saveAgendaBtn.addEventListener("click", saveAgendaFromForm);
       els.clearAgendaFormBtn.addEventListener("click", clearAgendaForm);
-      els.moreActionsBtn.addEventListener("click", (event) => {
-        event.stopPropagation();
-        setMoreMenu(els.moreActionsMenu.hidden);
-      });
-      els.rescheduleBtn.addEventListener("click", () => {
-        setMoreMenu(false);
-        rescheduleAgenda();
-      });
-      document.addEventListener("click", (event) => {
-        if (!event.target.closest(".more-tools")) setMoreMenu(false);
-      });
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") setMoreMenu(false);
-      });
       document.querySelectorAll("[data-image-field]").forEach((input) => {
         input.addEventListener("change", () => handleImageUpload(input));
       });
@@ -4348,6 +4257,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     bindEvents();
+    if (autoScheduleAgenda()) saveData();
     renderAll();
   </script>
 </body>
