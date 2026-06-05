@@ -656,6 +656,8 @@ test("agenda generator JSON import still enters the cloud sync save path", () =>
 test("agenda generator exports a mobile-friendly image PDF from the A4 preview", () => {
   const capturePrintPageCanvas = functionBlock("capturePrintPageCanvas");
   const renderPrintPageDomCanvas = functionBlock("renderPrintPageDomCanvas");
+  const collectSnapshotImagePaints = functionBlock("collectSnapshotImagePaints");
+  const paintSnapshotImagesOntoCanvas = functionBlock("paintSnapshotImagesOntoCanvas");
   const exportAgendaPdf = functionBlock("exportAgendaPdf");
   const saveBlobForDevice = functionBlock("saveBlobForDevice");
 
@@ -666,10 +668,19 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   assert.doesNotMatch(source, /id="previewRaster"|raster-ready/, "the visible A4 preview should remain the browser DOM preview, not a generated image overlay");
   assert.match(renderPrintPageDomCanvas, /cloneNode\(true\)/, "PDF export should clone the current DOM preview without replacing it");
   assert.match(renderPrintPageDomCanvas, /new XMLSerializer\(\)\.serializeToString\(snapshot\)/, "PDF export should serialize the browser DOM preview");
+  assert.match(renderPrintPageDomCanvas, /snapshot\.style\.border\s*=\s*"0"/, "PDF export snapshot should remove the preview card border so the A4 page starts flush at the header");
+  assert.match(renderPrintPageDomCanvas, /snapshot\.style\.borderRadius\s*=\s*"0"/, "PDF export snapshot should remove preview card rounded corners for a formal A4 document");
+  assert.match(renderPrintPageDomCanvas, /const imagePaints = collectSnapshotImagePaints\(els\.printPage,\s*canvasWidth,\s*canvasHeight\);[\s\S]*?await inlineSnapshotImages\(snapshot\)/, "PDF export should freeze repaint image positions before async rendering can let the live preview change");
   assert.match(renderPrintPageDomCanvas, /<foreignObject width="100%" height="100%">/, "PDF export should render the DOM through the browser SVG foreignObject path");
   assert.match(renderPrintPageDomCanvas, /data:image\/svg\+xml;charset=utf-8,\$\{encodeURIComponent\(svgMarkup\)\}/, "foreignObject should use a data URL so the canvas remains exportable");
   assert.match(renderPrintPageDomCanvas, /inlineSnapshotImages\(snapshot\)/, "local preview images should be embedded before DOM rendering");
   assert.match(renderPrintPageDomCanvas, /context\.drawImage\(image, 0, 0, canvas\.width, canvas\.height\)/, "the browser-rendered DOM image should back the PDF canvas");
+  assert.match(renderPrintPageDomCanvas, /await paintSnapshotImagesOntoCanvas\(context,\s*imagePaints\)/, "mobile export should repaint frozen preview images over the foreignObject canvas because some mobile browsers omit nested SVG images");
+  assert.doesNotMatch(renderPrintPageDomCanvas, /paintSnapshotImagesOntoCanvas\(context,\s*canvas,\s*els\.printPage\)/, "image repaint should not read the live preview after async export work has started");
+  assert.match(collectSnapshotImagePaints, /querySelectorAll\("img"\)/, "image repaint should include the QR and logo images from the live preview");
+  assert.match(collectSnapshotImagePaints, /getBoundingClientRect\(\)/, "image repaint should preserve each image's preview position");
+  assert.match(collectSnapshotImagePaints, /new Image\(\)/, "image repaint should freeze each image source before async export rendering can change the live DOM");
+  assert.match(paintSnapshotImagesOntoCanvas, /context\.drawImage\(\s*paint\.image,/, "image repaint should draw the frozen image directly onto the export canvas");
   assert.match(capturePrintPageCanvas, /waitForPrintAssets\(els\.printPage\)[\s\S]*?fitFlowLayout\(\)[\s\S]*?renderPrintPageDomCanvas\(\)/, "PDF capture should use the settled visible DOM preview as its source");
   assert.doesNotMatch(capturePrintPageCanvas, /renderPreview\(\)|syncPreviewScale\(\)/, "PDF capture should not re-render or rescale the visible preview before capture");
   assert.match(exportAgendaPdf, /new jsPDF\(\{ orientation: "portrait", unit: "mm", format: "a4", compress: true \}\)/, "PDF should be a single portrait A4 page");

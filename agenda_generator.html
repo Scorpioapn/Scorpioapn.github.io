@@ -5113,11 +5113,87 @@ ${GUEST_PARTICIPATION_NOTE}`,
       }));
     }
 
+    function canDrawExportImageSrc(src) {
+      if (!src || src.startsWith("data:") || src.startsWith("blob:")) return true;
+      try {
+        return new URL(src, window.location.href).origin === window.location.origin;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function collectSnapshotImagePaints(sourcePage, canvasWidth, canvasHeight) {
+      const pageRect = sourcePage.getBoundingClientRect();
+      if (!pageRect.width || !pageRect.height) return [];
+      const scaleX = canvasWidth / pageRect.width;
+      const scaleY = canvasHeight / pageRect.height;
+      return Array.from(sourcePage.querySelectorAll("img")).map((image) => {
+        const src = image.currentSrc || image.getAttribute("src") || "";
+        if (!image.complete || !image.naturalWidth || !image.naturalHeight || !canDrawExportImageSrc(src)) return null;
+        const rect = image.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        const styles = window.getComputedStyle(image);
+        let drawWidth = rect.width;
+        let drawHeight = rect.height;
+        let offsetX = 0;
+        let offsetY = 0;
+        if (styles.objectFit === "contain" || styles.objectFit === "scale-down") {
+          const imageRatio = image.naturalWidth / image.naturalHeight;
+          const boxRatio = rect.width / rect.height;
+          if (imageRatio > boxRatio) {
+            drawHeight = rect.width / imageRatio;
+            offsetY = (rect.height - drawHeight) / 2;
+          } else {
+            drawWidth = rect.height * imageRatio;
+            offsetX = (rect.width - drawWidth) / 2;
+          }
+        }
+        const paintImage = new Image();
+        paintImage.decoding = "sync";
+        paintImage.src = src;
+        return {
+          image: paintImage,
+          x: (rect.left - pageRect.left + offsetX) * scaleX,
+          y: (rect.top - pageRect.top + offsetY) * scaleY,
+          width: drawWidth * scaleX,
+          height: drawHeight * scaleY
+        };
+      }).filter(Boolean);
+    }
+
+    function waitForExportPaintImage(image) {
+      if (image.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        image.addEventListener("load", resolve, { once: true });
+        image.addEventListener("error", resolve, { once: true });
+      });
+    }
+
+    async function paintSnapshotImagesOntoCanvas(context, imagePaints) {
+      await Promise.all(imagePaints.map((paint) => waitForExportPaintImage(paint.image)));
+      imagePaints.forEach((paint) => {
+        if (!paint.image.complete || !paint.image.naturalWidth || !paint.image.naturalHeight) return;
+        try {
+          context.drawImage(
+            paint.image,
+            paint.x,
+            paint.y,
+            paint.width,
+            paint.height
+          );
+        } catch (error) {
+          console.warn("Failed to repaint export image", error);
+        }
+      });
+    }
+
     async function renderPrintPageDomCanvas(options) {
       const exportOptions = options || {};
       const scale = exportOptions.scale || Math.min(3, Math.max(2, window.devicePixelRatio || 1));
       const width = 980;
       const height = 1386;
+      const canvasWidth = Math.round(width * scale);
+      const canvasHeight = Math.round(height * scale);
       const snapshot = els.printPage.cloneNode(true);
       snapshot.id = "printPageExportSnapshot";
       snapshot.classList.add("exporting-snapshot");
@@ -5125,6 +5201,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
       snapshot.style.transform = "none";
       snapshot.style.width = `${width}px`;
       snapshot.style.height = `${height}px`;
+      snapshot.style.border = "0";
+      snapshot.style.borderRadius = "0";
+      const imagePaints = collectSnapshotImagePaints(els.printPage, canvasWidth, canvasHeight);
       await inlineSnapshotImages(snapshot);
       const cssText = readStylesheetText().replace(/<\//g, "<\\/");
       const snapshotMarkup = new XMLSerializer().serializeToString(snapshot);
@@ -5146,12 +5225,13 @@ ${GUEST_PARTICIPATION_NOTE}`,
         image.onerror = () => reject(new Error("浏览器 DOM 预览渲染失败"));
       });
       const canvas = document.createElement("canvas");
-      canvas.width = Math.round(width * scale);
-      canvas.height = Math.round(height * scale);
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
       const context = canvas.getContext("2d");
       context.fillStyle = "#fffdf8";
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      await paintSnapshotImagesOntoCanvas(context, imagePaints);
       return canvas;
     }
 
