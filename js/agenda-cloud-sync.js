@@ -51,6 +51,18 @@
     return data || null;
   }
 
+  function isVersionConflictError(error) {
+    const message = String(error?.message || error || "");
+    const code = String(error?.code || "");
+    return code === "40001" || /version conflict/i.test(message);
+  }
+
+  function isExpectedVersionRpcMissing(error) {
+    const message = String(error?.message || error || "");
+    const code = String(error?.code || "");
+    return code === "PGRST202" && /expected_version|save_agenda_draft/i.test(message);
+  }
+
   function isSupabaseConfigured(config) {
     return Boolean(config?.url && (config?.publishableKey || config?.anonKey || config?.key));
   }
@@ -184,11 +196,26 @@
       }
       pendingOfflineSave = false;
       applyStatus(SYNC_STATUS.syncing);
-      const row = await rpc("save_agenda_draft", {
+      let row = null;
+      const payload = options.getPayload();
+      const saveArgs = {
         draft_id: draftId,
-        payload: options.getPayload(),
+        payload,
         client_id: clientId
-      });
+      };
+      try {
+        row = await rpc("save_agenda_draft", {
+          ...saveArgs,
+          expected_version: version || null
+        });
+      } catch (error) {
+        if (isExpectedVersionRpcMissing(error)) {
+          row = await rpc("save_agenda_draft", saveArgs);
+        } else {
+          applyStatus(SYNC_STATUS.error, isVersionConflictError(error) ? "version-conflict" : "");
+          throw error;
+        }
+      }
       version = Number(row.version || version + 1);
       applyStatus(SYNC_STATUS.synced);
       if (channel?.send) {
@@ -206,8 +233,8 @@
       clearTimeoutFn(saveTimer);
       saveTimer = setTimeoutFn(() => {
         return saveNow().catch((error) => {
-          options.onError?.(error);
-          applyStatus(online() ? SYNC_STATUS.error : SYNC_STATUS.offline);
+          if (!isVersionConflictError(error)) options.onError?.(error);
+          applyStatus(online() ? SYNC_STATUS.error : SYNC_STATUS.offline, isVersionConflictError(error) ? "version-conflict" : "");
         });
       }, SAVE_DEBOUNCE_MS);
     }

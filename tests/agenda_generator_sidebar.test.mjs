@@ -352,6 +352,16 @@ test("agenda generator mobile list hides risky actions behind a menu and adds so
   assert.match(mobileCss, /\.agenda-list\.sort-mode \.agenda-mobile-sort\s*\{[\s\S]*?display:\s*grid;/, "sort mode should reveal explicit up/down controls");
 });
 
+test("agenda generator mobile preview shows a confident thumbnail and export-first actions", () => {
+  const mobileCss = cssMediaBlock("max-width: 620px");
+
+  assert.match(mobileCss, /\.preview-viewport\s*\{[\s\S]*?min-height:\s*min\(560px,\s*calc\(100dvh - 300px\)\);/, "mobile preview should reserve a visible A4 thumbnail area instead of feeling blank");
+  assert.match(mobileCss, /\.preview-frame\s*\{[\s\S]*?background:\s*#fffdf8;[\s\S]*?box-shadow:\s*var\(--shadow-2\);/, "mobile preview frame should read as a loaded document card");
+  assert.match(mobileCss, /\.toolbar-actions\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(0,\s*0\.82fr\) minmax\(0,\s*1\.18fr\);/, "mobile toolbar should use a stable grid that gives export the stronger slot");
+  assert.match(mobileCss, /\.toolbar-actions \.export-pdf-button\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?min-height:\s*56px;/, "mobile PDF export should be the dominant preview action");
+  assert.match(mobileCss, /\.toolbar-actions \.print-button\s*\{[\s\S]*?min-height:\s*48px;/, "mobile print should remain available but secondary to PDF export");
+});
+
 test("agenda generator gives the mobile editor dialog semantics and scoped quick add", () => {
   const syncMobileEditorState = functionBlock("syncMobileEditorState");
   const updateQuickAdd = functionBlock("updateMobileQuickAddVisibility");

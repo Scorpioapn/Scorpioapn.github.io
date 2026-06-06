@@ -2651,6 +2651,17 @@
         scroll-margin-top: 10px;
       }
 
+      .preview-viewport {
+        min-height: min(560px, calc(100dvh - 300px));
+        padding-top: 8px;
+      }
+
+      .preview-frame {
+        background: #fffdf8;
+        border-radius: 18px;
+        box-shadow: var(--shadow-2);
+      }
+
       .upload-grid {
         grid-template-columns: 1fr;
       }
@@ -2788,13 +2799,23 @@
         grid-template-columns: 1fr;
       }
 
+      .toolbar-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+        gap: 10px;
+      }
+
+      .toolbar-actions .status-chip {
+        min-height: 56px;
+      }
+
       .toolbar-actions .export-pdf-button {
-        flex: 1 1 150px;
-        min-height: 52px;
+        grid-column: 2;
+        min-height: 56px;
       }
 
       .toolbar-actions .print-button {
-        flex: 1 1 130px;
+        min-height: 48px;
       }
 
       .mobile-sort-toggle {
@@ -4589,6 +4610,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
       }
       if (detail === "missing-config") {
         showToast("请先在 js/supabase-config.js 填入 Supabase URL 和 publishable key");
+      } else if (detail === "version-conflict") {
+        showToast("云端草稿已有新版本，请重新打开同步链接确认后再保存");
       }
     }
 

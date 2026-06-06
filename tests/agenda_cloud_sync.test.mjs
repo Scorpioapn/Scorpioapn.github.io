@@ -145,8 +145,55 @@ test("cloud sync debounces local edits before saving to Supabase RPC", async () 
   assert.equal(saveCalls.length, 1);
   assert.deepEqual(saveCalls[0].payload, { meetingNo: "741" });
   assert.equal(saveCalls[0].draft_id, "draft_12345678901234567890");
+  assert.equal(saveCalls[0].expected_version, 2);
   assert.ok(saveCalls[0].client_id.startsWith("agenda-client-"));
   assert.ok(fake.calls.some((call) => call[0] === "send" && call[1].event === "agenda-updated"));
+});
+
+test("cloud sync rejects stale saves without broadcasting success", async () => {
+  const { controller, statuses, fake } = createController({
+    payload: { meetingNo: "stale-local" },
+    rpcHandler(name) {
+      if (name === "save_agenda_draft") {
+        return Promise.resolve({ data: null, error: new Error("agenda draft version conflict") });
+      }
+      return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 7 }, error: null });
+    }
+  });
+
+  await controller.init();
+  await assert.rejects(() => controller.saveNow(), /version conflict/);
+
+  assert.equal(controller.getVersion(), 7, "local controller version should not advance after a rejected stale save");
+  assert.ok(statuses.some(([status, detail]) => status === CloudSync.SYNC_STATUS.error && detail === "version-conflict"));
+  assert.equal(fake.calls.some((call) => call[0] === "send"), false, "stale saves should not broadcast a successful update");
+});
+
+test("cloud sync falls back to legacy save RPC while the expected-version migration is pending", async () => {
+  const saveCalls = [];
+  const { controller } = createController({
+    payload: { meetingNo: "legacy-compatible" },
+    rpcHandler(name, args) {
+      if (name === "save_agenda_draft") {
+        saveCalls.push(args);
+        if (Object.hasOwn(args, "expected_version")) {
+          const error = new Error("Could not find the function public.save_agenda_draft with expected_version");
+          error.code = "PGRST202";
+          return Promise.resolve({ data: null, error });
+        }
+        return Promise.resolve({ data: { version: 8, updated_at: "2026-06-06" }, error: null });
+      }
+      return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 7 }, error: null });
+    }
+  });
+
+  await controller.init();
+  await controller.saveNow();
+
+  assert.equal(saveCalls.length, 2);
+  assert.equal(saveCalls[0].expected_version, 7);
+  assert.equal(Object.hasOwn(saveCalls[1], "expected_version"), false, "legacy fallback should preserve live sync until the DB migration is applied");
+  assert.equal(controller.getVersion(), 8);
 });
 
 test("cloud sync applies newer remote broadcast and ignores self broadcast", async () => {
