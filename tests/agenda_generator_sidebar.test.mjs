@@ -565,6 +565,15 @@ test("agenda generator warns when the A4 preview may overflow", () => {
   assert.match(source, /当前内容可能超出 A4 页面，已使用最紧凑版式；请减少文字或拆分议程/, "overflow warning should explain that compact fitting already ran");
 });
 
+test("A4 preview top line includes the editable meeting manager when present", () => {
+  const renderPreview = functionBlock("renderPreview");
+
+  assert.match(renderPreview, /const managerName = String\(state\.manager \|\| ""\)\.trim\(\)/, "preview should read the existing editable manager field");
+  assert.match(renderPreview, /const managerThemeMeta = managerName \?/, "manager label should be conditional so empty values do not leave a trailing separator");
+  assert.match(renderPreview, /<span>例会经理：\$\{escapeHtml\(managerName\)\}<\/span>/, "preview top line should render the escaped manager name");
+  assert.match(renderPreview, /\$\{managerThemeMeta\}/, "manager label should be part of the title metadata row");
+});
+
 test("printable footer renders as three independent reference-style cards", () => {
   const footerRule = cssRule(".template-footer");
   const cardRule = cssRule(".template-footer-box");

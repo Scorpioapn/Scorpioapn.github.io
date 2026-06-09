@@ -4315,6 +4315,10 @@ ${GUEST_PARTICIPATION_NOTE}`,
       }).join("");
 
       els.previewChip.textContent = `第 ${state.meetingNo || "-"} 期`;
+      const managerName = String(state.manager || "").trim();
+      const managerThemeMeta = managerName ? `
+              <span>|</span>
+              <span>例会经理：${escapeHtml(managerName)}</span>` : "";
       els.printPage.innerHTML = `
         <header class="template-header">
           <div class="tm-logo-print" aria-label="Toastmasters International">
@@ -4327,6 +4331,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
               <span>主题：${escapeHtml(state.theme)}</span>
               <span>|</span>
               <span>今日一词：${escapeHtml(state.wordOfDay)}</span>
+              ${managerThemeMeta}
             </div>
           </div>
           <div class="template-meta-stack">
