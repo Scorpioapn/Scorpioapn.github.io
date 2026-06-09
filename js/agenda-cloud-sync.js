@@ -139,16 +139,22 @@
       channel = null;
     }
 
+    function handleAsyncSyncError(error) {
+      if (!isVersionConflictError(error)) options.onError?.(error);
+      applyStatus(online() ? SYNC_STATUS.error : SYNC_STATUS.offline, isVersionConflictError(error) ? "version-conflict" : "");
+    }
+
     function attachChannel() {
       const client = resolveSupabaseClient();
       if (!client || !draftId || channel) return;
       channel = client
         .channel(`agenda-draft:${draftId}`, { config: { broadcast: { self: false } } })
         .on("broadcast", { event: "agenda-updated" }, (message) => {
-          handleBroadcast(message?.payload || message);
+          return handleBroadcast(message?.payload || message).catch(handleAsyncSyncError);
         });
       channel.subscribe((status) => {
-        if (status === "SUBSCRIBED" && pendingOfflineSave) saveNow();
+        if (status === "SUBSCRIBED" && pendingOfflineSave) return saveNow().catch(handleAsyncSyncError);
+        return null;
       });
     }
 
@@ -232,10 +238,7 @@
       if (applyingRemote || !draftId) return;
       clearTimeoutFn(saveTimer);
       saveTimer = setTimeoutFn(() => {
-        return saveNow().catch((error) => {
-          if (!isVersionConflictError(error)) options.onError?.(error);
-          applyStatus(online() ? SYNC_STATUS.error : SYNC_STATUS.offline, isVersionConflictError(error) ? "version-conflict" : "");
-        });
+        return saveNow().catch(handleAsyncSyncError);
       }, SAVE_DEBOUNCE_MS);
     }
 

@@ -1586,8 +1586,22 @@
       align-items: center;
       justify-content: center;
       gap: 18px;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
       font-size: 16px;
       font-weight: 900;
+    }
+
+    .template-theme-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .template-theme-separator {
+      flex: 0 0 auto;
     }
 
     .template-meta-stack {
@@ -4317,8 +4331,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.previewChip.textContent = `第 ${state.meetingNo || "-"} 期`;
       const managerName = String(state.manager || "").trim();
       const managerThemeMeta = managerName ? `
-              <span>|</span>
-              <span>例会经理：${escapeHtml(managerName)}</span>` : "";
+              <span class="template-theme-separator">|</span>
+              <span class="template-theme-label">例会经理：${escapeHtml(managerName)}</span>` : "";
       els.printPage.innerHTML = `
         <header class="template-header">
           <div class="tm-logo-print" aria-label="Toastmasters International">
@@ -4328,9 +4342,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
             <div class="english">${escapeHtml(state.clubNameEnglish || "Toastmasters Club")}</div>
             <h2>${escapeHtml(state.clubName.replace("国际演讲俱乐部", "国际演讲会"))}</h2>
             <div class="template-theme-line">
-              <span>主题：${escapeHtml(state.theme)}</span>
-              <span>|</span>
-              <span>今日一词：${escapeHtml(state.wordOfDay)}</span>
+              <span class="template-theme-label">主题：${escapeHtml(state.theme)}</span>
+              <span class="template-theme-separator">|</span>
+              <span class="template-theme-label">今日一词：${escapeHtml(state.wordOfDay)}</span>
               ${managerThemeMeta}
             </div>
           </div>
@@ -5155,7 +5169,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (!pageRect.width || !pageRect.height) return [];
       const scaleX = canvasWidth / pageRect.width;
       const scaleY = canvasHeight / pageRect.height;
-      return Array.from(sourcePage.querySelectorAll("img")).map((image) => {
+      return Array.from(sourcePage.querySelectorAll("img")).map((image, snapshotIndex) => {
         const src = image.currentSrc || image.getAttribute("src") || "";
         if (!image.complete || !image.naturalWidth || !image.naturalHeight || !canDrawExportImageSrc(src)) return null;
         const rect = image.getBoundingClientRect();
@@ -5181,12 +5195,21 @@ ${GUEST_PARTICIPATION_NOTE}`,
         paintImage.src = src;
         return {
           image: paintImage,
+          snapshotIndex,
           x: (rect.left - pageRect.left + offsetX) * scaleX,
           y: (rect.top - pageRect.top + offsetY) * scaleY,
           width: drawWidth * scaleX,
           height: drawHeight * scaleY
         };
       }).filter(Boolean);
+    }
+
+    function hideSnapshotRepaintImages(snapshot, imagePaints) {
+      const snapshotImages = Array.from(snapshot.querySelectorAll("img"));
+      imagePaints.forEach((paint) => {
+        const image = snapshotImages[paint.snapshotIndex];
+        if (image) image.style.visibility = "hidden";
+      });
     }
 
     function waitForExportPaintImage(image) {
@@ -5233,6 +5256,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       snapshot.style.borderRadius = "0";
       const imagePaints = collectSnapshotImagePaints(els.printPage, canvasWidth, canvasHeight);
       await inlineSnapshotImages(snapshot);
+      hideSnapshotRepaintImages(snapshot, imagePaints);
       const cssText = readStylesheetText().replace(/<\//g, "<\\/");
       const snapshotMarkup = new XMLSerializer().serializeToString(snapshot);
       const svgMarkup = `

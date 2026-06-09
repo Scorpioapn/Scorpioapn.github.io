@@ -24,6 +24,7 @@ function deterministicRandom(bytes) {
 function createFakeSupabase(rpcHandler) {
   const calls = [];
   let broadcastHandler = null;
+  let subscribeHandler = null;
   const channel = {
     on(type, filter, handler) {
       calls.push(["on", type, filter]);
@@ -32,6 +33,7 @@ function createFakeSupabase(rpcHandler) {
     },
     subscribe(callback) {
       calls.push(["subscribe"]);
+      subscribeHandler = callback;
       callback?.("SUBSCRIBED");
       return this;
     },
@@ -44,6 +46,9 @@ function createFakeSupabase(rpcHandler) {
     calls,
     get broadcastHandler() {
       return broadcastHandler;
+    },
+    get subscribeHandler() {
+      return subscribeHandler;
     },
     library: {
       createClient() {
@@ -66,7 +71,13 @@ function createFakeSupabase(rpcHandler) {
   };
 }
 
-function createController({ initialDraftId = "draft_12345678901234567890", payload = { meetingNo: "739" }, rpcHandler }) {
+function createController({
+  initialDraftId = "draft_12345678901234567890",
+  payload = { meetingNo: "739" },
+  rpcHandler,
+  online = () => true,
+  onError = () => {}
+}) {
   const statuses = [];
   const links = [];
   const applied = [];
@@ -90,8 +101,8 @@ function createController({ initialDraftId = "draft_12345678901234567890", paylo
       return 1;
     },
     clearTimeout: () => {},
-    online: () => true,
-    onError: () => {}
+    online,
+    onError
   });
   return { controller, fake, statuses, links, applied, urls, runScheduled: () => scheduled?.() };
 }
@@ -221,4 +232,59 @@ test("cloud sync applies newer remote broadcast and ignores self broadcast", asy
   assert.equal(applied.length, appliedAfterInit + 1);
   assert.deepEqual(applied.at(-1), { meetingNo: "741" });
   assert.equal(controller.getVersion(), 2);
+});
+
+test("cloud sync reports newer broadcast load failures", async () => {
+  let loadCalls = 0;
+  const errors = [];
+  const { controller, statuses, fake } = createController({
+    rpcHandler(name) {
+      if (name === "get_agenda_draft") {
+        loadCalls += 1;
+        if (loadCalls === 1) {
+          return Promise.resolve({ data: { payload: { meetingNo: "739" }, version: 1 }, error: null });
+        }
+        return Promise.resolve({ data: null, error: new Error("remote draft unavailable") });
+      }
+      return Promise.resolve({ data: { version: 1 }, error: null });
+    },
+    onError: (error) => errors.push(error)
+  });
+
+  await controller.init();
+  await fake.broadcastHandler({ payload: { version: 5, updated_by: "other-client" } });
+
+  assert.equal(errors.length, 1);
+  assert.match(errors[0].message, /remote draft unavailable/);
+  assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.error), "failed broadcast refresh should show sync failure");
+});
+
+test("cloud sync reports pending reconnect save failures", async () => {
+  let isOnline = true;
+  let saveAttempts = 0;
+  const errors = [];
+  const { controller, statuses, fake } = createController({
+    payload: { meetingNo: "offline-edit" },
+    rpcHandler(name) {
+      if (name === "save_agenda_draft") {
+        saveAttempts += 1;
+        return Promise.resolve({ data: null, error: new Error("save rejected after reconnect") });
+      }
+      return Promise.resolve({ data: { payload: { meetingNo: "739" }, version: 1 }, error: null });
+    },
+    online: () => isOnline,
+    onError: (error) => errors.push(error)
+  });
+
+  await controller.init();
+  isOnline = false;
+  await controller.saveNow();
+  isOnline = true;
+  await fake.subscribeHandler("SUBSCRIBED");
+
+  assert.equal(saveAttempts, 1);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0].message, /save rejected after reconnect/);
+  assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.offline), "offline edit should show pending offline status first");
+  assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.error), "failed reconnect save should show sync failure");
 });

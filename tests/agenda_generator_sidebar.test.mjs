@@ -567,11 +567,18 @@ test("agenda generator warns when the A4 preview may overflow", () => {
 
 test("A4 preview top line includes the editable meeting manager when present", () => {
   const renderPreview = functionBlock("renderPreview");
+  const themeLineRule = cssRule(".template-theme-line");
+  const themeLabelRule = cssRule(".template-theme-label");
 
   assert.match(renderPreview, /const managerName = String\(state\.manager \|\| ""\)\.trim\(\)/, "preview should read the existing editable manager field");
   assert.match(renderPreview, /const managerThemeMeta = managerName \?/, "manager label should be conditional so empty values do not leave a trailing separator");
-  assert.match(renderPreview, /<span>例会经理：\$\{escapeHtml\(managerName\)\}<\/span>/, "preview top line should render the escaped manager name");
+  assert.match(renderPreview, /<span class="template-theme-label">例会经理：\$\{escapeHtml\(managerName\)\}<\/span>/, "preview top line should render the escaped manager name");
+  assert.match(renderPreview, /<span class="template-theme-label">主题：\$\{escapeHtml\(state\.theme\)\}<\/span>/, "theme text should share the same fitting behavior");
   assert.match(renderPreview, /\$\{managerThemeMeta\}/, "manager label should be part of the title metadata row");
+  assert.match(themeLineRule, /min-width:\s*0/, "metadata row should be allowed to shrink inside the fixed A4 header");
+  assert.match(themeLineRule, /overflow:\s*hidden/, "metadata row should not overlap the right-side date stack");
+  assert.match(themeLabelRule, /text-overflow:\s*ellipsis/, "long editable metadata should truncate instead of overflowing");
+  assert.match(themeLabelRule, /white-space:\s*nowrap/, "normal short metadata should keep the existing one-line header appearance");
 });
 
 test("printable footer renders as three independent reference-style cards", () => {
@@ -676,6 +683,7 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   const capturePrintPageCanvas = functionBlock("capturePrintPageCanvas");
   const renderPrintPageDomCanvas = functionBlock("renderPrintPageDomCanvas");
   const collectSnapshotImagePaints = functionBlock("collectSnapshotImagePaints");
+  const hideSnapshotRepaintImages = functionBlock("hideSnapshotRepaintImages");
   const paintSnapshotImagesOntoCanvas = functionBlock("paintSnapshotImagesOntoCanvas");
   const exportAgendaPdf = functionBlock("exportAgendaPdf");
   const saveBlobForDevice = functionBlock("saveBlobForDevice");
@@ -690,14 +698,17 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   assert.match(renderPrintPageDomCanvas, /snapshot\.style\.border\s*=\s*"0"/, "PDF export snapshot should remove the preview card border so the A4 page starts flush at the header");
   assert.match(renderPrintPageDomCanvas, /snapshot\.style\.borderRadius\s*=\s*"0"/, "PDF export snapshot should remove preview card rounded corners for a formal A4 document");
   assert.match(renderPrintPageDomCanvas, /const imagePaints = collectSnapshotImagePaints\(els\.printPage,\s*canvasWidth,\s*canvasHeight\);[\s\S]*?await inlineSnapshotImages\(snapshot\)/, "PDF export should freeze repaint image positions before async rendering can let the live preview change");
+  assert.match(renderPrintPageDomCanvas, /await inlineSnapshotImages\(snapshot\);[\s\S]*?hideSnapshotRepaintImages\(snapshot,\s*imagePaints\);[\s\S]*?new XMLSerializer\(\)\.serializeToString\(snapshot\)/, "PDF export should hide repaint images in the cloned DOM before serialization so they are drawn exactly once");
   assert.match(renderPrintPageDomCanvas, /<foreignObject width="100%" height="100%">/, "PDF export should render the DOM through the browser SVG foreignObject path");
   assert.match(renderPrintPageDomCanvas, /data:image\/svg\+xml;charset=utf-8,\$\{encodeURIComponent\(svgMarkup\)\}/, "foreignObject should use a data URL so the canvas remains exportable");
   assert.match(renderPrintPageDomCanvas, /inlineSnapshotImages\(snapshot\)/, "local preview images should be embedded before DOM rendering");
   assert.match(renderPrintPageDomCanvas, /context\.drawImage\(image, 0, 0, canvas\.width, canvas\.height\)/, "the browser-rendered DOM image should back the PDF canvas");
-  assert.match(renderPrintPageDomCanvas, /await paintSnapshotImagesOntoCanvas\(context,\s*imagePaints\)/, "mobile export should repaint frozen preview images over the foreignObject canvas because some mobile browsers omit nested SVG images");
+  assert.match(renderPrintPageDomCanvas, /await paintSnapshotImagesOntoCanvas\(context,\s*imagePaints\)/, "mobile export should draw frozen preview images once after the DOM canvas render");
   assert.doesNotMatch(renderPrintPageDomCanvas, /paintSnapshotImagesOntoCanvas\(context,\s*canvas,\s*els\.printPage\)/, "image repaint should not read the live preview after async export work has started");
   assert.match(collectSnapshotImagePaints, /querySelectorAll\("img"\)/, "image repaint should include the QR and logo images from the live preview");
   assert.match(collectSnapshotImagePaints, /getBoundingClientRect\(\)/, "image repaint should preserve each image's preview position");
+  assert.match(collectSnapshotImagePaints, /snapshotIndex/, "image repaint should track the matching clone image for one-pass export rendering");
+  assert.match(hideSnapshotRepaintImages, /image\.style\.visibility\s*=\s*"hidden"/, "matched clone images should keep layout space but not double-paint inside the foreignObject render");
   assert.match(collectSnapshotImagePaints, /new Image\(\)/, "image repaint should freeze each image source before async export rendering can change the live DOM");
   assert.match(paintSnapshotImagesOntoCanvas, /context\.drawImage\(\s*paint\.image,/, "image repaint should draw the frozen image directly onto the export canvas");
   assert.match(capturePrintPageCanvas, /waitForPrintAssets\(els\.printPage\)[\s\S]*?fitFlowLayout\(\)[\s\S]*?renderPrintPageDomCanvas\(\)/, "PDF capture should use the settled visible DOM preview as its source");
