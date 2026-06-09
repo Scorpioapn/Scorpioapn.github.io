@@ -109,6 +109,11 @@
       setStatus(status, detail);
     }
 
+    function clearScheduledSave() {
+      if (saveTimer !== null) clearTimeoutFn(saveTimer);
+      saveTimer = null;
+    }
+
     async function rpc(name, args) {
       const client = resolveSupabaseClient();
       if (!client) throw new Error("Supabase sync is not configured");
@@ -122,6 +127,8 @@
       applyStatus(SYNC_STATUS.syncing);
       const row = await rpc("get_agenda_draft", { draft_id: draftId });
       if (!row?.payload) throw new Error("Sync draft not found");
+      clearScheduledSave();
+      pendingOfflineSave = false;
       applyingRemote = true;
       try {
         options.applyRemotePayload(normalizeRemotePayload(row.payload));
@@ -142,6 +149,11 @@
     function handleAsyncSyncError(error) {
       if (!isVersionConflictError(error)) options.onError?.(error);
       applyStatus(online() ? SYNC_STATUS.error : SYNC_STATUS.offline, isVersionConflictError(error) ? "version-conflict" : "");
+    }
+
+    function markSaveFailure(error) {
+      pendingOfflineSave = !isVersionConflictError(error);
+      applyStatus(SYNC_STATUS.error, isVersionConflictError(error) ? "version-conflict" : "");
     }
 
     function attachChannel() {
@@ -200,7 +212,6 @@
         applyStatus(SYNC_STATUS.offline);
         return null;
       }
-      pendingOfflineSave = false;
       applyStatus(SYNC_STATUS.syncing);
       let row = null;
       const payload = options.getPayload();
@@ -216,12 +227,18 @@
         });
       } catch (error) {
         if (isExpectedVersionRpcMissing(error)) {
-          row = await rpc("save_agenda_draft", saveArgs);
+          try {
+            row = await rpc("save_agenda_draft", saveArgs);
+          } catch (fallbackError) {
+            markSaveFailure(fallbackError);
+            throw fallbackError;
+          }
         } else {
-          applyStatus(SYNC_STATUS.error, isVersionConflictError(error) ? "version-conflict" : "");
+          markSaveFailure(error);
           throw error;
         }
       }
+      pendingOfflineSave = false;
       version = Number(row.version || version + 1);
       applyStatus(SYNC_STATUS.synced);
       if (channel?.send) {
@@ -236,8 +253,9 @@
 
     function scheduleSave() {
       if (applyingRemote || !draftId) return;
-      clearTimeoutFn(saveTimer);
+      clearScheduledSave();
       saveTimer = setTimeoutFn(() => {
+        saveTimer = null;
         return saveNow().catch(handleAsyncSyncError);
       }, SAVE_DEBOUNCE_MS);
     }

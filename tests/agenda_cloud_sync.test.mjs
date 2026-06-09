@@ -83,6 +83,8 @@ function createController({
   const applied = [];
   const urls = [];
   let scheduled = null;
+  let nextTimerId = 1;
+  const activeTimers = new Map();
   const fake = createFakeSupabase(rpcHandler);
   const controller = CloudSync.createAgendaCloudSync({
     config: { url: "https://example.supabase.co", publishableKey: "sb_publishable_test" },
@@ -97,14 +99,35 @@ function createController({
     nowHref: () => "https://scorpioapn.github.io/agenda_generator.html",
     setBrowserUrl: (url) => urls.push(url),
     setTimeout: (fn) => {
-      scheduled = fn;
-      return 1;
+      const id = nextTimerId;
+      nextTimerId += 1;
+      scheduled = { id, fn };
+      activeTimers.set(id, fn);
+      return id;
     },
-    clearTimeout: () => {},
+    clearTimeout: (id) => {
+      activeTimers.delete(id);
+      if (scheduled?.id === id) scheduled = null;
+    },
     online,
     onError
   });
-  return { controller, fake, statuses, links, applied, urls, runScheduled: () => scheduled?.() };
+  return {
+    controller,
+    fake,
+    statuses,
+    links,
+    applied,
+    urls,
+    runScheduled: () => {
+      if (!scheduled || !activeTimers.has(scheduled.id)) return undefined;
+      const { id, fn } = scheduled;
+      activeTimers.delete(id);
+      if (scheduled?.id === id) scheduled = null;
+      return fn();
+    },
+    activeTimerCount: () => activeTimers.size
+  };
 }
 
 test("cloud sync reads draft id from URL search", () => {
@@ -287,4 +310,74 @@ test("cloud sync reports pending reconnect save failures", async () => {
   assert.match(errors[0].message, /save rejected after reconnect/);
   assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.offline), "offline edit should show pending offline status first");
   assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.error), "failed reconnect save should show sync failure");
+});
+
+test("cloud sync keeps online save failures pending so reconnect can retry", async () => {
+  let saveAttempts = 0;
+  const errors = [];
+  const { controller, statuses, fake, runScheduled, activeTimerCount } = createController({
+    payload: { meetingNo: "local-after-network-drop" },
+    rpcHandler(name) {
+      if (name === "save_agenda_draft") {
+        saveAttempts += 1;
+        if (saveAttempts === 1) {
+          return Promise.resolve({ data: null, error: new Error("network dropped during save") });
+        }
+        return Promise.resolve({ data: { version: 2, updated_at: "2026-06-09" }, error: null });
+      }
+      return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 1 }, error: null });
+    },
+    onError: (error) => errors.push(error)
+  });
+
+  await controller.init();
+  controller.scheduleSave();
+  await runScheduled();
+
+  assert.equal(saveAttempts, 1);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0].message, /network dropped during save/);
+  assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.error), "failed online save should report sync failure");
+
+  controller.retryPendingSave();
+  assert.equal(activeTimerCount(), 1, "failed online saves should remain pending for reconnect retry");
+  await runScheduled();
+
+  assert.equal(saveAttempts, 2);
+  assert.equal(controller.getVersion(), 2);
+  assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.synced), "retry should be able to return to synced");
+  assert.ok(fake.calls.some((call) => call[0] === "send" && call[1].event === "agenda-updated"));
+});
+
+test("cloud sync cancels a pending local debounce when a newer broadcast applies remote data", async () => {
+  let remoteVersion = 1;
+  let saveAttempts = 0;
+  const { controller, fake, applied, runScheduled, activeTimerCount } = createController({
+    rpcHandler(name) {
+      if (name === "get_agenda_draft") {
+        return Promise.resolve({
+          data: { payload: { meetingNo: `remote-${remoteVersion}` }, version: remoteVersion },
+          error: null
+        });
+      }
+      if (name === "save_agenda_draft") {
+        saveAttempts += 1;
+        return Promise.resolve({ data: { version: remoteVersion + 1, updated_at: "2026-06-09" }, error: null });
+      }
+      return Promise.resolve({ data: null, error: null });
+    }
+  });
+
+  await controller.init();
+  controller.scheduleSave();
+  assert.equal(activeTimerCount(), 1, "local edit should have a pending debounce save before remote data arrives");
+
+  remoteVersion = 2;
+  await fake.broadcastHandler({ payload: { version: 2, updated_by: "other-client" } });
+  assert.equal(activeTimerCount(), 0, "remote last-write-wins should cancel the stale local debounce save");
+  await runScheduled();
+
+  assert.equal(saveAttempts, 0, "cleared debounce should not re-save the remote payload as a new version");
+  assert.deepEqual(applied.at(-1), { meetingNo: "remote-2" });
+  assert.equal(controller.getVersion(), 2);
 });
