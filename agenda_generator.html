@@ -350,7 +350,8 @@
     input[type="time"],
     #meetingNo,
     #agendaTime,
-    #agendaDuration {
+    #agendaDuration,
+    #agendaDurationNote {
       font-family: var(--font-number);
     }
 
@@ -2287,6 +2288,19 @@
       white-space: nowrap;
     }
 
+    .flow-duration-main {
+      display: block;
+    }
+
+    .flow-duration-note {
+      display: block;
+      margin-top: 2px;
+      color: #554941;
+      font-size: 9.5px;
+      line-height: 1.12;
+      font-weight: 850;
+    }
+
     .flow-table .flow-person {
       width: 104px;
       text-align: center;
@@ -3336,8 +3350,12 @@
                 <input class="input" id="agendaTime" type="time" readonly aria-readonly="true" title="按会议开始时间和时长自动计算" />
               </div>
               <div class="field">
-                <label for="agendaDuration">时长</label>
-                <input class="input" id="agendaDuration" placeholder="5-7 或 2min/人" />
+                <label for="agendaDuration">总时长</label>
+                <input class="input" id="agendaDuration" placeholder="15 或 5-7" />
+              </div>
+              <div class="field">
+                <label for="agendaDurationNote">时长说明</label>
+                <input class="input" id="agendaDurationNote" placeholder="例如：2min/人" />
               </div>
               <div class="field full">
                 <label for="agendaTitle">活动内容</label>
@@ -3653,8 +3671,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         { id: "i-timer-declare", kind: "item", time: "19:38", title: "时间官宣言", detail: "", duration: "2", person: "纳纳（来宾）" },
         { id: "i-ah-declare", kind: "item", time: "19:41", title: "哼哈官宣言", detail: "", duration: "2", person: "Isabel（来宾）" },
         { id: "s-impromptu", kind: "section", title: "二、即兴马拉松" },
-        { id: "i-impromptu-rule", kind: "item", time: "19:43", title: "即兴主持介绍规则", detail: "", duration: "20", person: "Maggie" },
-        { id: "i-impromptu", kind: "item", time: "19:43", title: "即兴演讲", detail: "即兴主持人设计规则，展开两分钟演讲", duration: "2min/人", person: "现场所有人" },
+        { id: "i-impromptu", kind: "item", time: "19:43", title: "即兴演讲", detail: "即兴主持介绍规则\n即兴主持人设计规则，现场所有人参与", duration: "15", durationNote: "2min/人", person: "Maggie" },
         { id: "s-prepared", kind: "section", title: "三、精心演讲环节" },
         { id: "i-prepared-intro", kind: "item", time: "20:04", title: "总主持人介绍本环节+串场", detail: "30秒 × 4", duration: "2", person: "女侠" },
         { id: "i-speech-1", kind: "item", time: "20:06", title: "精心备稿1", detail: "《选择和努力》PM L1-2 撰写带有目的性的演讲稿", duration: "5-7", person: "Maggie" },
@@ -3683,7 +3700,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       { keywords: ["主席"], duration: "3", recommendation: "3分钟" },
       { keywords: ["总主持", "串场"], duration: "3", recommendation: "2-3分钟" },
       { keywords: ["三官宣言", "时间官宣言", "哼哈官宣言"], duration: "2", recommendation: "2分钟" },
-      { keywords: ["即兴演讲"], duration: "2min/人", recommendation: "2分钟/人" },
+      { keywords: ["即兴演讲"], duration: "15", durationNote: "2min/人", recommendation: "15分钟，2min/人" },
       { keywords: ["备稿演讲", "精心备稿"], duration: "5-7", recommendation: "5-7分钟" },
       { keywords: ["来宾介绍"], duration: "5", recommendation: "5分钟" },
       { keywords: ["即兴点评"], duration: "5", recommendation: "5分钟" },
@@ -3707,6 +3724,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       agendaTime: document.querySelector("#agendaTime"),
       agendaTitle: document.querySelector("#agendaTitle"),
       agendaDuration: document.querySelector("#agendaDuration"),
+      agendaDurationNote: document.querySelector("#agendaDurationNote"),
       agendaPerson: document.querySelector("#agendaPerson"),
       agendaDetail: document.querySelector("#agendaDetail"),
       residentPeople: document.querySelector("#residentPeople"),
@@ -3794,7 +3812,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
           ...parsed,
           items: Array.isArray(parsed.items) && parsed.items.length ? parsed.items : clone(DEFAULT_DATA.items)
         });
-        let migrated = stripRemovedDataFields(merged);
+        const agendaNormalization = normalizeAgendaItems(merged.items);
+        merged.items = agendaNormalization.items;
+        let migrated = stripRemovedDataFields(merged) || agendaNormalization.changed;
         if (merged.clubNameEnglish === "Changyan Chinese Toastmasters Club") {
           merged.clubNameEnglish = DEFAULT_DATA.clubNameEnglish;
           migrated = true;
@@ -3979,6 +3999,90 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (range) return Number(range[2]);
       const first = text.match(/(\d+(?:\.\d+)?)/);
       return first ? Number(first[1]) : 0;
+    }
+
+    function durationDisplayLabel(item) {
+      const total = String(item?.duration || "").trim();
+      const note = String(item?.durationNote || "").trim();
+      if (total && note) return `${total} (${note})`;
+      return total || note;
+    }
+
+    function hasPerPersonDuration(value) {
+      return /\/\s*人|每人/.test(String(value || ""));
+    }
+
+    function isLegacyImpromptuPair(ruleItem, speechItem) {
+      if (!ruleItem || !speechItem) return false;
+      if (ruleItem.kind === "section" || speechItem.kind === "section") return false;
+      return /即兴主持/.test(ruleItem.title || "")
+        && /规则/.test(ruleItem.title || "")
+        && /即兴演讲/.test(speechItem.title || "")
+        && hasPerPersonDuration(speechItem.duration);
+    }
+
+    function compactDetailLines(...parts) {
+      const seen = new Set();
+      return parts
+        .flatMap((part) => String(part || "").split(/\n+/))
+        .map((line) => line.trim())
+        .filter((line) => {
+          if (!line || seen.has(line)) return false;
+          seen.add(line);
+          return true;
+        })
+        .join("\n");
+    }
+
+    function normalizeAgendaItemFields(item) {
+      const normalized = { ...(item || {}) };
+      normalized.kind = normalized.kind === "section" ? "section" : "item";
+      if (normalized.kind === "section") {
+        delete normalized.time;
+        delete normalized.detail;
+        delete normalized.duration;
+        delete normalized.durationNote;
+        delete normalized.person;
+        return normalized;
+      }
+      const durationNote = String(normalized.durationNote || "").trim();
+      if (durationNote) normalized.durationNote = durationNote;
+      else delete normalized.durationNote;
+      return normalized;
+    }
+
+    function mergeLegacyImpromptuPair(ruleItem, speechItem) {
+      const participantLine = speechItem.person ? `${speechItem.person}参与` : "现场所有人参与";
+      return normalizeAgendaItemFields({
+        ...speechItem,
+        id: speechItem.id || ruleItem.id,
+        kind: "item",
+        time: ruleItem.time || speechItem.time || "",
+        title: speechItem.title || "即兴演讲",
+        detail: compactDetailLines(ruleItem.detail || ruleItem.title, speechItem.detail, participantLine),
+        duration: ruleItem.duration || "",
+        durationNote: speechItem.durationNote || speechItem.duration || "",
+        person: ruleItem.person || speechItem.person || ""
+      });
+    }
+
+    function normalizeAgendaItems(items = []) {
+      const normalizedItems = Array.isArray(items) ? items.map(normalizeAgendaItemFields) : [];
+      const result = [];
+      let changed = normalizedItems.length !== (Array.isArray(items) ? items.length : 0);
+      for (let index = 0; index < normalizedItems.length; index += 1) {
+        const item = normalizedItems[index];
+        const next = normalizedItems[index + 1];
+        if (isLegacyImpromptuPair(item, next)) {
+          result.push(mergeLegacyImpromptuPair(item, next));
+          index += 1;
+          changed = true;
+          continue;
+        }
+        if (JSON.stringify(item) !== JSON.stringify(items[index])) changed = true;
+        result.push(item);
+      }
+      return { items: result, changed };
     }
 
     function minutesToTime(totalMinutes) {
@@ -4321,7 +4425,10 @@ ${GUEST_PARTICIPATION_NOTE}`,
                 <span class="flow-activity-title">${escapeHtml(item.title || "")}</span>
                 ${item.detail ? `<span class="flow-activity-detail">${escapeHtml(item.detail)}</span>` : ""}
               </td>
-              <td class="flow-duration">${escapeHtml(item.duration || "")}</td>
+              <td class="flow-duration">
+                <span class="flow-duration-main">${escapeHtml(item.duration || "")}</span>
+                ${item.durationNote ? `<span class="flow-duration-note">${escapeHtml(item.durationNote)}</span>` : ""}
+              </td>
               <td class="flow-person">${escapeHtml(item.person || "")}</td>
             </tr>
           `;
@@ -4470,9 +4577,10 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.mobileSortToggleBtn?.classList.toggle("selected", sortModeActive);
       els.agendaList.innerHTML = state.items.map((item, index) => {
         const isSection = item.kind === "section";
+        const durationLabel = durationDisplayLabel(item);
         const meta = isSection
           ? "分组标题"
-          : `${item.time || "未定时间"} · ${item.duration || "未定时长"} · ${item.person || "未定参与者"}`;
+          : `${item.time || "未定时间"} · ${durationLabel || "未定时长"} · ${item.person || "未定参与者"}`;
         const rowType = isSection ? "分组" : "项目";
         return `
           <div class="agenda-row ${isSection ? "section" : ""} ${editingId === item.id ? "selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="${sortModeActive ? "false" : "true"}">
@@ -4811,7 +4919,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
     function syncAgendaKindFields() {
       const isSection = els.agendaKind.value === "section";
-      [els.agendaTime, els.agendaDuration, els.agendaPerson, els.agendaDetail].forEach((input) => {
+      [els.agendaTime, els.agendaDuration, els.agendaDurationNote, els.agendaPerson, els.agendaDetail].forEach((input) => {
         input.disabled = isSection;
       });
       els.agendaFormTitle.textContent = isSection
@@ -4827,6 +4935,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.agendaTime.value = "";
       els.agendaTitle.value = "";
       els.agendaDuration.value = "";
+      els.agendaDurationNote.value = "";
       els.agendaPerson.value = "";
       els.agendaDetail.value = "";
       syncAgendaKindFields();
@@ -4844,6 +4953,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.agendaTime.value = "";
       els.agendaTitle.value = "";
       els.agendaDuration.value = "";
+      els.agendaDurationNote.value = "";
       els.agendaPerson.value = "";
       els.agendaDetail.value = "";
       syncAgendaKindFields();
@@ -4864,6 +4974,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.agendaTime.value = item.time || "";
       els.agendaTitle.value = item.title || "";
       els.agendaDuration.value = item.duration || "";
+      els.agendaDurationNote.value = item.durationNote || "";
       els.agendaPerson.value = item.person || "";
       els.agendaDetail.value = item.detail || "";
       syncAgendaKindFields();
@@ -4876,7 +4987,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
     function readAgendaForm() {
       const kind = els.agendaKind.value;
-      return {
+      const item = {
         id: editingId || newId(kind),
         kind,
         time: kind === "section" ? "" : els.agendaTime.value,
@@ -4885,6 +4996,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
         duration: kind === "section" ? "" : els.agendaDuration.value.trim(),
         person: kind === "section" ? "" : els.agendaPerson.value.trim()
       };
+      const durationNote = kind === "section" ? "" : els.agendaDurationNote.value.trim();
+      if (durationNote) item.durationNote = durationNote;
+      return normalizeAgendaItemFields(item);
     }
 
     function saveAgendaFromForm() {
@@ -4988,6 +5102,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (match && !els.agendaDuration.value.trim()) {
         els.agendaDuration.value = match.duration;
       }
+      if (match?.durationNote && !els.agendaDurationNote.value.trim()) {
+        els.agendaDurationNote.value = match.durationNote;
+      }
       renderRuleHint();
     }
 
@@ -5005,7 +5122,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
         if (item.kind === "section") {
           lines.push(`【${item.title}】`);
         } else {
-          lines.push(`${item.time || "--:--"}  ${item.title}  ${item.duration || "-"}分钟  ${item.person || ""}`);
+          const durationText = item.duration ? `${item.duration}分钟` : "-";
+          const durationNote = item.durationNote ? `（${item.durationNote}）` : "";
+          lines.push(`${item.time || "--:--"}  ${item.title}  ${durationText}${durationNote}  ${item.person || ""}`);
           if (item.detail) lines.push(`  ${item.detail}`);
         }
       });
@@ -5374,6 +5493,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         ...parsed,
         items: Array.isArray(parsed.items) ? parsed.items : clone(DEFAULT_DATA.items)
       });
+      normalized.items = normalizeAgendaItems(normalized.items).items;
       stripRemovedDataFields(normalized);
       return normalized;
     }

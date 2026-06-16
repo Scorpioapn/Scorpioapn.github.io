@@ -96,6 +96,18 @@ function buildDurationParser() {
   return schema.parseDurationToMinutes;
 }
 
+function buildAgendaNormalizer() {
+  return new Function(`
+    ${functionBlock("hasPerPersonDuration")}
+    ${functionBlock("isLegacyImpromptuPair")}
+    ${functionBlock("compactDetailLines")}
+    ${functionBlock("normalizeAgendaItemFields")}
+    ${functionBlock("mergeLegacyImpromptuPair")}
+    ${functionBlock("normalizeAgendaItems")}
+    return normalizeAgendaItems;
+  `)();
+}
+
 function buildConflictChecker(storageValues) {
   const windowFake = {
     TMStorage: {
@@ -387,6 +399,47 @@ test("screen preview uses the same fixed artboard model as print", () => {
   assert.doesNotMatch(syncScaleMatch[1], /max-width:\s*920px/, "preview scale should not be limited to mobile widths");
 });
 
+test("agenda generator separates total duration from per-person duration notes", () => {
+  const renderPreview = functionBlock("renderPreview");
+  const readAgendaForm = functionBlock("readAgendaForm");
+  const applyTitleDefault = functionBlock("applyTitleDefault");
+  const autoSchedule = functionBlock("autoScheduleAgenda");
+  const durationRule = cssRule(".flow-duration-note");
+
+  assert.match(source, /id="agendaDurationNote"/, "agenda editor should expose an optional duration note field");
+  assert.match(source, /<label for="agendaDuration">总时长<\/label>/, "duration field should clearly mean total scheduled duration");
+  assert.match(source, /durationNote:\s*"2min\/人"/, "default impromptu agenda should store a per-person duration note");
+  assert.match(source, /duration:\s*"15"[\s\S]*?durationNote:\s*"2min\/人"/, "default impromptu agenda should use 15 minutes as the scheduled total");
+  assert.match(renderPreview, /flow-duration-main/, "A4 preview should render the primary total duration separately");
+  assert.match(renderPreview, /flow-duration-note/, "A4 preview should render duration notes as secondary text");
+  assert.match(durationRule, /font-size:\s*9\.5px;/, "duration notes should stay visually secondary inside the compact table cell");
+  assert.match(readAgendaForm, /durationNote/, "saving the agenda form should preserve a non-empty duration note");
+  assert.match(applyTitleDefault, /match\?\.durationNote/, "title defaults should fill the duration note when available");
+  assert.match(autoSchedule, /parseDurationMinutes\(item\.duration\)/, "automatic scheduling should use the total duration field");
+  assert.doesNotMatch(autoSchedule, /durationNote/, "duration notes should not affect automatic scheduling");
+});
+
+test("agenda generator normalizes legacy impromptu two-row timing into one double-duration row", () => {
+  const normalizeAgendaItems = buildAgendaNormalizer();
+  const { items, changed } = normalizeAgendaItems([
+    { id: "s-impromptu", kind: "section", title: "二、即兴演讲" },
+    { id: "rule", kind: "item", time: "19:42", title: "即兴主持介绍规则", detail: "", person: "燕微", duration: "15" },
+    { id: "speech", kind: "item", time: "19:57", title: "即兴演讲", detail: "即兴主持人设计规则，展开两分钟演讲", person: "现场所有人", duration: "2min/人" },
+    { id: "next", kind: "item", time: "19:59", title: "总主持人介绍本环节+串场", person: "卡卡", duration: "2" }
+  ]);
+
+  assert.equal(changed, true, "legacy impromptu rows should be detected as a migration");
+  assert.equal(items.length, 3, "legacy rule and speech rows should collapse into one agenda item");
+  assert.equal(items[1].id, "speech", "the merged row should keep the original speech item identity");
+  assert.equal(items[1].time, "19:42", "the merged row should start at the original total-flow time");
+  assert.equal(items[1].title, "即兴演讲");
+  assert.equal(items[1].duration, "15", "the merged row should schedule by total duration");
+  assert.equal(items[1].durationNote, "2min/人", "the merged row should preserve the per-person duration");
+  assert.equal(items[1].person, "燕微", "the merged row should keep the impromptu host as owner");
+  assert.match(items[1].detail, /即兴主持介绍规则/, "rule explanation should remain visible in the detail");
+  assert.match(items[1].detail, /现场所有人参与/, "participants should be preserved in the detail");
+});
+
 test("agenda builder syncs a copied agenda into timekeeper storage", () => {
   const buildAgenda = functionSource("buildTimekeeperAgendaItems");
   const syncAgenda = functionSource("syncTimekeeperAgenda");
@@ -451,6 +504,22 @@ test("timekeeper duration conversion handles real edge cases", () => {
   assert.equal(parseMinutes("０５-０７"), 7, "full-width digits should parse correctly");
   assert.equal(parseMinutes("30秒 × 4 + 1", 9), 9, "ambiguous mixed expressions should return fallback");
   assert.equal(parseMinutes("30秒 4", 9), 9, "unstructured multi-number labels should return fallback");
+});
+
+test("timekeeper sync uses total impromptu duration while preserving the per-person note", () => {
+  const payload = schema.buildTimekeeperPayload({
+    date: "2026-06-16",
+    startTime: "19:20",
+    endTime: "21:30",
+    items: [
+      { id: "s-impromptu", kind: "section", title: "二、即兴演讲" },
+      { id: "i-impromptu", kind: "item", time: "19:42", title: "即兴演讲", detail: "即兴主持介绍规则", person: "燕微", duration: "15", durationNote: "2min/人" }
+    ]
+  });
+
+  assert.equal(payload.agendaItems.length, 1);
+  assert.equal(payload.agendaItems[0].plannedMinutes, 15, "timekeeper should count the full impromptu flow, not the per-person note");
+  assert.equal(payload.agendaItems[0].durationLabel, "15 (2min/人)", "timekeeper should retain the readable per-person timing note");
 });
 
 test("timekeeper conflict detection handles default agenda and meeting edits", () => {

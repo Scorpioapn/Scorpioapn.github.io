@@ -83,16 +83,24 @@
     };
   }
 
+  function formatGeneratorDurationLabel(duration, durationNote) {
+    const total = String(duration || "").trim();
+    const note = String(durationNote || "").trim();
+    if (total && note) return `${total} (${note})`;
+    return total || note;
+  }
+
   function convertGeneratorItemToTimekeeperAgenda(item = {}, index = 0) {
     if ((item.kind || "item") === "section") return null;
     if (!String(item.title || "").trim()) return null;
     const plannedMinutes = parseDurationToMinutes(item.duration, 2);
+    const durationLabel = formatGeneratorDurationLabel(item.duration || `${plannedMinutes} 分钟`, item.durationNote);
     return normalizeTimekeeperAgendaItem({
       id: item.id || `agenda-sync-${index + 1}`,
       sourceId: item.id || "",
       name: String(item.title || "").trim(),
       plannedMinutes,
-      durationLabel: String(item.duration || `${plannedMinutes} 分钟`).trim(),
+      durationLabel,
       status: "pending",
       actualStart: null,
       actualEnd: null,
