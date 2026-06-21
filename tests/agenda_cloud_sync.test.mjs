@@ -54,6 +54,29 @@ function createFakeSupabase(rpcHandler) {
       createClient() {
         calls.push(["createClient"]);
         return {
+          functions: {
+            async invoke(functionName, { body }) {
+              calls.push(["invoke", functionName, body]);
+              const rpcName = {
+                create: "create_agenda_draft",
+                get: "get_agenda_draft",
+                save: "save_agenda_draft"
+              }[body.action];
+              const args = body.action === "create"
+                ? { payload: body.payload }
+                : body.action === "get"
+                  ? { draft_id: body.draftId }
+                  : {
+                      draft_id: body.draftId,
+                      payload: body.payload,
+                      client_id: body.clientId,
+                      expected_version: body.expectedVersion
+                    };
+              const result = await rpcHandler(rpcName, args);
+              if (result.error) return { data: null, error: result.error };
+              return { data: { data: result.data }, error: null };
+            }
+          },
           async rpc(name, args) {
             calls.push(["rpc", name, args]);
             return rpcHandler(name, args);
@@ -211,7 +234,7 @@ test("cloud sync rejects stale saves without broadcasting success", async () => 
 
 test("existing drafts cannot save before the first remote load succeeds", async () => {
   let saveCalls = 0;
-  const { controller } = createController({
+  const { controller, fake } = createController({
     rpcHandler(name) {
       if (name === "get_agenda_draft") {
         return Promise.resolve({ data: null, error: new Error("temporary load failure") });
@@ -226,18 +249,13 @@ test("existing drafts cannot save before the first remote load succeeds", async 
   assert.equal(saveCalls, 0);
 });
 
-test("cloud sync falls back to legacy save RPC while the expected-version migration is pending", async () => {
+test("cloud sync routes persistence through the Edge gateway instead of public RPCs", async () => {
   const saveCalls = [];
-  const { controller } = createController({
-    payload: { meetingNo: "legacy-compatible" },
+  const { controller, fake } = createController({
+    payload: { meetingNo: "edge-only" },
     rpcHandler(name, args) {
       if (name === "save_agenda_draft") {
         saveCalls.push(args);
-        if (Object.hasOwn(args, "expected_version")) {
-          const error = new Error("Could not find the function public.save_agenda_draft with expected_version");
-          error.code = "PGRST202";
-          return Promise.resolve({ data: null, error });
-        }
         return Promise.resolve({ data: { version: 8, updated_at: "2026-06-06" }, error: null });
       }
       return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 7 }, error: null });
@@ -247,10 +265,11 @@ test("cloud sync falls back to legacy save RPC while the expected-version migrat
   await controller.init();
   await controller.saveNow();
 
-  assert.equal(saveCalls.length, 2);
+  assert.equal(saveCalls.length, 1);
   assert.equal(saveCalls[0].expected_version, 7);
-  assert.equal(Object.hasOwn(saveCalls[1], "expected_version"), false, "legacy fallback should preserve live sync until the DB migration is applied");
   assert.equal(controller.getVersion(), 8);
+  assert.ok(fake.calls.some((call) => call[0] === "invoke" && call[1] === "agenda-drafts"));
+  assert.equal(fake.calls.some((call) => call[0] === "rpc"), false);
 });
 
 test("cloud sync applies newer remote broadcast and ignores self broadcast", async () => {

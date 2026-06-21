@@ -54,13 +54,7 @@
   function isVersionConflictError(error) {
     const message = String(error?.message || error || "");
     const code = String(error?.code || "");
-    return code === "40001" || /version conflict/i.test(message);
-  }
-
-  function isExpectedVersionRpcMissing(error) {
-    const message = String(error?.message || error || "");
-    const code = String(error?.code || "");
-    return code === "PGRST202" && /expected_version|save_agenda_draft/i.test(message);
+    return code === "40001" || code === "version_conflict" || /version[ _-]conflict/i.test(message);
   }
 
   function isSupabaseConfigured(config) {
@@ -124,19 +118,28 @@
       saveTimer = null;
     }
 
-    async function rpc(name, args) {
+    async function requestDraft(action, body = {}) {
+      if (options.transport) return normalizeRpcRow(await options.transport(action, body));
       const client = resolveSupabaseClient();
       if (!client) throw new Error("Supabase sync is not configured");
-      const { data, error } = await client.rpc(name, args);
+      if (!client.functions?.invoke) throw new Error("Supabase Edge sync is not available");
+      const { data, error } = await client.functions.invoke("agenda-drafts", {
+        body: { action, ...body }
+      });
       if (error) throw error;
-      return normalizeRpcRow(data);
+      if (data?.error) {
+        const requestError = new Error(data.error.message || data.error.code || "Agenda sync failed");
+        requestError.code = data.error.code || "";
+        throw requestError;
+      }
+      return normalizeRpcRow(data?.data ?? data);
     }
 
     async function loadRemoteDraft({ force = false } = {}) {
       if (!draftId) return null;
       if (dirty && !force) return enterConflict(version, "local-dirty");
       applyStatus(SYNC_STATUS.syncing);
-      const row = await rpc("get_agenda_draft", { draft_id: draftId });
+      const row = await requestDraft("get", { draftId });
       if (!row?.payload) throw new Error("Sync draft not found");
       clearScheduledSave();
       pendingOfflineSave = false;
@@ -217,7 +220,7 @@
         throw new Error("Supabase sync is not configured");
       }
       applyStatus(SYNC_STATUS.syncing);
-      const row = await rpc("create_agenda_draft", { payload: options.getPayload() });
+      const row = await requestDraft("create", { payload: options.getPayload() });
       draftId = row.id;
       version = Number(row.version || 1);
       remoteReady = true;
@@ -253,27 +256,16 @@
       let row = null;
       const payload = options.getPayload();
       const saveArgs = {
-        draft_id: draftId,
+        draftId,
         payload,
-        client_id: clientId
+        clientId,
+        expectedVersion: version
       };
       try {
-        row = await rpc("save_agenda_draft", {
-          ...saveArgs,
-          expected_version: version || null
-        });
+        row = await requestDraft("save", saveArgs);
       } catch (error) {
-        if (isExpectedVersionRpcMissing(error)) {
-          try {
-            row = await rpc("save_agenda_draft", saveArgs);
-          } catch (fallbackError) {
-            markSaveFailure(fallbackError);
-            throw fallbackError;
-          }
-        } else {
-          markSaveFailure(error);
-          throw error;
-        }
+        markSaveFailure(error);
+        throw error;
       }
       pendingOfflineSave = false;
       version = Number(row.version || version + 1);
@@ -325,7 +317,7 @@
         throw new Error("Supabase sync is not configured");
       }
       applyStatus(SYNC_STATUS.syncing);
-      const row = await rpc("create_agenda_draft", { payload: options.getPayload() });
+      const row = await requestDraft("create", { payload: options.getPayload() });
       detachChannel();
       draftId = row.id;
       version = Number(row.version || 1);
