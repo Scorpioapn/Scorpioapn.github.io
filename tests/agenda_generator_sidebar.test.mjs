@@ -750,6 +750,16 @@ test("agenda generator JSON import still enters the cloud sync save path", () =>
   assert.match(saveDataSource, /queueCloudSave\(\)/, "the common save path should queue cloud sync after localStorage");
 });
 
+test("cloud sync exposes explicit conflict recovery actions", () => {
+  const initCloudSyncSource = functionBlock("initCloudSync");
+  assert.match(source, /id="cloudSyncConflictActions"/);
+  assert.match(source, /id="loadRemoteDraftBtn"/);
+  assert.match(source, /id="forkLocalDraftBtn"/);
+  assert.match(source, /cloudSyncController\.loadRemoteLatest\(\)/);
+  assert.match(source, /cloudSyncController\.forkDraft\(\)/);
+  assert.match(initCloudSyncSource, /onConflict:\s*showCloudSyncConflict/);
+});
+
 test("agenda generator exports a mobile-friendly image PDF from the A4 preview", () => {
   const capturePrintPageCanvas = functionBlock("capturePrintPageCanvas");
   const renderPrintPageDomCanvas = functionBlock("renderPrintPageDomCanvas");

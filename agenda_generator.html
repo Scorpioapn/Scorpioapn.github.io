@@ -493,6 +493,26 @@
       font-size: 12px;
     }
 
+    .cloud-sync-conflict-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(179, 38, 30, 0.16);
+    }
+
+    .cloud-sync-conflict-actions[hidden] {
+      display: none;
+    }
+
+    .cloud-sync-conflict-message {
+      grid-column: 1 / -1;
+      color: var(--md-error);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
     .button {
       min-height: 48px;
       padding: 0 20px;
@@ -3554,6 +3574,11 @@
                   <button class="button tonal" id="createSyncDraftBtn" type="button">创建同步草稿</button>
                   <button class="button subtle" id="copySyncLinkBtn" type="button" disabled>复制同步链接</button>
                 </div>
+                <div class="cloud-sync-conflict-actions" id="cloudSyncConflictActions" aria-live="polite" hidden>
+                  <p class="cloud-sync-conflict-message">云端和本机均有修改。请选择载入云端，或将本机内容另存为新草稿。</p>
+                  <button class="button tonal" id="loadRemoteDraftBtn" type="button">载入云端</button>
+                  <button class="button subtle" id="forkLocalDraftBtn" type="button">本机另存</button>
+                </div>
               </div>
             </div>
             <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" />
@@ -3796,6 +3821,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
       cloudSyncLink: document.querySelector("#cloudSyncLink"),
       createSyncDraftBtn: document.querySelector("#createSyncDraftBtn"),
       copySyncLinkBtn: document.querySelector("#copySyncLinkBtn"),
+      cloudSyncConflictActions: document.querySelector("#cloudSyncConflictActions"),
+      loadRemoteDraftBtn: document.querySelector("#loadRemoteDraftBtn"),
+      forkLocalDraftBtn: document.querySelector("#forkLocalDraftBtn"),
       openTimekeeperBtn: document.querySelector("#openTimekeeperBtn"),
       toast: document.querySelector("#toast"),
       toastText: document.querySelector("#toastText"),
@@ -4804,7 +4832,41 @@ ${GUEST_PARTICIPATION_NOTE}`,
 
     function applyCloudDraftPayload(payload) {
       replaceAgendaState(payload);
+      renderCloudConflictActions(false);
       showToast("已应用云端最新草稿");
+    }
+
+    function renderCloudConflictActions(visible) {
+      if (els.cloudSyncConflictActions) els.cloudSyncConflictActions.hidden = !visible;
+    }
+
+    function showCloudSyncConflict() {
+      renderCloudConflictActions(true);
+      showToast("检测到云端与本机版本冲突，请选择保留方式");
+    }
+
+    async function loadRemoteConflictVersion() {
+      if (!cloudSyncController) return;
+      if (!window.confirm("载入云端版本？尚未同步的本机修改将被替换。")) return;
+      try {
+        await cloudSyncController.loadRemoteLatest();
+        renderCloudConflictActions(false);
+      } catch (error) {
+        console.error(error);
+        showToast("云端版本载入失败，本机内容仍保留");
+      }
+    }
+
+    async function forkLocalConflictVersion() {
+      if (!cloudSyncController) return;
+      try {
+        await cloudSyncController.forkDraft();
+        renderCloudConflictActions(false);
+        showToast("本机内容已另存为新的同步草稿");
+      } catch (error) {
+        console.error(error);
+        showToast("本机草稿另存失败，请先导出 JSON 备份");
+      }
     }
 
     function queueCloudSave() {
@@ -4815,6 +4877,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (!cloudSyncController) return;
       try {
         await cloudSyncController.createDraft();
+        renderCloudConflictActions(false);
         showToast("同步草稿已创建，可以复制链接到另一台设备");
       } catch (error) {
         const missingConfig = error.message === "Supabase sync is not configured";
@@ -4849,6 +4912,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
         getPayload: () => clone(state),
         normalizeRemotePayload: normalizeImportedData,
         applyRemotePayload: applyCloudDraftPayload,
+        onConflict: showCloudSyncConflict,
         setStatus: setCloudSyncStatus,
         renderLink: renderCloudSyncLink,
         nowHref: () => window.location.href,
@@ -5792,6 +5856,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
       els.createSyncDraftBtn?.addEventListener("click", createCloudDraft);
       els.copySyncLinkBtn?.addEventListener("click", copyCloudSyncLink);
+      els.loadRemoteDraftBtn?.addEventListener("click", loadRemoteConflictVersion);
+      els.forkLocalDraftBtn?.addEventListener("click", forkLocalConflictVersion);
       els.openTimekeeperBtn.addEventListener("click", openTimekeeper);
       window.addEventListener("resize", () => {
         if (!isMobileViewport() && mobileSortMode) {
