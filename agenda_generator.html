@@ -3253,13 +3253,55 @@
 
     }
   </style>
+<style id="audit-readability-fixes">
+  /* ===== 设计体检 · 议程稿可读性与一致性修复 ===== */
+  /* F-05 自托管 Oswald 条形数字，三端一致（需随仓带 assets/fonts/Oswald-Variable.ttf） */
+  @font-face{font-family:"Oswald";src:url("assets/fonts/Oswald-Variable.ttf") format("truetype");font-weight:200 700;font-style:normal;font-display:swap;}
+  :root{--font-number:"Oswald","DIN Alternate","Bahnschrift","Segoe UI Variable","Segoe UI",sans-serif;}
+
+  /* F-07 小字减重（中文小字超重会糊） */
+  .template-sheet .flow-activity-title{font-weight:700;}
+  .template-sheet .flow-time{font-weight:800;color:#0a6c9c;} /* F-02 时间列改亮蓝，与深蓝表头分层 */
+  .template-sheet .flow-table .flow-duration{font-weight:800;}
+  .template-sheet .flow-table th{font-weight:800;}
+  .template-sheet .section-label{font-weight:700;}
+  .template-sheet .timing-rule-heading strong{font-weight:800;}
+  .template-sheet .timing-rule-token,.template-sheet .timing-rule-value{font-weight:700;}
+  .template-sheet .template-info-card p,.template-sheet .template-info-card li{font-weight:600;}
+  .template-sheet .info-label{font-weight:800;}
+  .template-sheet .qr-box span{font-weight:700;}
+
+  /* F-06 抬高密集档字号下限（配合减重，避免跳破可读线） */
+  .template-sheet.flow-fit-dense{--flow-td-font:10px;--flow-detail-font:9px;}
+  .template-sheet.flow-fit-micro{--flow-td-font:9.2px;--flow-detail-font:8.4px;}
+
+  /* F-03 编辑器圆角收一档，向纸面靠拢 */
+  .surface-panel{border-radius:24px;}
+  .agenda-form-card{border-radius:24px;}
+  .agenda-row{border-radius:20px;}
+
+  /* F-08 选中态：蓝色撞按钮 → 栗红左条 */
+  .agenda-row.selected,.agenda-row.selected:hover{background:#fff;box-shadow:inset 4px 0 0 #772432, var(--shadow-2);}
+
+  /* F-08 编辑器用真·头马地球，替代「CY」字母章 */
+  .brand-mark{background:transparent !important;box-shadow:none !important;padding:0;overflow:hidden;}
+  .brand-mark img{width:100%;height:100%;object-fit:contain;display:block;}
+
+  /* A-02 二维码空状态：保留占位，虚线框 + 提示 */
+  .qr-box.is-empty{border:2px dashed rgba(119,36,50,0.45);background:#fffaf4;display:grid;place-items:center;gap:2px;color:#9a5560;}
+  .qr-box.is-empty span{font-size:9px;line-height:1.25;font-weight:800;text-align:center;}
+
+  /* A-04 字段分组留白：组间更松，用留白表达分组 */
+  .field-grid{gap:16px;}
+  .editor-scroll .surface-panel{margin-bottom:24px;}
+</style>
 </head>
 <body>
   <div class="app-shell">
     <aside class="editor-shell" aria-label="议程编辑区">
       <header class="editor-header">
         <div class="brand-row">
-          <div class="brand-mark" aria-hidden="true">CY</div>
+          <div class="brand-mark" aria-hidden="true"><img src="assets/toastmasters-logo-color-png.png" alt="" /></div>
           <div class="brand-copy">
             <p class="eyebrow">TOASTMASTERS AGENDA BUILDER</p>
             <h1>畅言中文议程生成器</h1>
@@ -4187,7 +4229,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     function qrBoxHtml(src) {
       return src
         ? `<div class="qr-box"><img src="${escapeHtml(src)}" alt="" /></div>`
-        : `<div class="qr-box"><span>未上传<br>二维码</span></div>`;
+        : `<div class="qr-box is-empty"><span>扫码区<br>待上传</span></div>`;
     }
 
     function weekdayText(dateValue) {
@@ -4478,27 +4520,27 @@ ${GUEST_PARTICIPATION_NOTE}`,
                   <div class="timing-rule-card">
                     <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>3分钟及以下规则</strong><small>适用于主席致辞、主持串场、三官宣言、短点评等</small></span></div>
                     <div class="timing-rule-list">
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 30 秒</span></div>
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 1 分钟 · 可收尾</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 30 秒 · 准备停</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到 · 请停止</span></div>
                       <div class="timing-rule-item"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 15 秒</span></div>
                     </div>
                   </div>
                   <div class="timing-rule-card">
                     <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>3–10分钟规则</strong><small>适用于备稿演讲、来宾介绍、即兴点评等</small></span></div>
                     <div class="timing-rule-list">
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 1 分钟</span></div>
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 2 分钟 · 可收尾</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 1 分钟 · 准备停</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到 · 请停止</span></div>
                       <div class="timing-rule-item"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
                     </div>
                   </div>
                   <div class="timing-rule-card">
                     <div class="timing-rule-heading"><span class="timing-rule-icon">${templateIconSvg("clock")}</span><span><strong>10分钟以上规则</strong><small>适用于工作坊、专题分享、较长流程说明等</small></span></div>
                     <div class="timing-rule-list">
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 5 分钟</span></div>
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 2 分钟</span></div>
-                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card green"></span>绿牌</span><span class="timing-rule-value">剩余 5 分钟 · 可收尾</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card yellow"></span>黄牌</span><span class="timing-rule-value">剩余 2 分钟 · 准备停</span></div>
+                      <div class="timing-rule-item"><span class="timing-rule-token"><span class="signal-card red"></span>红牌</span><span class="timing-rule-value">时间到 · 请停止</span></div>
                       <div class="timing-rule-item"><span class="timing-rule-token"><span class="rule-bell-icon">${templateIconSvg("bell")}</span>响铃</span><span class="timing-rule-value">超时 30 秒</span></div>
                     </div>
                   </div>
@@ -4680,14 +4722,22 @@ ${GUEST_PARTICIPATION_NOTE}`,
       return !hasPageOverflow && !hasFlowOverlap();
     }
 
+    const DENSITY_LABELS = { "": "标准排", "flow-fit-compact": "紧凑排", "flow-fit-dense": "密集排", "flow-fit-micro": "超密排" };
+    function updateDensityLabel() {
+      if (!els.previewChip) return;
+      const page = els.printPage;
+      const tier = FLOW_FIT_CLASSES.find((c) => page && page.classList.contains(c)) || "";
+      els.previewChip.textContent = `第 ${state.meetingNo || "-"} 期 · ${DENSITY_LABELS[tier] || "标准排"}`;
+    }
     function fitFlowLayout() {
       const page = els.printPage;
       if (!page) return true;
       for (let index = -1; index < FLOW_FIT_CLASSES.length; index += 1) {
         page.classList.remove(...FLOW_FIT_CLASSES);
         if (index >= 0) page.classList.add(FLOW_FIT_CLASSES[index]);
-        if (flowLayoutFits()) return true;
+        if (flowLayoutFits()) { updateDensityLabel(); return true; }
       }
+      updateDensityLabel();
       return flowLayoutFits();
     }
 
