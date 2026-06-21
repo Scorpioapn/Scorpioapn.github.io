@@ -88,6 +88,9 @@
     let saveTimer = null;
     let applyingRemote = false;
     let pendingOfflineSave = false;
+    let remoteReady = !draftId;
+    let dirty = false;
+    let conflict = null;
 
     function getDraftLink() {
       return draftId ? buildDraftUrl(nowHref(), draftId) : "";
@@ -109,6 +112,13 @@
       setStatus(status, detail);
     }
 
+    function enterConflict(remoteVersion, reason = "version-conflict") {
+      conflict = { remoteVersion: Number(remoteVersion || 0), reason };
+      applyStatus(SYNC_STATUS.error, "version-conflict");
+      options.onConflict?.({ ...conflict });
+      return { conflict: true };
+    }
+
     function clearScheduledSave() {
       if (saveTimer !== null) clearTimeoutFn(saveTimer);
       saveTimer = null;
@@ -122,8 +132,9 @@
       return normalizeRpcRow(data);
     }
 
-    async function loadRemoteDraft() {
+    async function loadRemoteDraft({ force = false } = {}) {
       if (!draftId) return null;
+      if (dirty && !force) return enterConflict(version, "local-dirty");
       applyStatus(SYNC_STATUS.syncing);
       const row = await rpc("get_agenda_draft", { draft_id: draftId });
       if (!row?.payload) throw new Error("Sync draft not found");
@@ -136,6 +147,9 @@
         applyingRemote = false;
       }
       version = Number(row.version || version || 1);
+      remoteReady = true;
+      dirty = false;
+      conflict = null;
       applyStatus(SYNC_STATUS.synced);
       updateLink();
       return row;
@@ -152,8 +166,13 @@
     }
 
     function markSaveFailure(error) {
-      pendingOfflineSave = !isVersionConflictError(error);
-      applyStatus(SYNC_STATUS.error, isVersionConflictError(error) ? "version-conflict" : "");
+      if (isVersionConflictError(error)) {
+        pendingOfflineSave = false;
+        enterConflict(version, "version-conflict");
+        return;
+      }
+      pendingOfflineSave = true;
+      applyStatus(SYNC_STATUS.error);
     }
 
     function attachChannel() {
@@ -165,7 +184,9 @@
           return handleBroadcast(message?.payload || message).catch(handleAsyncSyncError);
         });
       channel.subscribe((status) => {
-        if (status === "SUBSCRIBED" && pendingOfflineSave) return saveNow().catch(handleAsyncSyncError);
+        if (status === "SUBSCRIBED" && pendingOfflineSave && remoteReady && !conflict) {
+          return saveNow().catch(handleAsyncSyncError);
+        }
         return null;
       });
     }
@@ -181,7 +202,13 @@
         return null;
       }
       attachChannel();
-      return loadRemoteDraft();
+      try {
+        return await loadRemoteDraft();
+      } catch (error) {
+        remoteReady = false;
+        enterConflict(0, "initial-load-failed");
+        throw error;
+      }
     }
 
     async function createDraft() {
@@ -193,6 +220,9 @@
       const row = await rpc("create_agenda_draft", { payload: options.getPayload() });
       draftId = row.id;
       version = Number(row.version || 1);
+      remoteReady = true;
+      dirty = false;
+      conflict = null;
       setBrowserUrl(getDraftLink());
       detachChannel();
       attachChannel();
@@ -203,6 +233,13 @@
 
     async function saveNow() {
       if (applyingRemote || !draftId) return null;
+      if (!remoteReady || version <= 0) {
+        const error = new Error("remote draft is not ready");
+        error.code = "REMOTE_NOT_READY";
+        applyStatus(SYNC_STATUS.error, "remote-not-ready");
+        throw error;
+      }
+      if (conflict) return null;
       if (!resolveSupabaseClient()) {
         applyStatus(SYNC_STATUS.error, "missing-config");
         return null;
@@ -240,6 +277,8 @@
       }
       pendingOfflineSave = false;
       version = Number(row.version || version + 1);
+      dirty = false;
+      conflict = null;
       applyStatus(SYNC_STATUS.synced);
       if (channel?.send) {
         await channel.send({
@@ -253,9 +292,12 @@
 
     function scheduleSave() {
       if (applyingRemote || !draftId) return;
+      dirty = true;
+      if (!remoteReady || conflict) return;
       clearScheduledSave();
       saveTimer = setTimeoutFn(() => {
         saveTimer = null;
+        if (conflict) return undefined;
         return saveNow().catch(handleAsyncSyncError);
       }, SAVE_DEBOUNCE_MS);
     }
@@ -264,12 +306,38 @@
       if (!payload || payload.updated_by === clientId) return { ignored: true };
       const remoteVersion = Number(payload.version || 0);
       if (remoteVersion <= version) return { ignored: true };
+      if (dirty) return enterConflict(remoteVersion, "remote-update");
       await loadRemoteDraft();
       return { applied: true };
     }
 
     function retryPendingSave() {
-      if (pendingOfflineSave) scheduleSave();
+      if (pendingOfflineSave && remoteReady && !conflict) scheduleSave();
+    }
+
+    async function loadRemoteLatest() {
+      return loadRemoteDraft({ force: true });
+    }
+
+    async function forkDraft() {
+      if (!resolveSupabaseClient()) {
+        applyStatus(SYNC_STATUS.error, "missing-config");
+        throw new Error("Supabase sync is not configured");
+      }
+      applyStatus(SYNC_STATUS.syncing);
+      const row = await rpc("create_agenda_draft", { payload: options.getPayload() });
+      detachChannel();
+      draftId = row.id;
+      version = Number(row.version || 1);
+      remoteReady = true;
+      dirty = false;
+      conflict = null;
+      pendingOfflineSave = false;
+      setBrowserUrl(getDraftLink());
+      attachChannel();
+      updateLink();
+      applyStatus(SYNC_STATUS.synced);
+      return { id: draftId, version, url: getDraftLink() };
     }
 
     return {
@@ -279,10 +347,15 @@
       saveNow,
       handleBroadcast,
       retryPendingSave,
+      loadRemoteLatest,
+      forkDraft,
       getDraftLink,
       getDraftId: () => draftId,
       getVersion: () => version,
-      getClientId: () => clientId
+      getClientId: () => clientId,
+      hasConflict: () => Boolean(conflict),
+      isRemoteReady: () => remoteReady,
+      isDirty: () => dirty
     };
   }
 
