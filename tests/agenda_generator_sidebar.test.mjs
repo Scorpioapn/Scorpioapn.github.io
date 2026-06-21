@@ -742,9 +742,11 @@ test("agenda generator exposes multi-device Supabase draft sync controls", () =>
 
 test("agenda generator JSON import still enters the cloud sync save path", () => {
   const importJsonSource = functionBlock("importJson");
+  const replaceAgendaStateSource = functionBlock("replaceAgendaState");
   const saveDataSource = functionBlock("saveData");
 
-  assert.match(importJsonSource, /saveData\(\);[\s\S]*?renderAll\(\)/, "JSON import should keep using the common save/render path");
+  assert.match(importJsonSource, /replaceAgendaState\(JSON\.parse\(text\)\)/, "JSON import should validate through the atomic replacement path");
+  assert.match(replaceAgendaStateSource, /renderAll\(\);[\s\S]*?saveData\(\)/, "validated state should render successfully before persistence");
   assert.match(saveDataSource, /queueCloudSave\(\)/, "the common save path should queue cloud sync after localStorage");
 });
 

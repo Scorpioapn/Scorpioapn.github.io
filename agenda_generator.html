@@ -3615,6 +3615,7 @@
   <script src="js/storage.js"></script>
   <script src="js/time-rules.js"></script>
   <script src="js/agenda-schema.js"></script>
+  <script src="js/agenda-data.js"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/vendor/supabase-js-v2.umd.min.js"></script>
   <script src="js/agenda-cloud-sync.js"></script>
@@ -3625,6 +3626,7 @@
     const STORAGE_KEY = SHARED_STORAGE_KEYS.agendaGenerator;
     const TIMEKEEPER_STORAGE_KEYS = window.TMStorage.TIMEKEEPER_STORAGE_KEYS;
     const AgendaSchema = window.TMAgendaSchema;
+    const AgendaData = window.TMAgendaData;
     const CloudSync = window.TMAgendaCloudSync;
     const TimeRules = window.TMTimeRules;
     const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = [
@@ -3849,14 +3851,13 @@ ${GUEST_PARTICIPATION_NOTE}`,
         const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) return normalizeEscapedNewlines(clone(DEFAULT_DATA));
         const parsed = JSON.parse(saved);
-        const merged = normalizeEscapedNewlines({
-          ...clone(DEFAULT_DATA),
-          ...parsed,
-          items: Array.isArray(parsed.items) && parsed.items.length ? parsed.items : clone(DEFAULT_DATA.items)
-        });
+        const source = clone(parsed);
+        let migrated = stripRemovedDataFields(source);
+        if (!Array.isArray(source.items) || !source.items.length) source.items = clone(DEFAULT_DATA.items);
+        const merged = normalizeEscapedNewlines(AgendaData.normalizeAgendaData(source, DEFAULT_DATA, { strict: false }));
         const agendaNormalization = normalizeAgendaItems(merged.items);
         merged.items = agendaNormalization.items;
-        let migrated = stripRemovedDataFields(merged) || agendaNormalization.changed;
+        migrated = migrated || agendaNormalization.changed;
         if (merged.clubNameEnglish === "Changyan Chinese Toastmasters Club") {
           merged.clubNameEnglish = DEFAULT_DATA.clubNameEnglish;
           migrated = true;
@@ -4802,13 +4803,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     }
 
     function applyCloudDraftPayload(payload) {
-      state = normalizeImportedData(payload);
-      editingId = null;
-      dragId = null;
-      undoDelete = null;
-      autoScheduleAgenda();
-      saveData();
-      renderAll();
+      replaceAgendaState(payload);
       showToast("已应用云端最新草稿");
     }
 
@@ -5538,14 +5533,28 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("JSON 内容不是有效对象");
       }
-      const normalized = normalizeEscapedNewlines({
-        ...clone(DEFAULT_DATA),
-        ...parsed,
-        items: Array.isArray(parsed.items) ? parsed.items : clone(DEFAULT_DATA.items)
-      });
+      const normalized = normalizeEscapedNewlines(AgendaData.normalizeAgendaData(parsed, DEFAULT_DATA));
       normalized.items = normalizeAgendaItems(normalized.items).items;
       stripRemovedDataFields(normalized);
       return normalized;
+    }
+
+    function replaceAgendaState(payload) {
+      const previousState = state;
+      const nextState = normalizeImportedData(payload);
+      state = nextState;
+      editingId = null;
+      dragId = null;
+      undoDelete = null;
+      try {
+        autoScheduleAgenda();
+        renderAll();
+        saveData();
+      } catch (error) {
+        state = previousState;
+        renderAll();
+        throw error;
+      }
     }
 
     async function importJson(input) {
@@ -5553,14 +5562,8 @@ ${GUEST_PARTICIPATION_NOTE}`,
       if (!file) return;
       try {
         const text = await file.text();
-        state = normalizeImportedData(JSON.parse(text));
-        editingId = null;
-        dragId = null;
-        undoDelete = null;
+        replaceAgendaState(JSON.parse(text));
         input.value = "";
-        autoScheduleAgenda();
-        saveData();
-        renderAll();
         showToast("JSON 已导入");
       } catch (error) {
         input.value = "";
