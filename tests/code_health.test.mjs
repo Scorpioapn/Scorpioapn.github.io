@@ -26,6 +26,18 @@ test("project exposes a single npm test command", () => {
   assert.equal(packageJson.scripts?.test, "node --test tests/*.test.mjs");
 });
 
+test("hardened client modules and Edge deployment guide are tracked", () => {
+  for (const path of [
+    "js/agenda-data.js",
+    "js/timekeeper-state.js",
+    "js/export-safety.js",
+    "supabase/functions/agenda-drafts/index.ts",
+    "supabase/functions/agenda-drafts/README.md"
+  ]) {
+    assert.equal(existsSync(new URL(`../${path}`, import.meta.url)), true, `${path} should exist`);
+  }
+});
+
 test("timekeeper storage writes use guarded helpers", () => {
   assert.match(timekeeper, /function writeJson\(/, "timekeeper should centralize JSON writes");
   assert.match(timekeeper, /function removeStoredValue\(/, "timekeeper should centralize storage removal");
