@@ -2762,6 +2762,7 @@
   <script src="js/time-rules.js"></script>
   <script src="js/agenda-schema.js"></script>
   <script src="js/timekeeper-state.js"></script>
+  <script src="js/export-safety.js"></script>
   <script>
     const SHARED_STORAGE_KEYS = window.TMStorage.STORAGE_KEYS;
     const STORAGE_KEYS = {
@@ -2773,6 +2774,7 @@
     const TimeRules = window.TMTimeRules;
     const AgendaSchema = window.TMAgendaSchema;
     const TimekeeperState = window.TMTimekeeperState;
+    const ExportSafety = window.TMExportSafety;
 
     const INSPECTOR_KEY = "tm_timekeeper_inspector_open_v1";
 
@@ -3656,7 +3658,7 @@
         record.resultLabel || "",
         record.endedAt || ""
       ]);
-      const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+      const csv = [headers, ...rows].map((row) => row.map(ExportSafety.escapeCsvCell).join(",")).join("\n");
       const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
