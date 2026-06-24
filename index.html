@@ -2761,6 +2761,8 @@
   <script src="js/storage.js"></script>
   <script src="js/time-rules.js"></script>
   <script src="js/agenda-schema.js"></script>
+  <script src="js/timekeeper-state.js"></script>
+  <script src="js/export-safety.js"></script>
   <script>
     const SHARED_STORAGE_KEYS = window.TMStorage.STORAGE_KEYS;
     const STORAGE_KEYS = {
@@ -2771,6 +2773,8 @@
     };
     const TimeRules = window.TMTimeRules;
     const AgendaSchema = window.TMAgendaSchema;
+    const TimekeeperState = window.TMTimekeeperState;
+    const ExportSafety = window.TMExportSafety;
 
     const INSPECTOR_KEY = "tm_timekeeper_inspector_open_v1";
 
@@ -2968,7 +2972,7 @@
     }
 
     function saveRecords() {
-      writeJson(STORAGE_KEYS.records, state.records, "计时记录保存失败，请检查浏览器存储空间");
+      return writeJson(STORAGE_KEYS.records, state.records, "计时记录保存失败，请检查浏览器存储空间");
     }
 
     function saveMeeting() {
@@ -3399,7 +3403,7 @@
       state.timer.paused = false;
       state.timer.startedAt = Date.now() - state.timer.elapsed * 1000;
       state.timer.pausedAt = null;
-      item.status = "active";
+      TimekeeperState.activateOnly(state.agendaItems, item.id);
       item.actualStart = item.actualStart || new Date().toISOString();
       state.activeAgendaId = item.id;
       saveAgenda();
@@ -3469,6 +3473,7 @@
       if (!item) return;
       const elapsed = state.timer.elapsed;
       const record = elapsed > 0 ? addRecord(elapsed, item) : null;
+      if (elapsed > 0 && !record) return;
       const multiSpeaker = isMultiSpeakerAgenda(item);
       resetTimer(false);
       if (record) {
@@ -3490,8 +3495,8 @@
     function finishCurrentAgenda() {
       const item = getActiveAgenda();
       if (!item) return;
-      if (state.timer.running && !state.timer.paused) {
-        showToast("请先暂停或结束当前计时");
+      if (!TimekeeperState.canLeaveAgenda(state.timer, null)) {
+        showToast("请先结束并记录，或明确重置当前计时");
         return;
       }
       item.status = "done";
@@ -3509,8 +3514,8 @@
     }
 
     function selectAgenda(itemId) {
-      if (state.timer.running && !state.timer.paused) {
-        showToast("请先暂停或结束当前计时");
+      if (!TimekeeperState.canLeaveAgenda(state.timer, state.postRecordAction)) {
+        showToast("请先结束并记录、完成当前环节，或明确重置计时");
         return;
       }
       state.activeAgendaId = itemId;
@@ -3551,8 +3556,7 @@
         resultLabel: result.label,
         endedAt: new Date().toLocaleTimeString("zh-CN", { hour12: false })
       };
-      state.records.push(record);
-      saveRecords();
+      if (!TimekeeperState.appendPersistedRecord(state.records, record, saveRecords)) return null;
       return record;
     }
 
@@ -3654,7 +3658,7 @@
         record.resultLabel || "",
         record.endedAt || ""
       ]);
-      const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+      const csv = [headers, ...rows].map((row) => row.map(ExportSafety.escapeCsvCell).join(",")).join("\n");
       const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");

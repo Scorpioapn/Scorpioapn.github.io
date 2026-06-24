@@ -54,6 +54,29 @@ function createFakeSupabase(rpcHandler) {
       createClient() {
         calls.push(["createClient"]);
         return {
+          functions: {
+            async invoke(functionName, { body }) {
+              calls.push(["invoke", functionName, body]);
+              const rpcName = {
+                create: "create_agenda_draft",
+                get: "get_agenda_draft",
+                save: "save_agenda_draft"
+              }[body.action];
+              const args = body.action === "create"
+                ? { payload: body.payload }
+                : body.action === "get"
+                  ? { draft_id: body.draftId }
+                  : {
+                      draft_id: body.draftId,
+                      payload: body.payload,
+                      client_id: body.clientId,
+                      expected_version: body.expectedVersion
+                    };
+              const result = await rpcHandler(rpcName, args);
+              if (result.error) return { data: null, error: result.error };
+              return { data: { data: result.data }, error: null };
+            }
+          },
           async rpc(name, args) {
             calls.push(["rpc", name, args]);
             return rpcHandler(name, args);
@@ -76,7 +99,8 @@ function createController({
   payload = { meetingNo: "739" },
   rpcHandler,
   online = () => true,
-  onError = () => {}
+  onError = () => {},
+  onConflict = () => {}
 }) {
   const statuses = [];
   const links = [];
@@ -110,7 +134,8 @@ function createController({
       if (scheduled?.id === id) scheduled = null;
     },
     online,
-    onError
+    onError,
+    onConflict
   });
   return {
     controller,
@@ -185,6 +210,7 @@ test("cloud sync debounces local edits before saving to Supabase RPC", async () 
 });
 
 test("cloud sync rejects stale saves without broadcasting success", async () => {
+  const conflicts = [];
   const { controller, statuses, fake } = createController({
     payload: { meetingNo: "stale-local" },
     rpcHandler(name) {
@@ -192,7 +218,8 @@ test("cloud sync rejects stale saves without broadcasting success", async () => 
         return Promise.resolve({ data: null, error: new Error("agenda draft version conflict") });
       }
       return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 7 }, error: null });
-    }
+    },
+    onConflict: (conflict) => conflicts.push(conflict)
   });
 
   await controller.init();
@@ -201,20 +228,34 @@ test("cloud sync rejects stale saves without broadcasting success", async () => 
   assert.equal(controller.getVersion(), 7, "local controller version should not advance after a rejected stale save");
   assert.ok(statuses.some(([status, detail]) => status === CloudSync.SYNC_STATUS.error && detail === "version-conflict"));
   assert.equal(fake.calls.some((call) => call[0] === "send"), false, "stale saves should not broadcast a successful update");
+  assert.equal(controller.hasConflict(), true);
+  assert.deepEqual(conflicts, [{ remoteVersion: 7, reason: "version-conflict" }]);
 });
 
-test("cloud sync falls back to legacy save RPC while the expected-version migration is pending", async () => {
+test("existing drafts cannot save before the first remote load succeeds", async () => {
+  let saveCalls = 0;
+  const { controller, fake } = createController({
+    rpcHandler(name) {
+      if (name === "get_agenda_draft") {
+        return Promise.resolve({ data: null, error: new Error("temporary load failure") });
+      }
+      if (name === "save_agenda_draft") saveCalls += 1;
+      return Promise.resolve({ data: { version: 2 }, error: null });
+    }
+  });
+
+  await assert.rejects(() => controller.init(), /temporary load failure/);
+  await assert.rejects(() => controller.saveNow(), /remote draft is not ready/);
+  assert.equal(saveCalls, 0);
+});
+
+test("cloud sync routes persistence through the Edge gateway instead of public RPCs", async () => {
   const saveCalls = [];
-  const { controller } = createController({
-    payload: { meetingNo: "legacy-compatible" },
+  const { controller, fake } = createController({
+    payload: { meetingNo: "edge-only" },
     rpcHandler(name, args) {
       if (name === "save_agenda_draft") {
         saveCalls.push(args);
-        if (Object.hasOwn(args, "expected_version")) {
-          const error = new Error("Could not find the function public.save_agenda_draft with expected_version");
-          error.code = "PGRST202";
-          return Promise.resolve({ data: null, error });
-        }
         return Promise.resolve({ data: { version: 8, updated_at: "2026-06-06" }, error: null });
       }
       return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 7 }, error: null });
@@ -224,10 +265,11 @@ test("cloud sync falls back to legacy save RPC while the expected-version migrat
   await controller.init();
   await controller.saveNow();
 
-  assert.equal(saveCalls.length, 2);
+  assert.equal(saveCalls.length, 1);
   assert.equal(saveCalls[0].expected_version, 7);
-  assert.equal(Object.hasOwn(saveCalls[1], "expected_version"), false, "legacy fallback should preserve live sync until the DB migration is applied");
   assert.equal(controller.getVersion(), 8);
+  assert.ok(fake.calls.some((call) => call[0] === "invoke" && call[1] === "agenda-drafts"));
+  assert.equal(fake.calls.some((call) => call[0] === "rpc"), false);
 });
 
 test("cloud sync applies newer remote broadcast and ignores self broadcast", async () => {
@@ -349,9 +391,10 @@ test("cloud sync keeps online save failures pending so reconnect can retry", asy
   assert.ok(fake.calls.some((call) => call[0] === "send" && call[1].event === "agenda-updated"));
 });
 
-test("cloud sync cancels a pending local debounce when a newer broadcast applies remote data", async () => {
+test("cloud sync preserves a pending local edit when a newer broadcast arrives", async () => {
   let remoteVersion = 1;
   let saveAttempts = 0;
+  const conflicts = [];
   const { controller, fake, applied, runScheduled, activeTimerCount } = createController({
     rpcHandler(name) {
       if (name === "get_agenda_draft") {
@@ -365,7 +408,8 @@ test("cloud sync cancels a pending local debounce when a newer broadcast applies
         return Promise.resolve({ data: { version: remoteVersion + 1, updated_at: "2026-06-09" }, error: null });
       }
       return Promise.resolve({ data: null, error: null });
-    }
+    },
+    onConflict: (conflict) => conflicts.push(conflict)
   });
 
   await controller.init();
@@ -374,10 +418,39 @@ test("cloud sync cancels a pending local debounce when a newer broadcast applies
 
   remoteVersion = 2;
   await fake.broadcastHandler({ payload: { version: 2, updated_by: "other-client" } });
-  assert.equal(activeTimerCount(), 0, "remote last-write-wins should cancel the stale local debounce save");
-  await runScheduled();
+  assert.equal(activeTimerCount(), 1, "the local debounce should remain available until the conflict is resolved");
+  assert.equal(saveAttempts, 0);
+  assert.deepEqual(applied.at(-1), { meetingNo: "remote-1" });
+  assert.equal(controller.getVersion(), 1);
+  assert.deepEqual(conflicts, [{ remoteVersion: 2, reason: "remote-update" }]);
+  assert.equal(controller.hasConflict(), true);
+  assert.equal(await runScheduled(), undefined, "conflicted saves should stay local instead of overwriting remote data");
+});
 
-  assert.equal(saveAttempts, 0, "cleared debounce should not re-save the remote payload as a new version");
-  assert.deepEqual(applied.at(-1), { meetingNo: "remote-2" });
-  assert.equal(controller.getVersion(), 2);
+test("forking a conflict creates a new draft from the local payload", async () => {
+  const localPayload = { meetingNo: "local-copy" };
+  const { controller, fake, urls } = createController({
+    payload: localPayload,
+    rpcHandler(name, args) {
+      if (name === "get_agenda_draft") {
+        return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 1 }, error: null });
+      }
+      if (name === "create_agenda_draft") {
+        assert.deepEqual(args.payload, localPayload);
+        return Promise.resolve({ data: { id: "fork_12345678901234567890", version: 1 }, error: null });
+      }
+      return Promise.resolve({ data: { version: 2 }, error: null });
+    }
+  });
+
+  await controller.init();
+  controller.scheduleSave();
+  await controller.handleBroadcast({ version: 2, updated_by: "other-client" });
+  const result = await controller.forkDraft();
+
+  assert.equal(result.id, "fork_12345678901234567890");
+  assert.equal(controller.hasConflict(), false);
+  assert.equal(controller.isDirty(), false);
+  assert.ok(urls.at(-1).includes("fork_12345678901234567890"));
+  assert.ok(fake.calls.some((call) => call[0] === "removeChannel"));
 });

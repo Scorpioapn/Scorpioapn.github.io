@@ -742,10 +742,22 @@ test("agenda generator exposes multi-device Supabase draft sync controls", () =>
 
 test("agenda generator JSON import still enters the cloud sync save path", () => {
   const importJsonSource = functionBlock("importJson");
+  const replaceAgendaStateSource = functionBlock("replaceAgendaState");
   const saveDataSource = functionBlock("saveData");
 
-  assert.match(importJsonSource, /saveData\(\);[\s\S]*?renderAll\(\)/, "JSON import should keep using the common save/render path");
+  assert.match(importJsonSource, /replaceAgendaState\(JSON\.parse\(text\)\)/, "JSON import should validate through the atomic replacement path");
+  assert.match(replaceAgendaStateSource, /renderAll\(\);[\s\S]*?saveData\(\)/, "validated state should render successfully before persistence");
   assert.match(saveDataSource, /queueCloudSave\(\)/, "the common save path should queue cloud sync after localStorage");
+});
+
+test("cloud sync exposes explicit conflict recovery actions", () => {
+  const initCloudSyncSource = functionBlock("initCloudSync");
+  assert.match(source, /id="cloudSyncConflictActions"/);
+  assert.match(source, /id="loadRemoteDraftBtn"/);
+  assert.match(source, /id="forkLocalDraftBtn"/);
+  assert.match(source, /cloudSyncController\.loadRemoteLatest\(\)/);
+  assert.match(source, /cloudSyncController\.forkDraft\(\)/);
+  assert.match(initCloudSyncSource, /onConflict:\s*showCloudSyncConflict/);
 });
 
 test("agenda generator exports a mobile-friendly image PDF from the A4 preview", () => {
