@@ -4334,14 +4334,17 @@ ${GUEST_PARTICIPATION_NOTE}`,
       return `${formatDate(nextDate)}（${weekdayText(nextDate)}） ${nextTime}`;
     }
 
-    function guestParticipationHtml(text) {
-      const raw = String(text || "").trim();
-      const tags = GUEST_PARTICIPATION_TAGS.slice(0, 3);
-      const note = raw
+    function guestParticipationNote(text) {
+      return String(text || "").trim()
         .split(/\n+/)
         .map((line) => line.trim())
         .find((line) => line && !/[【\[]/.test(line) && !/诚邀|一半|伟大|源于开始/.test(line))
         || GUEST_PARTICIPATION_NOTE;
+    }
+
+    function guestParticipationHtml(text) {
+      const tags = GUEST_PARTICIPATION_TAGS.slice(0, 3);
+      const note = guestParticipationNote(text);
 
       return `
         <div class="footer-card-body guest-participation">
@@ -4373,12 +4376,16 @@ ${GUEST_PARTICIPATION_NOTE}`,
       return text;
     }
 
-    function meetingRulesHtml(text) {
+    function meetingRulesList(text) {
       const lines = String(text || "")
         .split(/\n+/)
         .map(normalizeMeetingRuleLine)
         .filter(Boolean);
-      const rules = (lines.length ? lines : DEFAULT_MEETING_RULES).slice(0, 4);
+      return (lines.length ? lines : DEFAULT_MEETING_RULES).slice(0, 4);
+    }
+
+    function meetingRulesHtml(text) {
+      const rules = meetingRulesList(text);
       return `
         <ul class="footer-card-body meeting-rules-list">
           ${rules.map((rule) => `<li>${escapeHtml(rule)}</li>`).join("")}
@@ -5183,9 +5190,9 @@ ${GUEST_PARTICIPATION_NOTE}`,
         `下期例会主题：${state.nextTheme}`,
         `下次例会时间：${formatNextMeeting()}`,
         `来宾可参与方式：${GUEST_PARTICIPATION_TAGS.join("、")}`,
-        `来宾说明：${GUEST_PARTICIPATION_NOTE}`,
+        `来宾说明：${guestParticipationNote(state.guestInvitation)}`,
         "会议守则：",
-        ...DEFAULT_MEETING_RULES.map((rule) => `- ${rule}`)
+        ...meetingRulesList(state.meetingRules).map((rule) => `- ${rule}`)
       );
       return lines.join("\n");
     }
