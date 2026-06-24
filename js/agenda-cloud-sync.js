@@ -140,6 +140,9 @@
       if (dirty && !force) return enterConflict(version, "local-dirty");
       applyStatus(SYNC_STATUS.syncing);
       const row = await requestDraft("get", { draftId });
+      if (dirty && !force) {
+        return enterConflict(Number(row?.version || version || 0), "local-dirty");
+      }
       if (!row?.payload) throw new Error("Sync draft not found");
       clearScheduledSave();
       pendingOfflineSave = false;
