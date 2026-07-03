@@ -530,6 +530,19 @@ test("timekeeper sync uses total impromptu duration while preserving the per-per
   assert.equal(payload.agendaItems[0].durationLabel, "15 (2min/人)", "timekeeper should retain the readable per-person timing note");
 });
 
+test("timekeeper meeting title follows the editable Chinese club name", () => {
+  const payload = schema.buildTimekeeperPayload({
+    clubName: "新中文俱乐部名",
+    meetingNo: "777",
+    theme: "重来",
+    items: [
+      { id: "i-opening", kind: "item", title: "开场", duration: "3" }
+    ]
+  });
+
+  assert.equal(payload.meeting.meetingTitle, "新中文俱乐部名 · 第777期例会 · 主题：重来");
+});
+
 test("timekeeper conflict detection handles default agenda and meeting edits", () => {
   const defaultAgenda = [
     { name: "事务官宣布会议规则", plannedMinutes: 1, durationLabel: "1 分钟", status: "pending" },
@@ -706,6 +719,11 @@ test("fixed info editor only exposes fields that still appear in the preview", (
   assert.equal(nextDetails.includes('id="footerNotes"'), false, "obsolete footer notes editor should be removed");
   assert.equal(fixedDetails.includes('id="pathways"'), false, "Pathways editor should be removed because it no longer appears in preview");
   assert.equal(fixedDetails.includes('id="joinInfo"'), false, "join info editor should be removed because it no longer appears in preview");
+  assert.ok(fixedDetails.includes('for="clubName"'), "Chinese club name label should be visible in the fixed info editor");
+  assert.ok(fixedDetails.includes("中文俱乐部名"), "Chinese club name should use the requested editor label");
+  assert.ok(fixedDetails.includes('id="clubName"'), "Chinese club name input should be present");
+  assert.ok(fixedDetails.includes('data-field="clubName"'), "Chinese club name should use the existing autosave binding");
+  assert.ok(fixedDetails.includes('id="clubNameEnglish"'), "English club name editor should remain unchanged");
   assert.ok(fixedDetails.includes('id="meetingRules"'), "meeting rules editor should remain because it drives the footer card");
   assert.ok(fixedDetails.includes("每行一条"), "meeting rules editor should explain that each line maps to one preview rule");
 });
