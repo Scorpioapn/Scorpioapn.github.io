@@ -515,7 +515,7 @@
       position: fixed;
       inset: 0;
       z-index: 130;
-      pointer-events: none;
+      pointer-events: auto;
     }
 
     .guide-overlay[hidden] {
@@ -5038,7 +5038,11 @@
     function closeGuide({ markSeen = false } = {}) {
       if (!els.guideOverlay) return;
       if (markSeen) {
-        localStorage.setItem(GUIDE_SEEN_STORAGE_KEY, "true");
+        try {
+          localStorage.setItem(GUIDE_SEEN_STORAGE_KEY, "true");
+        } catch (error) {
+          console.warn("Failed to save guide state", error);
+        }
       }
       els.guideOverlay.hidden = true;
       document.body.classList.remove("guide-open");
