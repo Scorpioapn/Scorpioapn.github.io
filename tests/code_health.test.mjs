@@ -5,6 +5,7 @@ import { test } from "node:test";
 const agendaGenerator = readFileSync(new URL("../agenda_generator.html", import.meta.url), "utf8");
 const timekeeper = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageUrl = new URL("../package.json", import.meta.url);
+const supabaseDeployWorkflowUrl = new URL("../.github/workflows/deploy-supabase.yml", import.meta.url);
 
 function extractFunction(source, name) {
   const start = source.indexOf(`function ${name}`);
@@ -20,22 +21,36 @@ function extractFunction(source, name) {
   throw new Error(`${name} function body should close`);
 }
 
-test("project exposes a single npm test command", () => {
+test("project exposes test and Supabase smoke scripts", () => {
   assert.ok(existsSync(packageUrl), "package.json should exist");
   const packageJson = JSON.parse(readFileSync(packageUrl, "utf8"));
   assert.equal(packageJson.scripts?.test, "node --test tests/*.test.mjs");
+  assert.equal(packageJson.scripts?.["smoke:supabase"], "node scripts/supabase-smoke-test.mjs");
 });
 
-test("hardened client modules and Edge deployment guide are tracked", () => {
+test("hardened client modules, Edge deployment guide, and CI deploy workflow are tracked", () => {
   for (const path of [
     "js/agenda-data.js",
     "js/timekeeper-state.js",
     "js/export-safety.js",
     "supabase/functions/agenda-drafts/index.ts",
-    "supabase/functions/agenda-drafts/README.md"
+    "supabase/functions/agenda-drafts/README.md",
+    ".github/workflows/deploy-supabase.yml",
+    "scripts/supabase-smoke-test.mjs"
   ]) {
     assert.equal(existsSync(new URL(`../${path}`, import.meta.url)), true, `${path} should exist`);
   }
+});
+
+test("Supabase deploy workflow runs backend deploy and live smoke checks", () => {
+  assert.equal(existsSync(supabaseDeployWorkflowUrl), true, "Supabase deploy workflow should exist");
+  const workflow = readFileSync(supabaseDeployWorkflowUrl, "utf8");
+  assert.match(workflow, /supabase db push --linked --dry-run/);
+  assert.match(workflow, /supabase functions deploy agenda-drafts/);
+  assert.match(workflow, /supabase db push --linked --yes/);
+  assert.match(workflow, /npm run smoke:supabase/);
+  assert.match(workflow, /SUPABASE_ACCESS_TOKEN/);
+  assert.doesNotMatch(workflow, /SUPABASE_DB_PASSWORD/);
 });
 
 test("timekeeper storage writes use guarded helpers", () => {
