@@ -47,6 +47,7 @@ test("Supabase deploy workflow runs backend deploy and live smoke checks", () =>
   const workflow = readFileSync(supabaseDeployWorkflowUrl, "utf8");
   assert.match(workflow, /supabase db push --linked --dry-run/);
   assert.match(workflow, /supabase functions deploy agenda-drafts/);
+  assert.match(workflow, /--use-api/);
   assert.match(workflow, /supabase db push --linked --yes/);
   assert.match(workflow, /npm run smoke:supabase/);
   assert.match(workflow, /SUPABASE_ACCESS_TOKEN/);

@@ -18,7 +18,7 @@ Pushing to GitHub does not deploy Supabase unless the GitHub Actions workflow su
 1. Runs `npm test`.
 2. Links the Supabase project.
 3. Dry-runs pending database migrations.
-4. Deploys the `agenda-drafts` Edge Function with `--no-verify-jwt`.
+4. Deploys the `agenda-drafts` Edge Function with `--no-verify-jwt --use-api`.
 5. Pushes database migrations.
 6. Runs `npm run smoke:supabase` against the live project.
 
@@ -60,7 +60,7 @@ Run these commands from the repository root only if GitHub Actions is unavailabl
 npm test
 supabase link --project-ref nixguazietjzvcztbueh --yes
 supabase db push --linked --dry-run --yes
-supabase functions deploy agenda-drafts --project-ref nixguazietjzvcztbueh --no-verify-jwt
+supabase functions deploy agenda-drafts --project-ref nixguazietjzvcztbueh --no-verify-jwt --use-api
 supabase db push --linked --yes
 npm run smoke:supabase
 ```
@@ -68,6 +68,8 @@ npm run smoke:supabase
 Deploy in this order: function code and secrets, database migration, then the updated static client. Publish the client immediately after `supabase db push`, because the migration removes direct anonymous RPC access.
 
 `--no-verify-jwt` intentionally preserves the no-login capability-link experience. The function remains responsible for origin handling, request rate limits, the 4 MiB payload limit, capability-ID validation, draft expiry, and optimistic version checks.
+
+`--use-api` asks Supabase to bundle the function server-side, which avoids GitHub runner Docker/remote dependency fetch failures during CI.
 
 ## Smoke test
 

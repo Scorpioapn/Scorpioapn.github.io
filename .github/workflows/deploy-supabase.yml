@@ -61,7 +61,15 @@ jobs:
       - name: Deploy agenda Edge Function
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy agenda-drafts --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+        run: |
+          for attempt in 1 2 3; do
+            if supabase functions deploy agenda-drafts --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api; then
+              exit 0
+            fi
+            echo "Supabase function deploy failed on attempt ${attempt}; retrying..."
+            sleep $((attempt * 10))
+          done
+          exit 1
 
       - name: Push database migrations
         env:
