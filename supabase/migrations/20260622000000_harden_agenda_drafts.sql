@@ -114,6 +114,8 @@ as $$
     and d.expires_at > now();
 $$;
 
+drop function if exists public.save_agenda_draft(text, jsonb, text, bigint);
+
 create or replace function public.save_agenda_draft(
   draft_id text,
   payload jsonb,
