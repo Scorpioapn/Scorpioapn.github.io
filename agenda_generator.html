@@ -511,6 +511,79 @@
       font-weight: 750;
     }
 
+    .guide-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 130;
+      pointer-events: none;
+    }
+
+    .guide-overlay[hidden] {
+      display: none;
+    }
+
+    .guide-spotlight {
+      position: fixed;
+      border: 3px solid var(--md-primary-container);
+      border-radius: 28px;
+      box-shadow: 0 0 0 9999px rgba(33, 26, 21, 0.48), 0 12px 34px rgba(0, 48, 71, 0.22);
+      pointer-events: none;
+      transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease;
+    }
+
+    .guide-card {
+      position: fixed;
+      width: min(368px, calc(100vw - 32px));
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      border: 1px solid rgba(119, 36, 50, 0.22);
+      border-radius: 24px;
+      color: var(--md-on-surface);
+      background: rgba(255, 249, 240, 0.98);
+      box-shadow: var(--shadow-3);
+      pointer-events: auto;
+    }
+
+    .guide-card h2 {
+      color: var(--md-primary);
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.16;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .guide-card p {
+      color: var(--md-on-surface-variant);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 720;
+    }
+
+    .guide-progress {
+      color: var(--md-secondary);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .guide-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .guide-actions .button {
+      min-height: 44px;
+      padding-inline: 10px;
+    }
+
+    .guide-actions .button:disabled {
+      cursor: default;
+      opacity: 0.45;
+      transform: none;
+    }
+
     .cloud-sync-card {
       display: grid;
       gap: 10px;
@@ -2727,6 +2800,14 @@
         display: block;
       }
 
+      .guide-card {
+        left: 16px !important;
+        right: 16px !important;
+        bottom: 16px !important;
+        top: auto !important;
+        width: auto;
+      }
+
       .preview-frame {
         margin: 8px auto 40px;
       }
@@ -2754,6 +2835,18 @@
       }
 
       .field-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .brand-row {
+        align-items: flex-start;
+      }
+
+      .header-actions {
+        justify-content: flex-end;
+      }
+
+      .guide-actions {
         grid-template-columns: 1fr;
       }
 
@@ -3141,6 +3234,7 @@
       .editor-shell,
       .preview-toolbar,
       .toast,
+      .guide-overlay,
       .mobile-taskbar,
       .mobile-quick-add,
       .mobile-editor-scrim {
@@ -3394,6 +3488,10 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 13l3-2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
               <span class="nav-button-label">时间官</span>
             </a>
+            <button class="nav-button" id="guideReplayBtn" type="button" title="重新查看使用引导">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 0 1 4.4 1.4c0 1.8-2.2 2-2.2 3.4"/><path d="M12 17h.01"/></svg>
+              <span class="nav-button-label">重新查看引导</span>
+            </button>
           </div>
         </div>
       </header>
@@ -3522,7 +3620,7 @@
           <div class="agenda-list" id="agendaList"></div>
         </section>
 
-        <section class="surface-panel" aria-labelledby="sideInfoTitle">
+        <section class="surface-panel" id="fixedInfoPanel" aria-labelledby="sideInfoTitle">
           <div class="panel-title">
             <h2 id="sideInfoTitle">下期与固定信息</h2>
             <span class="meta">默认折叠</span>
@@ -3722,6 +3820,22 @@
     </div>
   </div>
 
+  <div class="guide-overlay" id="guideOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideDescription">
+    <div class="guide-spotlight" id="guideSpotlight" aria-hidden="true"></div>
+    <section class="guide-card" id="guideCard">
+      <span class="guide-progress" id="guideProgress"></span>
+      <div>
+        <h2 id="guideTitle">使用引导</h2>
+        <p id="guideDescription"></p>
+      </div>
+      <div class="guide-actions">
+        <button class="button subtle" id="guidePrevBtn" type="button">上一步</button>
+        <button class="button tonal" id="guideNextBtn" type="button">下一步</button>
+        <button class="button filled" id="guideDoneBtn" type="button">完成</button>
+      </div>
+    </section>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite">
     <span id="toastText"></span>
     <button id="toastAction" type="button"></button>
@@ -3740,6 +3854,7 @@
   <script>
     const SHARED_STORAGE_KEYS = window.TMStorage.STORAGE_KEYS;
     const STORAGE_KEY = SHARED_STORAGE_KEYS.agendaGenerator;
+    const GUIDE_SEEN_STORAGE_KEY = "tm_agenda_guide_seen_v1";
     const TIMEKEEPER_STORAGE_KEYS = window.TMStorage.TIMEKEEPER_STORAGE_KEYS;
     const AgendaSchema = window.TMAgendaSchema;
     const AgendaData = window.TMAgendaData;
@@ -3798,6 +3913,39 @@
       { keywords: ["颁奖", "分享"], duration: "5", recommendation: "5分钟" }
     ];
 
+    const AGENDA_GUIDE_STEPS = [
+      {
+        target: "#meetingInfoPanel",
+        title: "会议信息",
+        description: "先填写期数、主题、日期、时间和地点；这些内容会同步更新到右侧 A4 预览。"
+      },
+      {
+        target: "#agendaPanel",
+        title: "当前议程",
+        description: "在这里添加项目或分组。每个项目的时间会按开始时间和时长自动排好。"
+      },
+      {
+        target: "#fixedInfoPanel",
+        title: "图片上传与固定信息",
+        description: "这里维护 Logo、二维码、下期信息、俱乐部介绍、干事团队和会议守则。"
+      },
+      {
+        target: "#previewPanel",
+        title: "A4 实时预览",
+        description: "右侧会实时展示打印版效果，适合导出前检查内容密度和排版。"
+      },
+      {
+        target: "#exportPanel",
+        title: "导出与备份",
+        description: "完成后可导出 PDF、打印 A4、复制文字版，也可以导入或导出 JSON 备份。"
+      },
+      {
+        target: "#cloudSyncPanel",
+        title: "多设备同步",
+        description: "创建同步草稿后，手机和电脑打开同一链接即可接力编辑。"
+      }
+    ];
+
     const els = {
       printPage: document.querySelector("#printPage"),
       previewChip: document.querySelector("#previewChip"),
@@ -3848,6 +3996,16 @@
       loadRemoteDraftBtn: document.querySelector("#loadRemoteDraftBtn"),
       forkLocalDraftBtn: document.querySelector("#forkLocalDraftBtn"),
       openTimekeeperBtn: document.querySelector("#openTimekeeperBtn"),
+      guideReplayBtn: document.querySelector("#guideReplayBtn"),
+      guideOverlay: document.querySelector("#guideOverlay"),
+      guideSpotlight: document.querySelector("#guideSpotlight"),
+      guideCard: document.querySelector("#guideCard"),
+      guideProgress: document.querySelector("#guideProgress"),
+      guideTitle: document.querySelector("#guideTitle"),
+      guideDescription: document.querySelector("#guideDescription"),
+      guidePrevBtn: document.querySelector("#guidePrevBtn"),
+      guideNextBtn: document.querySelector("#guideNextBtn"),
+      guideDoneBtn: document.querySelector("#guideDoneBtn"),
       toast: document.querySelector("#toast"),
       toastText: document.querySelector("#toastText"),
       toastAction: document.querySelector("#toastAction")
@@ -3864,6 +4022,9 @@
     let lastExportUrl = null;
     let printOverflowWarningVisible = false;
     let cloudSyncController = null;
+    let guideStepIndex = 0;
+    let activeGuideSteps = [];
+    let guidePositionTimer = null;
 
     const CLOUD_SYNC_STATUS_LABELS = {
       local: "本机草稿",
@@ -3904,7 +4065,7 @@
         const parsed = JSON.parse(saved);
         const source = clone(parsed);
         let migrated = stripRemovedDataFields(source);
-        if (!Array.isArray(source.items) || !source.items.length) source.items = clone(DEFAULT_DATA.items);
+        if (!Array.isArray(source.items)) source.items = clone(DEFAULT_DATA.items);
         const merged = normalizeEscapedNewlines(AgendaData.normalizeAgendaData(source, DEFAULT_DATA, { strict: false }));
         const agendaNormalization = normalizeAgendaItems(merged.items);
         merged.items = agendaNormalization.items;
@@ -4780,6 +4941,131 @@
     function closeTemplateModal() {
       if (els.templateModal) els.templateModal.hidden = true;
       els.changeTemplateBtn?.focus();
+    }
+
+    function availableGuideSteps() {
+      return AGENDA_GUIDE_STEPS.filter((step) => document.querySelector(step.target));
+    }
+
+    function isGuideOpen() {
+      return Boolean(els.guideOverlay && !els.guideOverlay.hidden);
+    }
+
+    function guideTargetIsVisible(target) {
+      const rect = target.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      return rect.top >= 8 && rect.left >= 8 && rect.bottom <= viewportHeight - 8 && rect.right <= viewportWidth - 8;
+    }
+
+    function currentGuideTarget() {
+      const step = activeGuideSteps[guideStepIndex];
+      return step ? document.querySelector(step.target) : null;
+    }
+
+    function positionGuideElements(target) {
+      if (!target || !els.guideSpotlight || !els.guideCard) return;
+      const rect = target.getBoundingClientRect();
+      const padding = window.innerWidth <= 620 ? 6 : 10;
+      const left = Math.max(8, rect.left - padding);
+      const top = Math.max(8, rect.top - padding);
+      const right = Math.min(window.innerWidth - 8, rect.right + padding);
+      const bottom = Math.min(window.innerHeight - 8, rect.bottom + padding);
+
+      Object.assign(els.guideSpotlight.style, {
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${Math.max(80, right - left)}px`,
+        height: `${Math.max(80, bottom - top)}px`
+      });
+
+      if (window.innerWidth <= 920) {
+        els.guideCard.style.left = "";
+        els.guideCard.style.top = "";
+        return;
+      }
+
+      const cardRect = els.guideCard.getBoundingClientRect();
+      const gap = 18;
+      let cardLeft = rect.right + gap;
+      if (cardLeft + cardRect.width > window.innerWidth - 18) {
+        cardLeft = rect.left - cardRect.width - gap;
+      }
+      if (cardLeft < 18) {
+        cardLeft = window.innerWidth - cardRect.width - 18;
+      }
+      let cardTop = Math.min(Math.max(18, rect.top), window.innerHeight - cardRect.height - 18);
+
+      els.guideCard.style.left = `${Math.max(18, cardLeft)}px`;
+      els.guideCard.style.top = `${Math.max(18, cardTop)}px`;
+    }
+
+    function queueGuidePositionUpdate(target) {
+      window.clearTimeout(guidePositionTimer);
+      positionGuideElements(target);
+      guidePositionTimer = window.setTimeout(() => positionGuideElements(target), 240);
+    }
+
+    function renderGuideStep() {
+      if (!isGuideOpen() || !activeGuideSteps.length) return;
+      const step = activeGuideSteps[guideStepIndex];
+      const target = currentGuideTarget();
+      if (!step || !target) return;
+
+      els.guideTitle.textContent = step.title;
+      els.guideDescription.textContent = step.description;
+      els.guideProgress.textContent = `${guideStepIndex + 1} / ${activeGuideSteps.length}`;
+      els.guidePrevBtn.disabled = guideStepIndex === 0;
+      els.guideNextBtn.disabled = guideStepIndex === activeGuideSteps.length - 1;
+
+      if (!guideTargetIsVisible(target)) {
+        target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+      }
+      queueGuidePositionUpdate(target);
+    }
+
+    function openGuide({ startIndex = 0 } = {}) {
+      if (!els.guideOverlay) return;
+      activeGuideSteps = availableGuideSteps();
+      if (!activeGuideSteps.length) return;
+      guideStepIndex = Math.min(Math.max(startIndex, 0), activeGuideSteps.length - 1);
+      els.guideOverlay.hidden = false;
+      document.body.classList.add("guide-open");
+      renderGuideStep();
+      window.requestAnimationFrame(() => els.guideNextBtn?.focus());
+    }
+
+    function closeGuide({ markSeen = false } = {}) {
+      if (!els.guideOverlay) return;
+      if (markSeen) {
+        localStorage.setItem(GUIDE_SEEN_STORAGE_KEY, "true");
+      }
+      els.guideOverlay.hidden = true;
+      document.body.classList.remove("guide-open");
+      window.clearTimeout(guidePositionTimer);
+      els.guideSpotlight?.removeAttribute("style");
+      els.guideCard?.removeAttribute("style");
+    }
+
+    function completeGuide() {
+      closeGuide({ markSeen: true });
+      showToast("使用引导已完成");
+    }
+
+    function moveGuideStep(direction) {
+      if (!isGuideOpen()) return;
+      guideStepIndex = Math.min(Math.max(guideStepIndex + direction, 0), activeGuideSteps.length - 1);
+      renderGuideStep();
+    }
+
+    function scheduleFirstRunGuide() {
+      try {
+        if (localStorage.getItem(GUIDE_SEEN_STORAGE_KEY) !== "true") {
+          window.setTimeout(() => openGuide(), 480);
+        }
+      } catch (error) {
+        console.warn("Failed to read guide state", error);
+      }
     }
 
     function applyAgendaTemplate(templateId) {
@@ -5937,6 +6223,10 @@
       });
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
+        if (isGuideOpen()) {
+          closeGuide({ markSeen: false });
+          return;
+        }
         if (!els.templateModal?.hidden) {
           closeTemplateModal();
           return;
@@ -5954,6 +6244,10 @@
       els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
       els.changeTemplateBtn?.addEventListener("click", openTemplateModal);
       els.closeTemplateModalBtn?.addEventListener("click", closeTemplateModal);
+      els.guideReplayBtn?.addEventListener("click", () => openGuide());
+      els.guidePrevBtn?.addEventListener("click", () => moveGuideStep(-1));
+      els.guideNextBtn?.addEventListener("click", () => moveGuideStep(1));
+      els.guideDoneBtn?.addEventListener("click", completeGuide);
       els.templateModal?.addEventListener("click", (event) => {
         if (event.target === els.templateModal) closeTemplateModal();
       });
@@ -5973,6 +6267,7 @@
         }
         syncMobileEditorState();
         syncPreviewScale();
+        if (isGuideOpen()) queueGuidePositionUpdate(currentGuideTarget());
       });
     }
 
@@ -5980,6 +6275,7 @@
     if (autoScheduleAgenda()) saveData();
     renderAll();
     initCloudSync();
+    scheduleFirstRunGuide();
   </script>
 </body>
 </html>

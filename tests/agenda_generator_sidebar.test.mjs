@@ -779,6 +779,13 @@ test("template picker confirms before overwriting agenda state", () => {
   assert.match(loadDataSource, /if \(!saved\) return normalizeEscapedNewlines\(clone\(DEFAULT_DATA\)\)/, "default template should only seed the page when no saved local data exists");
 });
 
+test("saved empty agendas stay empty instead of being reseeded from the default template", () => {
+  const loadDataSource = functionBlock("loadData");
+
+  assert.match(loadDataSource, /if \(!Array\.isArray\(source\.items\)\) source\.items = clone\(DEFAULT_DATA\.items\);/, "missing legacy items should still receive default items");
+  assert.doesNotMatch(loadDataSource, /!\s*source\.items\.length/, "an intentionally saved empty agenda should not be overwritten by the default template");
+});
+
 test("agenda generator exposes multi-device Supabase draft sync controls", () => {
   const panel = exportPanelTemplate();
   const saveDataSource = functionBlock("saveData");
