@@ -5,7 +5,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : window, function () {
   const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024;
   const MAX_ITEMS = 250;
-  const IMAGE_FIELDS = new Set(["logoData", "wechatQrData", "joinQrData"]);
+  const IMAGE_FIELDS = new Set(["logoData", "wechatQrData", "joinQrData", "voteQrData"]);
   const ITEM_FIELDS = ["time", "title", "detail", "duration", "durationNote", "person"];
 
   function byteLength(value) {

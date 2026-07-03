@@ -182,10 +182,14 @@ test("follow-us card uses default QR assets with upload override support", () =>
   assert.equal(sidebar.includes("拍照关注我们"), false, "QR sidebar card should not use the old longer title");
   assert.ok(existsSync(new URL("../assets/quhuo-qr.png", import.meta.url)), "default 取火 QR asset should exist");
   assert.ok(existsSync(new URL("../assets/join-consult-qr.png", import.meta.url)), "default 入会咨询 QR asset should exist");
+  assert.ok(existsSync(new URL("../assets/vote-qr.png", import.meta.url)), "default 现场投票 QR asset should exist");
   assert.match(source, /DEFAULT_WECHAT_QR_SRC\s*=\s*"assets\/quhuo-qr\.png"/, "取火 QR should have a repo asset default");
   assert.match(source, /DEFAULT_JOIN_QR_SRC\s*=\s*"assets\/join-consult-qr\.png"/, "入会咨询 QR should have a repo asset default");
+  assert.match(source, /DEFAULT_VOTE_QR_SRC\s*=\s*"assets\/vote-qr\.png"/, "现场投票 QR should have a repo asset default");
   assert.match(source, /qrBoxHtml\(state\.wechatQrData\s*\|\|\s*DEFAULT_WECHAT_QR_SRC\)/, "取火 QR should fall back to the default asset");
   assert.match(source, /qrBoxHtml\(state\.joinQrData\s*\|\|\s*DEFAULT_JOIN_QR_SRC\)/, "入会咨询 QR should fall back to the default asset");
+  assert.match(source, /voteQrData:\s*""/, "vote QR upload should be part of agenda state");
+  assert.match(source, /state\.voteQrData\s*\|\|\s*DEFAULT_VOTE_QR_SRC/, "现场投票 QR should use uploaded data before the default asset");
 });
 
 test("image upload editor omits obsolete current poster upload", () => {
@@ -194,6 +198,9 @@ test("image upload editor omits obsolete current poster upload", () => {
   assert.ok(uploadDetails.includes('id="logoInput"'), "brand logo upload should remain available");
   assert.ok(uploadDetails.includes('id="wechatQrInput"'), "取火 QR upload should remain available");
   assert.ok(uploadDetails.includes('id="joinQrInput"'), "入会咨询 QR upload should remain available");
+  assert.ok(uploadDetails.includes('id="voteQrInput"'), "现场投票 QR upload should be available");
+  assert.ok(uploadDetails.includes('data-image-preview="voteQrData"'), "现场投票 QR preview should use the shared upload renderer");
+  assert.ok(uploadDetails.includes('data-image-field="voteQrData"'), "现场投票 QR input should save through the shared upload handler");
   assert.equal(uploadDetails.includes('id="posterInput"'), false, "current poster upload input should be removed");
   assert.equal(uploadDetails.includes('data-image-preview="posterData"'), false, "current poster preview upload card should be removed");
   assert.equal(uploadDetails.includes("当期海报"), false, "current poster editing copy should be removed from the upload editor");
@@ -312,6 +319,7 @@ test("printable footer keeps guest participation beside the live voting QR", () 
   }
   assert.ok(source.includes("DEFAULT_VOTE_QR_SRC"), "guest card should reference the bundled vote QR asset");
   assert.ok(existsSync(new URL("../assets/vote-qr.png", import.meta.url)), "vote QR asset should exist");
+  assert.match(source, /voteQrData:\s*\{[\s\S]*?emptyLabel:\s*"现场投票二维码"[\s\S]*?defaultSrc:\s*DEFAULT_VOTE_QR_SRC/, "vote QR should use the shared image upload metadata");
   assert.doesNotMatch(source, /诚邀您一起|成为一半|所有的伟大都源于开始/, "guest card defaults should not include long slogans");
   assert.match(guestTagsRule, /display:\s*flex;[\s\S]*?justify-content:\s*flex-start;/, "guest tags should stay on the left side");
   assert.match(guestCardRule, /grid-template-columns:\s*minmax\(0,\s*1fr\) 78px;[\s\S]*?align-items:\s*center;/, "guest card should reserve a right column for voting QR");

@@ -12,6 +12,7 @@ const defaults = {
   logoData: "",
   wechatQrData: "",
   joinQrData: "",
+  voteQrData: "",
   items: [{ id: "item-1", kind: "item", title: "主持", duration: "3", time: "19:30", person: "", detail: "" }]
 };
 
@@ -67,10 +68,12 @@ test("agenda normalization caps items and accepts bundled/data image sources", (
   const result = AgendaData.normalizeAgendaData({
     ...defaults,
     logoData: "data:image/png;base64,AAAA",
-    wechatQrData: "assets/quhuo-qr.png"
+    wechatQrData: "assets/quhuo-qr.png",
+    voteQrData: "assets/vote-qr.png"
   }, defaults);
   assert.equal(result.logoData, "data:image/png;base64,AAAA");
   assert.equal(result.wechatQrData, "assets/quhuo-qr.png");
+  assert.equal(result.voteQrData, "assets/vote-qr.png");
 });
 
 test("agenda generator uses strict normalization before replacing persisted state", () => {

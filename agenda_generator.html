@@ -3509,6 +3509,13 @@
                 <button class="qr-remove-button" type="button" data-clear-image="joinQrData" title="移除入会咨询二维码" aria-label="移除入会咨询二维码" hidden>×</button>
                 <input class="file-input" id="joinQrInput" type="file" accept="image/*" data-image-field="joinQrData" />
               </section>
+              <section class="upload-card qr-upload-card">
+                <label class="upload-preview" for="voteQrInput" data-image-preview="voteQrData" tabindex="0">
+                  <span class="upload-empty">未上传<br>现场投票二维码<small>点按上传</small></span>
+                </label>
+                <button class="qr-remove-button" type="button" data-clear-image="voteQrData" title="移除现场投票二维码" aria-label="移除现场投票二维码" hidden>×</button>
+                <input class="file-input" id="voteQrInput" type="file" accept="image/*" data-image-field="voteQrData" />
+              </section>
             </div>
           </details>
           <details class="fixed-info">
@@ -3720,6 +3727,7 @@
       logoData: "",
       wechatQrData: "",
       joinQrData: "",
+      voteQrData: "",
       nextTheme: "夏日穿搭",
       nextMeetingDate: "",
       nextMeetingTime: "",
@@ -4230,6 +4238,13 @@ ${GUEST_PARTICIPATION_NOTE}`,
           removed: "二维码已移除",
           defaultSrc: DEFAULT_JOIN_QR_SRC,
         },
+        voteQrData: {
+          emptyLabel: "现场投票二维码",
+          overlay: "更换二维码",
+          updated: "现场投票二维码已更新",
+          removed: "二维码已移除",
+          defaultSrc: DEFAULT_VOTE_QR_SRC,
+        },
       };
       return meta[field] || {
         emptyLabel: "图片",
@@ -4384,7 +4399,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
             <p class="guest-note">${escapeHtml(note)}</p>
           </div>
           <figure class="guest-vote-card">
-            <img src="${DEFAULT_VOTE_QR_SRC}" alt="现场投票二维码" />
+            <img src="${escapeHtml(state.voteQrData || DEFAULT_VOTE_QR_SRC)}" alt="现场投票二维码" />
             <figcaption>现场投票</figcaption>
           </figure>
         </div>
