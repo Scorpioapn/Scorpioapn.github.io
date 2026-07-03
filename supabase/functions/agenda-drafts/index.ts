@@ -19,7 +19,7 @@ function corsHeaders(request: Request) {
   const allowedOrigin = !allowedOrigins.size ? "*" : allowedOrigins.has(origin) ? origin : "null";
   return {
     "access-control-allow-origin": allowedOrigin,
-    "access-control-allow-headers": "authorization, apikey, content-type",
+    "access-control-allow-headers": "authorization, apikey, content-type, x-client-info, x-region",
     "access-control-allow-methods": "POST, OPTIONS",
     "vary": "origin"
   };

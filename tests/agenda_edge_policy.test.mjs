@@ -73,5 +73,7 @@ test("Edge gateway exists and never exposes raw database errors", () => {
   assert.match(source, /Deno\.serve/);
   assert.match(source, /consume_agenda_draft_rate_limit/);
   assert.match(source, /version_conflict/);
+  assert.match(source, /x-client-info/);
+  assert.match(source, /x-region/);
   assert.doesNotMatch(source, /error\.message\s*\}/);
 });
