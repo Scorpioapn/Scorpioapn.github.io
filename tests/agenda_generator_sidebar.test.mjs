@@ -7,7 +7,9 @@ const require = createRequire(import.meta.url);
 const source = readFileSync(new URL("../agenda_generator.html", import.meta.url), "utf8");
 const storageSource = readFileSync(new URL("../js/storage.js", import.meta.url), "utf8");
 const schemaSource = readFileSync(new URL("../js/agenda-schema.js", import.meta.url), "utf8");
+const templatesSource = readFileSync(new URL("../js/agenda-templates.js", import.meta.url), "utf8");
 const schema = require("../js/agenda-schema.js");
+const templates = require("../js/agenda-templates.js");
 
 function sidebarTemplate() {
   const match = source.match(/<aside class="template-sidebar">([\s\S]*?)<\/aside>/);
@@ -163,15 +165,17 @@ test("printable sidebar renders the requested information cards in order", () =>
 
 
 test("default member team roster matches the updated club officers", () => {
-  assert.match(source, /officers:\s*DEFAULT_OFFICERS,/, "default data should reference the shared updated officer roster");
-  assert.ok(source.includes("LEGACY_DEFAULT_OFFICERS"), "old saved default roster should migrate without overwriting custom edits");
+  const defaultData = templates.getDefaultData();
+
+  assert.match(source, /const DEFAULT_OFFICERS\s*=\s*AgendaTemplates\.DEFAULT_OFFICERS/, "agenda page should read the shared updated officer roster from templates");
+  assert.ok(templatesSource.includes("LEGACY_DEFAULT_OFFICERS"), "old saved default roster should remain available for migration");
   for (const text of [
     "会长：卡卡  秘书长：浩岩",
     "教育副会长：斯敏  财务官：燕薇",
     "会员副会长：莫婷  事务官：文星",
     "公关副会长：聪聪"
   ]) {
-    assert.ok(source.includes(text), `updated default roster should include: ${text}`);
+    assert.ok(defaultData.officers.includes(text), `updated default roster should include: ${text}`);
   }
 });
 
@@ -188,7 +192,7 @@ test("follow-us card uses default QR assets with upload override support", () =>
   assert.match(source, /DEFAULT_VOTE_QR_SRC\s*=\s*"assets\/vote-qr\.png"/, "现场投票 QR should have a repo asset default");
   assert.match(source, /qrBoxHtml\(state\.wechatQrData\s*\|\|\s*DEFAULT_WECHAT_QR_SRC\)/, "取火 QR should fall back to the default asset");
   assert.match(source, /qrBoxHtml\(state\.joinQrData\s*\|\|\s*DEFAULT_JOIN_QR_SRC\)/, "入会咨询 QR should fall back to the default asset");
-  assert.match(source, /voteQrData:\s*""/, "vote QR upload should be part of agenda state");
+  assert.match(templatesSource, /voteQrData:\s*""/, "vote QR upload should be part of agenda template state");
   assert.match(source, /state\.voteQrData\s*\|\|\s*DEFAULT_VOTE_QR_SRC/, "现场投票 QR should use uploaded data before the default asset");
 });
 
@@ -307,6 +311,7 @@ test("timing rules module contains all three detailed rule groups", () => {
 
 test("printable footer keeps guest participation beside the live voting QR", () => {
   const footer = footerTemplate();
+  const defaultGuestInvitation = templates.getDefaultData().guestInvitation;
   const guestTagsRule = cssRule(".guest-tags");
   const guestCardRule = cssRule(".guest-participation");
   const voteCardRule = cssRule(".guest-vote-card");
@@ -314,13 +319,14 @@ test("printable footer keeps guest participation beside the live voting QR", () 
 
   assert.ok(footer.includes("来宾可参与方式"), "footer should use the updated guest participation title");
   assert.ok(footer.includes("guestParticipationHtml(state.guestInvitation)"), "guest card should use the tag renderer");
-  for (const text of ["来宾介绍", "即兴演讲", "话题分词", "无需经验，欢迎第一次参加", "现场投票"]) {
-    assert.ok(source.includes(text), `guest card should include: ${text}`);
+  for (const text of ["来宾介绍", "即兴演讲", "话题分词", "无需经验，欢迎第一次参加"]) {
+    assert.ok(defaultGuestInvitation.includes(text), `guest card defaults should include: ${text}`);
   }
+  assert.ok(source.includes("现场投票"), "guest card should include the live voting label");
   assert.ok(source.includes("DEFAULT_VOTE_QR_SRC"), "guest card should reference the bundled vote QR asset");
   assert.ok(existsSync(new URL("../assets/vote-qr.png", import.meta.url)), "vote QR asset should exist");
   assert.match(source, /voteQrData:\s*\{[\s\S]*?emptyLabel:\s*"现场投票二维码"[\s\S]*?defaultSrc:\s*DEFAULT_VOTE_QR_SRC/, "vote QR should use the shared image upload metadata");
-  assert.doesNotMatch(source, /诚邀您一起|成为一半|所有的伟大都源于开始/, "guest card defaults should not include long slogans");
+  assert.doesNotMatch(templatesSource, /诚邀您一起|成为一半|所有的伟大都源于开始/, "guest card defaults should not include long slogans");
   assert.match(guestTagsRule, /display:\s*flex;[\s\S]*?justify-content:\s*flex-start;/, "guest tags should stay on the left side");
   assert.match(guestCardRule, /grid-template-columns:\s*minmax\(0,\s*1fr\) 78px;[\s\S]*?align-items:\s*center;/, "guest card should reserve a right column for voting QR");
   assert.match(voteCardRule, /width:\s*78px;[\s\S]*?border-radius:\s*9px;[\s\S]*?background:\s*#ffffff;/, "vote QR should sit in a small white rounded card");
@@ -743,6 +749,34 @@ test("export panel separates print actions from json backup actions", () => {
   assert.match(groupsRule, /display:\s*grid;[\s\S]*?gap:\s*14px;/, "export groups should be visually separated");
   assert.match(actionsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "paired export buttons should align in two columns");
   assert.match(primaryActionsRule, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/, "primary export buttons should align in three columns on desktop");
+});
+
+test("agenda generator exposes selectable agenda templates", () => {
+  const names = templates.listTemplates().map((template) => template.name);
+  const regular = templates.getTemplate("常规例会模板");
+  const marathon = templates.getTemplate("impromptu-marathon");
+
+  assert.ok(existsSync(new URL("../js/agenda-templates.js", import.meta.url)), "agenda templates module should exist");
+  assert.match(source, /<script src="js\/agenda-templates\.js"><\/script>[\s\S]*?<script src="js\/agenda-data\.js"><\/script>/, "agenda templates should load before agenda app initialization");
+  assert.ok(names.includes("常规例会模板"), "regular meeting template should be listed");
+  assert.ok(names.includes("即兴马拉松模板"), "impromptu marathon template should be listed");
+  assert.equal(templates.getDefaultData().theme, "去运动", "default data should still come from the regular meeting template");
+  assert.ok(regular.data.items.some((item) => item.title === "主席总结本期活动，结束会议"), "regular template should keep the existing default agenda content");
+  assert.ok(marathon.data.items.some((item) => String(item.title).includes("即兴演讲 Round 2")), "marathon template should provide a distinct agenda");
+});
+
+test("template picker confirms before overwriting agenda state", () => {
+  const panel = exportPanelTemplate();
+  const loadDataSource = functionBlock("loadData");
+  const applyTemplateSource = functionBlock("applyAgendaTemplate");
+
+  assert.ok(panel.includes('id="changeTemplateBtn"'), "export panel should expose a template switch button near backup actions");
+  assert.ok(source.includes('id="templateModal"'), "template picker modal should be present");
+  assert.match(applyTemplateSource, /AgendaTemplates\.getTemplate\(templateId\)/, "template application should load data from the shared template module");
+  assert.match(applyTemplateSource, /window\.confirm\("更换模板会覆盖当前议程内容，是否继续？"\)[\s\S]*?return;/, "template switch should confirm before replacing state");
+  assert.match(applyTemplateSource, /state\s*=\s*nextState/, "template switch should replace the current agenda only after confirmation");
+  assert.match(applyTemplateSource, /autoScheduleAgenda\(\);\s*renderAll\(\);\s*saveData\(\);/, "template switch should reschedule, rerender, and save through the normal path");
+  assert.match(loadDataSource, /if \(!saved\) return normalizeEscapedNewlines\(clone\(DEFAULT_DATA\)\)/, "default template should only seed the page when no saved local data exists");
 });
 
 test("agenda generator exposes multi-device Supabase draft sync controls", () => {

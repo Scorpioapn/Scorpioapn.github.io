@@ -448,6 +448,69 @@
       padding-inline: 12px;
     }
 
+    .template-modal-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(33, 26, 21, 0.34);
+      backdrop-filter: blur(4px);
+    }
+
+    .template-modal-scrim[hidden] {
+      display: none;
+    }
+
+    .template-modal {
+      width: min(520px, 100%);
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+      border: 1px solid rgba(106, 88, 66, 0.16);
+      border-radius: 24px;
+      background: rgba(255, 251, 247, 0.98);
+      box-shadow: var(--shadow-3);
+    }
+
+    .template-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .template-option {
+      width: 100%;
+      min-height: 76px;
+      padding: 14px;
+      display: grid;
+      gap: 6px;
+      text-align: left;
+      border: 1px solid rgba(106, 88, 66, 0.16);
+      border-radius: 18px;
+      color: var(--md-on-surface);
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .template-option:hover,
+    .template-option:focus-visible {
+      border-color: rgba(0, 78, 96, 0.36);
+      background: var(--md-primary-container);
+    }
+
+    .template-option strong {
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 950;
+    }
+
+    .template-option span {
+      color: var(--md-secondary);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 750;
+    }
+
     .cloud-sync-card {
       display: grid;
       gap: 10px;
@@ -3570,6 +3633,7 @@
               <div class="export-actions backup">
                 <button class="button tonal" id="exportJsonBtn" type="button">导出 JSON</button>
                 <button class="button subtle" id="importJsonBtn" type="button">导入 JSON</button>
+                <button class="button subtle" id="changeTemplateBtn" type="button">更换模板</button>
               </div>
             </div>
             <div class="export-action-group cloud-sync-group" id="cloudSyncPanel">
@@ -3643,6 +3707,21 @@
     </a>
   </nav>
 
+  <div class="template-modal-scrim" id="templateModal" hidden role="dialog" aria-modal="true" aria-labelledby="templateModalTitle">
+    <div class="template-modal">
+      <div class="panel-title">
+        <div>
+          <h2 id="templateModalTitle">更换模板</h2>
+          <p class="helper-text">选择后会先提示确认，再覆盖当前议程内容。</p>
+        </div>
+        <button class="mini-button" id="closeTemplateModalBtn" type="button" title="关闭模板选择" aria-label="关闭模板选择">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="template-list" id="templateList"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite">
     <span id="toastText"></span>
     <button id="toastAction" type="button"></button>
@@ -3651,6 +3730,7 @@
   <script src="js/storage.js"></script>
   <script src="js/time-rules.js"></script>
   <script src="js/agenda-schema.js"></script>
+  <script src="js/agenda-templates.js"></script>
   <script src="js/agenda-data.js"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/vendor/supabase-js-v2.umd.min.js"></script>
@@ -3663,6 +3743,7 @@
     const TIMEKEEPER_STORAGE_KEYS = window.TMStorage.TIMEKEEPER_STORAGE_KEYS;
     const AgendaSchema = window.TMAgendaSchema;
     const AgendaData = window.TMAgendaData;
+    const AgendaTemplates = window.TMAgendaTemplates;
     const CloudSync = window.TMAgendaCloudSync;
     const TimeRules = window.TMTimeRules;
     const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = [
@@ -3683,26 +3764,11 @@
     const DEFAULT_WECHAT_QR_SRC = "assets/quhuo-qr.png";
     const DEFAULT_JOIN_QR_SRC = "assets/join-consult-qr.png";
     const DEFAULT_VOTE_QR_SRC = "assets/vote-qr.png";
-    const GUEST_PARTICIPATION_TAGS = ["来宾介绍", "即兴演讲", "话题分词"];
-    const GUEST_PARTICIPATION_NOTE = "无需经验，欢迎第一次参加";
-    const DEFAULT_MEETING_RULES = [
-      "手机请调至静音",
-      "请留意时间官提示",
-      "欢迎鼓掌、反馈与投票",
-      "入会咨询请联系会员副会长"
-    ];
-    const DEFAULT_OFFICERS = [
-      "会长：卡卡  秘书长：浩岩",
-      "教育副会长：斯敏  财务官：燕薇",
-      "会员副会长：莫婷  事务官：文星",
-      "公关副会长：聪聪"
-    ].join("\n");
-    const LEGACY_DEFAULT_OFFICERS = [
-      "会长：女侠  秘书长：夏奈",
-      "教育副会长：聪聪  财务官：王兵伟",
-      "会员副会长：Venus斯敏  事务官：Jeff",
-      "公关副会长：水杨酸"
-    ].join("\n");
+    const GUEST_PARTICIPATION_TAGS = AgendaTemplates.GUEST_PARTICIPATION_TAGS;
+    const GUEST_PARTICIPATION_NOTE = AgendaTemplates.GUEST_PARTICIPATION_NOTE;
+    const DEFAULT_MEETING_RULES = AgendaTemplates.DEFAULT_MEETING_RULES;
+    const DEFAULT_OFFICERS = AgendaTemplates.DEFAULT_OFFICERS;
+    const LEGACY_DEFAULT_OFFICERS = AgendaTemplates.LEGACY_DEFAULT_OFFICERS;
     const OFFICER_ROLE_LABELS = [
       "教育副会长",
       "会员副会长",
@@ -3715,66 +3781,7 @@
     ];
     const OFFICER_ROLE_PATTERN = OFFICER_ROLE_LABELS.join("|");
     const FLOW_FIT_CLASSES = ["flow-fit-compact", "flow-fit-dense", "flow-fit-micro"];
-
-    const DEFAULT_DATA = {
-      clubName: "畅言中文国际演讲俱乐部",
-      clubNameEnglish: "Charm Voice Mandarin Toastmasters Club",
-      meetingNo: "739",
-      theme: "去运动",
-      wordOfDay: "越来越好",
-      date: "2025-07-15",
-      startTime: "19:25",
-      endTime: "21:30",
-      location: "深圳市南山区科技园讯美科技广场3号楼4楼SPACE MAX会议室(高新中A出口)",
-      manager: "卡卡",
-      posterDesigner: "水杨酸",
-      logoData: "",
-      wechatQrData: "",
-      joinQrData: "",
-      voteQrData: "",
-      nextTheme: "夏日穿搭",
-      nextMeetingDate: "",
-      nextMeetingTime: "",
-      residentPeople: "女侠\nMaggie\nBell\n聪聪\nVenus斯敏\n纳纳\nIsabel\nRui（Soar High）\nDavid（MAD）\n筠筠\n卡卡\n水杨酸\nJeff",
-      clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
-      officers: DEFAULT_OFFICERS,
-      meetingRules: DEFAULT_MEETING_RULES.join("\n"),
-      meetingVision: "会议愿景：很开心与大家建立一种愉悦的学习旅程，谢谢大家~",
-      guestInvitation: `【${GUEST_PARTICIPATION_TAGS.join("】 【")}】
-${GUEST_PARTICIPATION_NOTE}`,
-      items: [
-        { id: "s-open", kind: "section", title: "一、开场环节" },
-        { id: "i-guest-checkin", kind: "item", time: "19:15", title: "来宾入会，相互认识与交流", detail: "", duration: "10", person: "全体会员" },
-        { id: "i-warmup", kind: "item", time: "19:25", title: "暖场互动", detail: "", duration: "5", person: "全体会员" },
-        { id: "i-rules", kind: "item", time: "19:30", title: "事务官宣布会议规则", detail: "", duration: "1", person: "女侠" },
-        { id: "i-president", kind: "item", time: "19:32", title: "主席致词", detail: "", duration: "3", person: "女侠" },
-        { id: "i-host-open", kind: "item", time: "19:35", title: "总主持开场，介绍会议流程", detail: "30秒 × 4 + 1", duration: "3", person: "女侠" },
-        { id: "i-timer-declare", kind: "item", time: "19:38", title: "时间官宣言", detail: "", duration: "2", person: "纳纳（来宾）" },
-        { id: "i-ah-declare", kind: "item", time: "19:41", title: "哼哈官宣言", detail: "", duration: "2", person: "Isabel（来宾）" },
-        { id: "s-impromptu", kind: "section", title: "二、即兴马拉松" },
-        { id: "i-impromptu", kind: "item", time: "19:43", title: "即兴演讲", detail: "即兴主持介绍规则\n即兴主持人设计规则，现场所有人参与", duration: "15", durationNote: "2min/人", person: "Maggie" },
-        { id: "s-prepared", kind: "section", title: "三、精心演讲环节" },
-        { id: "i-prepared-intro", kind: "item", time: "20:04", title: "总主持人介绍本环节+串场", detail: "30秒 × 4", duration: "2", person: "女侠" },
-        { id: "i-speech-1", kind: "item", time: "20:06", title: "精心备稿1", detail: "《选择和努力》PM L1-2 撰写带有目的性的演讲稿", duration: "5-7", person: "Maggie" },
-        { id: "i-speech-2", kind: "item", time: "20:13", title: "精心备稿2", detail: "《走出能力陷阱》PM L1-4 评估与反馈", duration: "5-7", person: "Bell" },
-        { id: "i-speech-3", kind: "item", time: "20:21", title: "精心备稿3", detail: "《“冷”“战”》PM L3-1 说服型演讲", duration: "5-7", person: "聪聪" },
-        { id: "i-guests", kind: "item", time: "20:29", title: "来宾介绍", detail: "", duration: "6", person: "Venus斯敏" },
-        { id: "s-feedback", kind: "section", title: "四、茶歇&会议反馈环节" },
-        { id: "i-break", kind: "item", time: "20:35", title: "茶歇+大合照", detail: "", duration: "5", person: "全场人员" },
-        { id: "i-feedback-intro", kind: "item", time: "20:41", title: "总主持人介绍本环节+串场", detail: "30秒 × 4", duration: "2", person: "女侠" },
-        { id: "i-impromptu-eval", kind: "item", time: "20:43", title: "即兴点评", detail: "", duration: "7", person: "Rui（Soar High）" },
-        { id: "i-eval-1", kind: "item", time: "20:51", title: "备稿点评1", detail: "《选择和努力》PM L1-2 撰写带有目的性的演讲稿", duration: "5", person: "David（MAD）" },
-        { id: "i-eval-2", kind: "item", time: "20:56", title: "备稿点评2", detail: "《走出能力陷阱》PM L1-4 评估与反馈", duration: "5", person: "女侠" },
-        { id: "i-eval-3", kind: "item", time: "21:02", title: "备稿点评3", detail: "《“冷”“战”》PM L3-1 说服型演讲", duration: "5", person: "筠筠" },
-        { id: "i-ah-report", kind: "item", time: "21:07", title: "哼哈官报告", detail: "", duration: "3", person: "Isabel（来宾）" },
-        { id: "i-timer-report", kind: "item", time: "21:11", title: "时间官报告", detail: "", duration: "3", person: "纳纳（来宾）" },
-        { id: "i-vote", kind: "item", time: "21:13", title: "电子投票", detail: "", duration: "1", person: "女侠" },
-        { id: "i-general-eval", kind: "item", time: "21:14", title: "总点评", detail: "", duration: "8", person: "Venus斯敏" },
-        { id: "s-share", kind: "section", title: "五、分享环节" },
-        { id: "i-award", kind: "item", time: "21:22", title: "颁奖&真情分享", detail: "", duration: "5", person: "女侠&雪花组合" },
-        { id: "i-close", kind: "item", time: "21:28", title: "主席总结本期活动，结束会议", detail: "", duration: "1", person: "女侠" }
-      ]
-    };
+    const DEFAULT_DATA = AgendaTemplates.getDefaultData();
 
     const DEFAULT_MATCHES = [
       { keywords: ["事务官"], duration: "1", recommendation: "1分钟" },
@@ -3827,7 +3834,11 @@ ${GUEST_PARTICIPATION_NOTE}`,
       copyBtnTop: document.querySelector("#copyBtnTop"),
       exportJsonBtn: document.querySelector("#exportJsonBtn"),
       importJsonBtn: document.querySelector("#importJsonBtn"),
+      changeTemplateBtn: document.querySelector("#changeTemplateBtn"),
       jsonImportInput: document.querySelector("#jsonImportInput"),
+      templateModal: document.querySelector("#templateModal"),
+      templateList: document.querySelector("#templateList"),
+      closeTemplateModalBtn: document.querySelector("#closeTemplateModalBtn"),
       cloudSyncStatus: document.querySelector("#cloudSyncStatus"),
       cloudSyncVersion: document.querySelector("#cloudSyncVersion"),
       cloudSyncLink: document.querySelector("#cloudSyncLink"),
@@ -4744,6 +4755,63 @@ ${GUEST_PARTICIPATION_NOTE}`,
       renderAgendaList();
       renderRuleHint();
       syncMobileEditorState();
+    }
+
+    function renderTemplateOptions() {
+      if (!els.templateList) return;
+      const templates = AgendaTemplates.listTemplates();
+      els.templateList.innerHTML = templates.map((template) => `
+        <button class="template-option" type="button" data-template-id="${escapeHtml(template.id)}">
+          <strong>${escapeHtml(template.name)}</strong>
+          <span>${escapeHtml(template.description)} · ${template.itemCount} 个环节</span>
+        </button>
+      `).join("");
+    }
+
+    function openTemplateModal() {
+      renderTemplateOptions();
+      if (!els.templateModal) return;
+      els.templateModal.hidden = false;
+      window.requestAnimationFrame(() => {
+        els.templateList?.querySelector(".template-option")?.focus();
+      });
+    }
+
+    function closeTemplateModal() {
+      if (els.templateModal) els.templateModal.hidden = true;
+      els.changeTemplateBtn?.focus();
+    }
+
+    function applyAgendaTemplate(templateId) {
+      const template = AgendaTemplates.getTemplate(templateId);
+      if (!template) {
+        showToast("模板不存在");
+        return;
+      }
+      if (!window.confirm("更换模板会覆盖当前议程内容，是否继续？")) return;
+
+      const previousState = state;
+      try {
+        const nextState = normalizeEscapedNewlines(AgendaData.normalizeAgendaData(template.data, DEFAULT_DATA, { strict: false }));
+        nextState.items = normalizeAgendaItems(nextState.items).items;
+        state = nextState;
+        editingId = null;
+        dragId = null;
+        undoDelete = null;
+        mobileSortMode = false;
+        if (els.agendaFormCard) els.agendaFormCard.hidden = true;
+        closeAgendaMenus();
+        autoScheduleAgenda();
+        renderAll();
+        saveData();
+        closeTemplateModal();
+        showToast(`已切换为${template.name}`);
+      } catch (error) {
+        console.error(error);
+        state = previousState;
+        renderAll();
+        showToast("模板应用失败，当前内容已保留");
+      }
     }
 
     function syncPreviewScale() {
@@ -5869,6 +5937,10 @@ ${GUEST_PARTICIPATION_NOTE}`,
       });
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
+        if (!els.templateModal?.hidden) {
+          closeTemplateModal();
+          return;
+        }
         closeAgendaMenus();
         if (!els.agendaFormCard.hidden) clearAgendaForm();
       });
@@ -5880,6 +5952,15 @@ ${GUEST_PARTICIPATION_NOTE}`,
       els.exportJsonBtn.addEventListener("click", downloadJson);
       els.importJsonBtn.addEventListener("click", () => els.jsonImportInput.click());
       els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
+      els.changeTemplateBtn?.addEventListener("click", openTemplateModal);
+      els.closeTemplateModalBtn?.addEventListener("click", closeTemplateModal);
+      els.templateModal?.addEventListener("click", (event) => {
+        if (event.target === els.templateModal) closeTemplateModal();
+      });
+      els.templateList?.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-template-id]");
+        if (button) applyAgendaTemplate(button.dataset.templateId);
+      });
       els.createSyncDraftBtn?.addEventListener("click", createCloudDraft);
       els.copySyncLinkBtn?.addEventListener("click", copyCloudSyncLink);
       els.loadRemoteDraftBtn?.addEventListener("click", loadRemoteConflictVersion);
