@@ -3932,8 +3932,8 @@
               </div>
             </div>
             <div class="export-action-group cloud-sync-group" id="cloudSyncPanel">
-              <span class="export-group-title">多设备同步</span>
-              <p class="helper-text">创建公开同步链接后，手机和电脑打开同一链接即可接力编辑。</p>
+              <span class="export-group-title">多设备同步（可选）</span>
+              <p class="helper-text">创建公开同步链接后，手机和电脑打开同一链接即可接力编辑。任何拿到链接的人都能查看和编辑该草稿；即使云端暂时不可用，编辑、导出、打印也不受影响。</p>
               <div class="cloud-sync-card">
                 <div class="cloud-sync-status-row">
                   <span class="status-chip sync-status-chip" id="cloudSyncStatus" data-status="local">本机草稿</span>
@@ -5691,7 +5691,7 @@
         const missingConfig = error.message === "Supabase sync is not configured";
         if (!missingConfig) console.error(error);
         setCloudSyncStatus("error", missingConfig ? "missing-config" : "");
-        if (!missingConfig) showToast("同步草稿创建失败，请稍后重试");
+        if (!missingConfig) showToast("云端服务暂时不可用（免费服务可能正在休眠，请一分钟后再试）。本机自动保存不受影响。");
       }
     }
 
@@ -5728,7 +5728,9 @@
         online: () => navigator.onLine,
         onError: (error) => {
           console.error(error);
-          showToast(navigator.onLine ? "云端同步失败" : "当前离线，恢复网络后会继续同步");
+          showToast(navigator.onLine
+            ? "云端同步失败，内容已保存在本机；下次编辑时会自动重试"
+            : "当前离线，恢复网络后会继续同步");
         }
       });
       window.addEventListener("online", () => cloudSyncController?.retryPendingSave());
