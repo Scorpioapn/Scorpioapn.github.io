@@ -528,6 +528,141 @@
       font-weight: 750;
     }
 
+    .relay-import-modal {
+      width: min(680px, 100%);
+      max-height: min(760px, calc(100vh - 44px));
+      overflow: auto;
+    }
+
+    .relay-import-field .textarea {
+      min-height: 190px;
+      resize: vertical;
+      font-family: var(--font-body);
+    }
+
+    .relay-import-warnings {
+      display: grid;
+      gap: 8px;
+    }
+
+    .relay-import-warnings[hidden] {
+      display: none;
+    }
+
+    .relay-import-warning {
+      padding: 10px 12px;
+      border-radius: 16px;
+      color: #6b3f00;
+      background: rgba(255, 183, 77, 0.20);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+    .relay-import-preview {
+      min-height: 120px;
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid rgba(106, 88, 66, 0.14);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .relay-import-empty {
+      color: var(--md-on-surface-variant);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .relay-import-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .relay-import-field-preview,
+    .relay-import-item-preview {
+      min-width: 0;
+      padding: 9px 11px;
+      border-radius: 14px;
+      background: var(--md-surface-container-low);
+    }
+
+    .relay-import-field-preview strong,
+    .relay-import-item-preview strong {
+      display: block;
+      color: var(--md-secondary);
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .relay-import-field-preview span,
+    .relay-import-item-preview span,
+    .relay-import-item-preview small {
+      color: var(--md-on-surface);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 760;
+      overflow-wrap: anywhere;
+    }
+
+    .relay-import-section-title {
+      margin-bottom: -6px;
+      color: var(--md-primary);
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 950;
+    }
+
+    .relay-import-items {
+      display: grid;
+      gap: 8px;
+    }
+
+    .relay-import-section-preview {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 14px;
+      color: var(--md-on-primary-container);
+      background: var(--md-primary-container);
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 950;
+    }
+
+    .relay-import-item-preview {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px 12px;
+      align-items: start;
+    }
+
+    .relay-import-item-preview small {
+      color: var(--md-on-surface-variant);
+      font-family: var(--font-number);
+      white-space: nowrap;
+    }
+
+    .relay-import-item-preview em {
+      grid-column: 1 / -1;
+      color: var(--md-on-surface-variant);
+      font-size: 12px;
+      line-height: 1.45;
+      font-style: normal;
+      white-space: pre-line;
+    }
+
+    .relay-import-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
     .guide-overlay {
       position: fixed;
       inset: 0;
@@ -3020,6 +3155,25 @@
         grid-template-columns: 1fr;
       }
 
+      .template-modal-scrim {
+        align-items: start;
+        padding: 12px;
+        overflow-y: auto;
+      }
+
+      .relay-import-modal {
+        max-height: none;
+      }
+
+      .relay-import-fields,
+      .relay-import-item-preview {
+        grid-template-columns: 1fr;
+      }
+
+      .relay-import-actions .button {
+        flex: 1 1 140px;
+      }
+
       .toolbar-actions {
         display: grid;
         grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
@@ -3748,6 +3902,7 @@
               <div class="export-actions backup">
                 <button class="button tonal" id="exportJsonBtn" type="button">导出 JSON</button>
                 <button class="button subtle" id="importJsonBtn" type="button">导入 JSON</button>
+                <button class="button subtle" id="relayImportBtn" type="button">导入接龙</button>
                 <button class="button subtle" id="changeTemplateBtn" type="button">更换模板</button>
               </div>
             </div>
@@ -3837,6 +3992,30 @@
     </div>
   </div>
 
+  <div class="template-modal-scrim" id="relayImportModal" hidden role="dialog" aria-modal="true" aria-labelledby="relayImportModalTitle">
+    <div class="template-modal relay-import-modal">
+      <div class="panel-title">
+        <div>
+          <h2 id="relayImportModalTitle">导入接龙</h2>
+          <p class="helper-text">粘贴微信群报名帖，先预览解析结果，确认后再覆盖当前议程。</p>
+        </div>
+        <button class="mini-button" id="closeRelayImportModalBtn" type="button" title="关闭接龙导入" aria-label="关闭接龙导入">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <label class="field relay-import-field" for="relayImportText">
+        <span>接龙文字</span>
+        <textarea class="textarea" id="relayImportText" placeholder="粘贴微信群接龙报名帖..."></textarea>
+      </label>
+      <div class="relay-import-warnings" id="relayImportWarnings" hidden></div>
+      <div class="relay-import-preview" id="relayImportPreview" aria-live="polite"></div>
+      <div class="relay-import-actions">
+        <button class="button subtle" id="relayImportCancelBtn" type="button">取消</button>
+        <button class="button filled" id="relayImportConfirmBtn" type="button" disabled>确认导入</button>
+      </div>
+    </div>
+  </div>
+
   <div class="guide-overlay" id="guideOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideDescription">
     <div class="guide-spotlight" id="guideSpotlight" aria-hidden="true"></div>
     <section class="guide-card" id="guideCard">
@@ -3862,6 +4041,7 @@
   <script src="js/time-rules.js"></script>
   <script src="js/agenda-schema.js"></script>
   <script src="js/agenda-templates.js"></script>
+  <script src="js/agenda-relay-importer.js"></script>
   <script src="js/agenda-data.js"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/vendor/supabase-js-v2.umd.min.js"></script>
@@ -3876,6 +4056,8 @@
     const AgendaSchema = window.TMAgendaSchema;
     const AgendaData = window.TMAgendaData;
     const AgendaTemplates = window.TMAgendaTemplates;
+    const RelayImporter = window.TMAgendaRelayImporter;
+    window.parseRelayText = RelayImporter.parseRelayText;
     const CloudSync = window.TMAgendaCloudSync;
     const TimeRules = window.TMTimeRules;
     const TIMEKEEPER_DEFAULT_AGENDA_SIGNATURE = [
@@ -3999,11 +4181,19 @@
       copyBtnTop: document.querySelector("#copyBtnTop"),
       exportJsonBtn: document.querySelector("#exportJsonBtn"),
       importJsonBtn: document.querySelector("#importJsonBtn"),
+      relayImportBtn: document.querySelector("#relayImportBtn"),
       changeTemplateBtn: document.querySelector("#changeTemplateBtn"),
       jsonImportInput: document.querySelector("#jsonImportInput"),
       templateModal: document.querySelector("#templateModal"),
       templateList: document.querySelector("#templateList"),
       closeTemplateModalBtn: document.querySelector("#closeTemplateModalBtn"),
+      relayImportModal: document.querySelector("#relayImportModal"),
+      relayImportText: document.querySelector("#relayImportText"),
+      relayImportPreview: document.querySelector("#relayImportPreview"),
+      relayImportWarnings: document.querySelector("#relayImportWarnings"),
+      relayImportCancelBtn: document.querySelector("#relayImportCancelBtn"),
+      relayImportConfirmBtn: document.querySelector("#relayImportConfirmBtn"),
+      closeRelayImportModalBtn: document.querySelector("#closeRelayImportModalBtn"),
       cloudSyncStatus: document.querySelector("#cloudSyncStatus"),
       cloudSyncVersion: document.querySelector("#cloudSyncVersion"),
       cloudSyncLink: document.querySelector("#cloudSyncLink"),
@@ -4042,6 +4232,7 @@
     let guideStepIndex = 0;
     let activeGuideSteps = [];
     let guidePositionTimer = null;
+    let parsedRelayImport = null;
 
     const CLOUD_SYNC_STATUS_LABELS = {
       local: "本机草稿",
@@ -4958,6 +5149,138 @@
     function closeTemplateModal() {
       if (els.templateModal) els.templateModal.hidden = true;
       els.changeTemplateBtn?.focus();
+    }
+
+    function relayImportHasContent(result) {
+      if (!result) return false;
+      const fields = ["meetingNo", "theme", "wordOfDay", "manager", "date", "startTime", "endTime", "location"];
+      return fields.some((field) => String(result[field] || "").trim()) || Boolean(result.items?.length);
+    }
+
+    function renderRelayImportWarnings(warnings = []) {
+      if (!els.relayImportWarnings) return;
+      if (!warnings.length) {
+        els.relayImportWarnings.hidden = true;
+        els.relayImportWarnings.innerHTML = "";
+        return;
+      }
+      els.relayImportWarnings.hidden = false;
+      els.relayImportWarnings.innerHTML = warnings
+        .map((warning) => `<div class="relay-import-warning">${escapeHtml(warning.message || "请检查接龙内容。")}</div>`)
+        .join("");
+    }
+
+    function renderRelayImportPreview(result, error = null) {
+      if (!els.relayImportPreview) return;
+      const hasContent = relayImportHasContent(result);
+      els.relayImportConfirmBtn.disabled = !hasContent || Boolean(error);
+
+      if (error) {
+        renderRelayImportWarnings([]);
+        els.relayImportPreview.innerHTML = `<p class="relay-import-empty">${escapeHtml(error.message || "接龙解析失败，请检查文本格式。")}</p>`;
+        return;
+      }
+      renderRelayImportWarnings(result?.warnings || []);
+      if (!hasContent) {
+        els.relayImportPreview.innerHTML = `<p class="relay-import-empty">粘贴接龙后，这里会显示会议信息和议程预览。</p>`;
+        return;
+      }
+
+      const fields = [
+        ["期数", result.meetingNo ? `第${result.meetingNo}期` : ""],
+        ["主题", result.theme],
+        ["今日一词", result.wordOfDay],
+        ["例会经理", result.manager],
+        ["日期", result.date],
+        ["时间", result.startTime && result.endTime ? `${result.startTime}-${result.endTime}` : ""],
+        ["地点", result.location]
+      ].filter(([, value]) => String(value || "").trim());
+      const fieldHtml = fields.length
+        ? `<div class="relay-import-fields">${fields.map(([label, value]) => `
+          <div class="relay-import-field-preview">
+            <strong>${escapeHtml(label)}</strong>
+            <span>${escapeHtml(value)}</span>
+          </div>
+        `).join("")}</div>`
+        : `<p class="relay-import-empty">未识别到会议信息。</p>`;
+      const itemHtml = result.items?.length
+        ? `<h3 class="relay-import-section-title">议程预览</h3>
+          <div class="relay-import-items">${result.items.map((item) => item.kind === "section"
+            ? `<div class="relay-import-section-preview">${escapeHtml(item.title || "栏目")}</div>`
+            : `<div class="relay-import-item-preview">
+                <div>
+                  <strong>${escapeHtml(item.title || "未命名环节")}</strong>
+                  <span>${escapeHtml(item.person || "待定")}</span>
+                </div>
+                <small>${escapeHtml(item.duration || "")}${item.durationNote ? ` · ${escapeHtml(item.durationNote)}` : ""}</small>
+                ${item.detail ? `<em>${escapeHtml(item.detail)}</em>` : ""}
+              </div>`).join("")}</div>`
+        : `<p class="relay-import-empty">未识别到议程环节，确认后当前议程列表会变为空。</p>`;
+
+      els.relayImportPreview.innerHTML = `${fieldHtml}${itemHtml}`;
+    }
+
+    function refreshRelayImportPreview() {
+      const text = els.relayImportText?.value || "";
+      try {
+        parsedRelayImport = RelayImporter.parseRelayText(text);
+        renderRelayImportPreview(parsedRelayImport);
+      } catch (error) {
+        parsedRelayImport = null;
+        renderRelayImportPreview(null, error);
+      }
+    }
+
+    function openRelayImportModal() {
+      if (!els.relayImportModal) return;
+      parsedRelayImport = null;
+      if (els.relayImportText) els.relayImportText.value = "";
+      renderRelayImportPreview(null);
+      els.relayImportModal.hidden = false;
+      window.requestAnimationFrame(() => els.relayImportText?.focus());
+    }
+
+    function closeRelayImportModal({ restoreFocus = true } = {}) {
+      if (els.relayImportModal) els.relayImportModal.hidden = true;
+      parsedRelayImport = null;
+      renderRelayImportWarnings([]);
+      if (restoreFocus) els.relayImportBtn?.focus();
+    }
+
+    function applyRelayImport() {
+      if (!parsedRelayImport || !relayImportHasContent(parsedRelayImport)) return;
+      const previousState = state;
+      const relayFields = {};
+      ["meetingNo", "theme", "wordOfDay", "manager", "date", "startTime", "endTime", "location"].forEach((field) => {
+        const value = String(parsedRelayImport[field] || "").trim();
+        if (value) relayFields[field] = value;
+      });
+
+      try {
+        const nextState = normalizeEscapedNewlines(AgendaData.normalizeAgendaData({
+          ...state,
+          ...relayFields,
+          items: parsedRelayImport.items
+        }, DEFAULT_DATA, { strict: false }));
+        nextState.items = normalizeAgendaItems(nextState.items).items;
+        state = nextState;
+        editingId = null;
+        dragId = null;
+        undoDelete = null;
+        mobileSortMode = false;
+        if (els.agendaFormCard) els.agendaFormCard.hidden = true;
+        closeAgendaMenus();
+        autoScheduleAgenda();
+        renderAll();
+        saveData();
+        closeRelayImportModal({ restoreFocus: false });
+        showToast("接龙已导入");
+      } catch (error) {
+        console.error(error);
+        state = previousState;
+        renderAll();
+        showToast("接龙导入失败，当前内容已保留");
+      }
     }
 
     function availableGuideSteps() {
@@ -6250,6 +6573,10 @@
           closeGuide({ markSeen: false });
           return;
         }
+        if (!els.relayImportModal?.hidden) {
+          closeRelayImportModal();
+          return;
+        }
         if (!els.templateModal?.hidden) {
           closeTemplateModal();
           return;
@@ -6265,6 +6592,11 @@
       els.exportJsonBtn.addEventListener("click", downloadJson);
       els.importJsonBtn.addEventListener("click", () => els.jsonImportInput.click());
       els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
+      els.relayImportBtn?.addEventListener("click", openRelayImportModal);
+      els.relayImportText?.addEventListener("input", refreshRelayImportPreview);
+      els.relayImportCancelBtn?.addEventListener("click", () => closeRelayImportModal());
+      els.closeRelayImportModalBtn?.addEventListener("click", () => closeRelayImportModal());
+      els.relayImportConfirmBtn?.addEventListener("click", applyRelayImport);
       els.changeTemplateBtn?.addEventListener("click", openTemplateModal);
       els.closeTemplateModalBtn?.addEventListener("click", closeTemplateModal);
       els.guideReplayBtn?.addEventListener("click", () => openGuide());
@@ -6273,6 +6605,9 @@
       els.guideDoneBtn?.addEventListener("click", completeGuide);
       els.templateModal?.addEventListener("click", (event) => {
         if (event.target === els.templateModal) closeTemplateModal();
+      });
+      els.relayImportModal?.addEventListener("click", (event) => {
+        if (event.target === els.relayImportModal) closeRelayImportModal();
       });
       els.templateList?.addEventListener("click", (event) => {
         const button = event.target.closest("[data-template-id]");

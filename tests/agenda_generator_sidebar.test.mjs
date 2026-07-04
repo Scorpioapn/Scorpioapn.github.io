@@ -759,6 +759,26 @@ test("export panel separates print actions from json backup actions", () => {
   assert.match(primaryActionsRule, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/, "primary export buttons should align in three columns on desktop");
 });
 
+test("agenda generator exposes a WeChat relay text import modal", () => {
+  const panel = exportPanelTemplate();
+  const applyRelayImportSource = functionBlock("applyRelayImport");
+  const renderRelayImportPreviewSource = functionBlock("renderRelayImportPreview");
+
+  assert.match(source, /<script src="js\/agenda-relay-importer\.js"><\/script>[\s\S]*?<script src="js\/agenda-data\.js"><\/script>/, "relay importer should load before agenda app initialization");
+  assert.match(panel, /id="exportJsonBtn"[\s\S]*?id="importJsonBtn"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"/, "relay import should sit beside JSON backup controls");
+  assert.ok(source.includes('id="relayImportModal"'), "relay import modal should exist");
+  assert.ok(source.includes('id="relayImportText"'), "relay import modal should provide a paste textarea");
+  assert.ok(source.includes('id="relayImportPreview"'), "relay import modal should show parsed preview");
+  assert.ok(source.includes('id="relayImportWarnings"'), "relay import modal should show parser warnings");
+  assert.ok(source.includes('id="relayImportCancelBtn"'), "relay import modal should allow canceling without changes");
+  assert.ok(source.includes('id="relayImportConfirmBtn"'), "relay import modal should require explicit confirmation");
+  assert.match(applyRelayImportSource, /autoScheduleAgenda\(\);\s*renderAll\(\);\s*saveData\(\);/, "confirmed relay import should reschedule, rerender, and save through the normal path");
+  assert.match(applyRelayImportSource, /\.\.\.state[\s\S]*?items:\s*parsedRelayImport\.items/, "relay import should preserve fixed information while replacing agenda items");
+  assert.match(source, /window\.parseRelayText\s*=\s*RelayImporter\.parseRelayText/, "parser should be exposed for browser console testing");
+  assert.match(renderRelayImportPreviewSource, /item\.kind === "section"/, "relay preview should render imported sections as section dividers");
+  assert.ok(source.includes(".relay-import-section-preview"), "relay section preview should have dedicated styling");
+});
+
 test("agenda generator exposes selectable agenda templates", () => {
   const names = templates.listTemplates().map((template) => template.name);
   const regular = templates.getTemplate("常规例会模板");
