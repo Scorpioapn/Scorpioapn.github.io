@@ -184,6 +184,23 @@
       flex-wrap: wrap;
     }
 
+    @media (min-width: 921px) {
+      .brand-row {
+        display: grid;
+        grid-template-columns: 50px minmax(190px, 1fr);
+        align-items: start;
+      }
+
+      .brand-copy {
+        min-width: 190px;
+      }
+
+      .header-actions {
+        grid-column: 2;
+        justify-content: flex-start;
+      }
+    }
+
     .icon-button {
       width: 48px;
       height: 48px;
@@ -4967,16 +4984,20 @@
       if (!target || !els.guideSpotlight || !els.guideCard) return;
       const rect = target.getBoundingClientRect();
       const padding = window.innerWidth <= 620 ? 6 : 10;
+      const cardRect = els.guideCard.getBoundingClientRect();
+      const gap = window.innerWidth <= 620 ? 12 : 18;
       const left = Math.max(8, rect.left - padding);
       const top = Math.max(8, rect.top - padding);
       const right = Math.min(window.innerWidth - 8, rect.right + padding);
       const bottom = Math.min(window.innerHeight - 8, rect.bottom + padding);
+      const cardBlocksTarget = window.innerWidth <= 920 && cardRect.top > top && cardRect.top < bottom;
+      const spotlightBottom = cardBlocksTarget ? Math.max(top + 80, Math.min(bottom, cardRect.top - gap)) : bottom;
 
       Object.assign(els.guideSpotlight.style, {
         left: `${left}px`,
         top: `${top}px`,
         width: `${Math.max(80, right - left)}px`,
-        height: `${Math.max(80, bottom - top)}px`
+        height: `${Math.max(80, spotlightBottom - top)}px`
       });
 
       if (window.innerWidth <= 920) {
@@ -4985,8 +5006,6 @@
         return;
       }
 
-      const cardRect = els.guideCard.getBoundingClientRect();
-      const gap = 18;
       let cardLeft = rect.right + gap;
       if (cardLeft + cardRect.width > window.innerWidth - 18) {
         cardLeft = rect.left - cardRect.width - gap;

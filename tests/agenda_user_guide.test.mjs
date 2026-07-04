@@ -87,3 +87,11 @@ test("agenda guide still closes when completion state cannot be persisted", () =
   assert.match(closeGuideSource, /catch\s*\(error\)\s*{[\s\S]*?console\.warn\("Failed to save guide state",\s*error\);[\s\S]*?}/, "storage failures should be logged without blocking close");
   assert.match(closeGuideSource, /els\.guideOverlay\.hidden\s*=\s*true;/, "guide should still hide after a storage failure");
 });
+
+test("mobile agenda guide clips the spotlight above the fixed guide card", () => {
+  const positionGuideSource = functionBlock("positionGuideElements");
+  assert.match(positionGuideSource, /const cardRect = els\.guideCard\.getBoundingClientRect\(\);/, "spotlight positioning should know where the guide card sits");
+  assert.match(positionGuideSource, /window\.innerWidth\s*<=\s*920[\s\S]*?cardRect\.top[\s\S]*?bottom/, "mobile guide should detect when the fixed card overlaps the highlighted target");
+  assert.match(positionGuideSource, /const spotlightBottom = cardBlocksTarget \? Math\.max\(top \+ 80, Math\.min\(bottom, cardRect\.top - gap\)\) : bottom;/, "mobile spotlight should stop above the guide card instead of framing covered content");
+  assert.match(positionGuideSource, /height:\s*`\$\{Math\.max\(80, spotlightBottom - top\)\}px`/, "spotlight height should use the clipped bottom edge");
+});

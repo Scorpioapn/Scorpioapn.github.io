@@ -163,6 +163,14 @@ test("printable sidebar renders the requested information cards in order", () =>
   assert.equal(sidebar.includes("TM-Pathways"), false, "Pathways should not occupy printable sidebar space");
 });
 
+test("desktop editor header gives the brand title enough room", () => {
+  const desktopHeaderCss = cssMediaBlock("min-width: 921px");
+
+  assert.match(desktopHeaderCss, /\.brand-row\s*{[\s\S]*?grid-template-columns:\s*50px minmax\(190px,\s*1fr\);/, "desktop header should reserve a real title column instead of squeezing it beside action buttons");
+  assert.match(desktopHeaderCss, /\.header-actions\s*{[\s\S]*?grid-column:\s*2;/, "desktop header actions should wrap below the title column");
+  assert.match(desktopHeaderCss, /\.brand-copy\s*{[\s\S]*?min-width:\s*190px;/, "desktop brand copy should keep the Chinese title from fragmenting into narrow lines");
+});
+
 
 test("default member team roster matches the updated club officers", () => {
   const defaultData = templates.getDefaultData();
