@@ -4866,11 +4866,15 @@
       return entries;
     }
 
+    function compactOfficerRole(role) {
+      return role === "Sergeant at Arms 接待官" ? "SAA 接待官" : role;
+    }
+
     function officerGridHtml() {
       const entries = parseOfficerEntries(state.officers);
       return entries.map((entry) => {
         if (entry.role) {
-          return `<p class="team-row"><span class="team-role">${escapeHtml(entry.role)}</span><span class="team-name">${escapeHtml(entry.name)}</span></p>`;
+          return `<p class="team-row"><span class="team-role">${escapeHtml(compactOfficerRole(entry.role))}</span><span class="team-name">${escapeHtml(entry.name)}</span></p>`;
         }
         return `<p class="team-row full"><span class="team-freeform">${escapeHtml(entry.text || "")}</span></p>`;
       }).join("") || `

@@ -214,6 +214,18 @@ test("member team preview preserves bilingual officer role labels", () => {
   ]);
 });
 
+test("member team preview compacts the longest officer role for the narrow sidebar", () => {
+  const compactOfficerRole = new Function(`
+    ${functionBlock("compactOfficerRole")}
+    return compactOfficerRole;
+  `)();
+  const officerGridHtmlSource = functionBlock("officerGridHtml");
+
+  assert.equal(compactOfficerRole("Sergeant at Arms 接待官"), "SAA 接待官");
+  assert.equal(compactOfficerRole("VPE 教育副会长"), "VPE 教育副会长");
+  assert.match(officerGridHtmlSource, /compactOfficerRole\(entry\.role\)/, "printable team card should use the compact role label");
+});
+
 test("regular meeting template uses the supplied 782 agenda JSON as the default", () => {
   const defaultData = templates.getDefaultData();
 
