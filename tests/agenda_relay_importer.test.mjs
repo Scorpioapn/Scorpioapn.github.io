@@ -197,3 +197,51 @@ test("parseRelayText keeps empty input empty instead of inventing pending fields
   assert.equal(result.items.length, 0);
   assert.equal(result.meetingNo, "");
 });
+
+test("parseRelayText rejects invalid clock values instead of storing them", () => {
+  for (const range of ["19:99-21:30", "25:30-26:10", "12:60-13:00", "19:30-24:01"]) {
+    const result = parseRelayText(`畅言779期报名帖\n时间：6月9日 ${range}`, { now: new Date("2026-01-15T00:00:00+08:00") });
+    assert.equal(result.startTime, "", `${range} should not produce a start time`);
+    assert.equal(result.endTime, "", `${range} should not produce an end time`);
+    assert.equal(result.date, "", `${range} should not produce a date either`);
+  }
+});
+
+test("parseRelayText rejects impossible calendar dates", () => {
+  for (const dateText of ["13月32日", "2月30日", "0月5日"]) {
+    const result = parseRelayText(`时间：${dateText} 19:30-21:30`, { now: new Date("2026-01-15T00:00:00+08:00") });
+    assert.equal(result.date, "", `${dateText} should be rejected`);
+  }
+  const leap = parseRelayText("时间：2028年2月29日 19:30-21:30", { now: new Date("2026-01-15T00:00:00+08:00") });
+  assert.equal(leap.date, "2028-02-29", "valid leap-year date should still parse");
+});
+
+test("parseRelayText normalizes full-width digits in meeting number and times", () => {
+  const result = parseRelayText("畅言７７９期报名帖\n时间：６月９日 １９:３０-２１:３０", { now: new Date("2026-01-15T00:00:00+08:00") });
+  assert.equal(result.meetingNo, "779");
+  assert.equal(result.date, "2026-06-09");
+  assert.equal(result.startTime, "19:30");
+});
+
+test("parseRelayText recognizes 总主持人 and 主持人 as the host role", () => {
+  const result = parseRelayText("总主持人：文星", {});
+  assert.equal(itemByTitle(result, "总主持开场，介绍会议流程").person, "文星");
+  const result2 = parseRelayText("主持人：莫婷", {});
+  assert.equal(itemByTitle(result2, "总主持开场，介绍会议流程").person, "莫婷");
+});
+
+test("parseRelayText reads the meeting number without the club name prefix", () => {
+  assert.equal(parseRelayText("780期报名帖", {}).meetingNo, "780");
+  assert.equal(parseRelayText("第781期例会 主题：练习", {}).meetingNo, "781");
+  assert.equal(parseRelayText("隶属于第118大区", {}).meetingNo, "", "district numbers should not be mistaken for meeting numbers");
+});
+
+test("parseRelayText splits inline key-value pairs on any line, not only single-line pastes", () => {
+  const result = parseRelayText(`畅言779期报名帖
+主席致辞：卡卡 总主持：文星
+备稿演讲1：Ada`, { now: new Date("2026-01-15T00:00:00+08:00") });
+
+  assert.equal(itemByTitle(result, "主席致辞").person, "卡卡");
+  assert.equal(itemByTitle(result, "总主持开场，介绍会议流程").person, "文星");
+  assert.equal(itemByTitle(result, "备稿演讲1").person, "Ada");
+});

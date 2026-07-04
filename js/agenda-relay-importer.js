@@ -8,6 +8,9 @@
   const PENDING_PATTERN = /^(?:待定|待报名|空|tbd|n\/a|na|none|null|-|—|--|无)$/i;
   const ROLE_ALIASES = new Map([
     ["主席致词", "主席致辞"],
+    ["总主持人", "总主持"],
+    ["主持人", "总主持"],
+    ["即兴主持人", "即兴主持"],
     ["颁奖＆真情分享", "颁奖&真情分享"],
     ["颁奖和真情分享", "颁奖&真情分享"],
     ["颁奖/真情分享", "颁奖&真情分享"],
@@ -63,21 +66,20 @@
     return String(value ?? "")
       .replace(/\u00a0/g, " ")
       .replace(/\u3000/g, " ")
+      .replace(/[\uff10-\uff19]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
       .replace(/[ \t]+/g, " ")
       .trim();
   }
 
   function normalizeText(text) {
-    const normalizedLines = String(text ?? "")
+    // \u6bcf\u4e00\u884c\u90fd\u6309\u201c\u7a7a\u683c+\u5df2\u77e5\u5b57\u6bb5\u540d+\u5192\u53f7\u201d\u518d\u62c6\u5206\u4e00\u6b21\uff0c\u517c\u5bb9\u5fae\u4fe1\u628a\u591a\u4e2a
+    // \u5b57\u6bb5\u6298\u53e0\u5230\u540c\u4e00\u884c\uff08\u6216\u6574\u5e16\u6298\u53e0\u6210\u4e00\u884c\uff09\u7c98\u8d34\u51fa\u6765\u7684\u60c5\u51b5\u3002
+    return String(text ?? "")
       .replace(/\r\n?/g, "\n")
       .split("\n")
       .map(normalizeSpaces)
-      .filter(Boolean);
-    if (normalizedLines.length !== 1) return normalizedLines;
-
-    return normalizedLines[0]
-      .replace(RELAY_FIELD_BOUNDARY, "\n$1$2")
-      .split("\n")
+      .filter(Boolean)
+      .flatMap((line) => line.replace(RELAY_FIELD_BOUNDARY, "\n$1$2").split("\n"))
       .map(normalizeSpaces)
       .filter(Boolean);
   }
@@ -117,7 +119,8 @@
   }
 
   function parseMeetingNo(line) {
-    const match = line.match(/畅言\s*(\d+)\s*期(?:报名帖|报名|例会)?/);
+    const match = line.match(/畅言\s*(\d+)\s*期(?:报名帖|报名|例会)?/)
+      || line.match(/(\d{1,5})\s*期\s*(?:报名帖|报名|例会)/);
     return match ? match[1] : "";
   }
 
@@ -137,6 +140,13 @@
     const endHour = Number(match[6]);
     const endMinute = Number(match[7]);
     if ([year, month, day, startHour, startMinute, endHour, endMinute].some((part) => !Number.isFinite(part))) {
+      return {};
+    }
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (month < 1 || month > 12 || day < 1 || day > daysInMonth) {
+      return {};
+    }
+    if (startHour > 23 || endHour > 23 || startMinute > 59 || endMinute > 59) {
       return {};
     }
     return {
