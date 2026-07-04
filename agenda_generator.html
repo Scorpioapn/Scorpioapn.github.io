@@ -954,6 +954,13 @@
       margin: 0 0 12px;
     }
 
+    .button:focus-visible,
+    .mini-button:focus-visible,
+    .nav-button:focus-visible {
+      outline: 3px solid var(--md-primary);
+      outline-offset: 2px;
+    }
+
     .agenda-form-card {
       margin: 0 0 14px;
       padding: 16px;
@@ -3184,7 +3191,8 @@
       }
 
       .relay-import-modal {
-        max-height: none;
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
       }
 
       .relay-import-fields,
@@ -5182,10 +5190,48 @@
       `).join("");
     }
 
+    function overlayElements() {
+      return [els.templateModal, els.relayImportModal, els.guideOverlay];
+    }
+
+    // 弹层打开时把背景标记为 inert，键盘和读屏都无法落到被遮住的内容上。
+    function syncBackgroundInert() {
+      const anyOverlayOpen = overlayElements().some((overlay) => overlay && !overlay.hidden);
+      [".app-shell", ".mobile-taskbar", ".mobile-quick-add"].forEach((selector) => {
+        document.querySelectorAll(selector).forEach((element) => {
+          if (anyOverlayOpen) element.setAttribute("inert", "");
+          else element.removeAttribute("inert");
+        });
+      });
+    }
+
+    function trapOverlayTab(event) {
+      if (event.key !== "Tab") return;
+      const overlay = overlayElements().find((element) => element && !element.hidden);
+      if (!overlay) return;
+      const focusables = Array.from(
+        overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      ).filter((element) => !element.disabled && element.getClientRects().length > 0);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      const inside = overlay.contains(active);
+      if (event.shiftKey && (!inside || active === first)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (!inside || active === last)) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", trapOverlayTab, true);
+
     function openTemplateModal() {
       renderTemplateOptions();
       if (!els.templateModal) return;
       els.templateModal.hidden = false;
+      syncBackgroundInert();
       window.requestAnimationFrame(() => {
         els.templateList?.querySelector(".template-option")?.focus();
       });
@@ -5193,6 +5239,7 @@
 
     function closeTemplateModal() {
       if (els.templateModal) els.templateModal.hidden = true;
+      syncBackgroundInert();
       els.changeTemplateBtn?.focus();
     }
 
@@ -5289,6 +5336,7 @@
       if (els.relayImportText) els.relayImportText.value = "";
       renderRelayImportPreview(null);
       els.relayImportModal.hidden = false;
+      syncBackgroundInert();
       window.requestAnimationFrame(() => els.relayImportText?.focus());
     }
 
@@ -5296,6 +5344,7 @@
       if (els.relayImportModal) els.relayImportModal.hidden = true;
       parsedRelayImport = null;
       renderRelayImportWarnings([]);
+      syncBackgroundInert();
       if (restoreFocus) els.relayImportBtn?.focus();
     }
 
@@ -5442,6 +5491,7 @@
       guideWindowScroll = { x: window.scrollX, y: window.scrollY };
       els.guideOverlay.hidden = false;
       document.body.classList.add("guide-open");
+      syncBackgroundInert();
       renderGuideStep();
       window.requestAnimationFrame(() => els.guideNextBtn?.focus());
     }
@@ -5461,6 +5511,8 @@
       els.guideSpotlight?.removeAttribute("style");
       els.guideCard?.removeAttribute("style");
       restoreGuideWindowScroll();
+      syncBackgroundInert();
+      els.guideReplayBtn?.focus();
     }
 
     function completeGuide() {
