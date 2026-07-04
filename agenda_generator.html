@@ -59,6 +59,9 @@
       --sidebar-gap: 12px;
       --sidebar-card-x: 14px;
       --sidebar-card-y: 10px;
+      --sidebar-pair-grid-width: 218px;
+      --sidebar-pair-gap: 18px;
+      --sidebar-pair-columns: repeat(2, minmax(0, 1fr));
       --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
       --font-display: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
       --font-number: "DIN Alternate", "Segoe UI", "Roboto Mono", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
@@ -1681,6 +1684,9 @@
       --sidebar-gap: 12px;
       --sidebar-card-x: 14px;
       --sidebar-card-y: 10px;
+      --sidebar-pair-grid-width: 218px;
+      --sidebar-pair-gap: 18px;
+      --sidebar-pair-columns: repeat(2, minmax(0, 1fr));
       --template-header-min: 132px;
       --template-header-padding: 20px 26px;
       --template-main-padding: 18px 20px 14px;
@@ -2102,9 +2108,11 @@
     }
 
     .qr-row {
+      width: min(100%, var(--sidebar-pair-grid-width));
+      justify-self: center;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
+      grid-template-columns: var(--sidebar-pair-columns);
+      column-gap: var(--sidebar-pair-gap);
       height: 100%;
       align-items: center;
       text-align: center;
@@ -2276,18 +2284,19 @@
     }
 
     .timing-rule-list {
+      width: min(100%, var(--sidebar-pair-grid-width));
+      justify-self: center;
       display: grid;
       gap: 0;
-      padding-left: 32px;
-      padding-right: 32px;
+      padding: 0;
     }
 
     .timing-rule-item {
       min-width: 0;
       display: grid;
-      grid-template-columns: 62px minmax(0, 1fr);
+      grid-template-columns: var(--sidebar-pair-columns);
       align-items: center;
-      gap: 7px;
+      column-gap: var(--sidebar-pair-gap);
       min-height: 16px;
       padding: 2px 0;
       border-top: 1px solid rgba(106, 88, 66, 0.08);
@@ -2299,8 +2308,9 @@
 
     .timing-rule-token {
       min-width: 0;
-      display: inline-flex;
+      display: flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
       color: #211a15;
       font-size: 9.8px;
@@ -2332,7 +2342,7 @@
       font-size: 9.8px;
       line-height: 1.18;
       font-weight: 780;
-      text-align: right;
+      text-align: center;
       overflow-wrap: anywhere;
     }
 
@@ -2364,16 +2374,16 @@
       display: grid;
       row-gap: 5px;
       align-content: center;
-      padding-left: 57px;
-      padding-right: 57px;
+      justify-items: center;
     }
 
     .team-row {
+      width: min(100%, var(--sidebar-pair-grid-width));
       min-width: 0;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: 12px;
-      align-items: baseline;
+      grid-template-columns: var(--sidebar-pair-columns);
+      column-gap: var(--sidebar-pair-gap);
+      align-items: center;
       font-size: 10.4px;
       line-height: 1.38;
     }
@@ -2392,12 +2402,13 @@
     .team-role {
       color: #211a15;
       font-weight: 780;
+      text-align: center;
     }
 
     .team-name {
       color: #211a15;
       font-weight: 850;
-      text-align: right;
+      text-align: center;
     }
 
     .poster-body {

@@ -310,9 +310,10 @@ test("timing rule groups read as calm vertical instruction cards", () => {
   const itemRule = cssRule(".timing-rule-item");
 
   assert.doesNotMatch(listRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "timing rules should not use 2 × 2 cell grids");
-  assert.match(listRule, /padding-left:\s*32px;/, "rule lists should align under the heading copy instead of filling the whole card like a table");
-  assert.match(listRule, /padding-right:\s*32px;/, "rule values should use a symmetric right inset matching the left signal label inset");
-  assert.match(itemRule, /grid-template-columns:\s*62px minmax\(0,\s*1fr\);/, "rule rows should align labels and values cleanly");
+  assert.match(listRule, /width:\s*min\(100%,\s*var\(--sidebar-pair-grid-width\)\);/, "rule lists should use the shared centered two-column measure");
+  assert.match(listRule, /justify-self:\s*center;/, "rule lists should sit on the same center line as other paired sidebar content");
+  assert.match(itemRule, /grid-template-columns:\s*var\(--sidebar-pair-columns\);/, "rule rows should use the shared paired column definition");
+  assert.match(itemRule, /column-gap:\s*var\(--sidebar-pair-gap\);/, "rule rows should use the shared paired column gap");
   assert.doesNotMatch(source, /class="timing-rule-line"/, "timing rules should not render as four-row mini tables");
   assert.doesNotMatch(itemRule, /background:/, "individual rule rows should not look like boxed cells");
   assert.match(source, /\.timing-rule-heading\s*\{[\s\S]*?grid-template-columns:\s*26px minmax\(0,\s*1fr\);/, "each rule card should have a clear icon-led heading");
@@ -328,21 +329,28 @@ test("sidebar typography and gutters stay visually consistent", () => {
   const teamGridRule = cssRule(".team-grid");
   const teamRowRule = cssRule(".team-row");
   const teamNameRule = cssRule(".team-name");
+  const teamRoleRule = cssRule(".team-role");
+  const timingTokenRule = cssRule(".timing-rule-token");
   const timingValueRule = cssRule(".timing-rule-value");
 
   assert.match(source, /--sidebar-card-x:\s*14px;/, "sidebar cards should share one horizontal padding token");
+  assert.match(source, /--sidebar-pair-grid-width:\s*218px;/, "paired sidebar content should share one centered grid width");
+  assert.match(source, /--sidebar-pair-gap:\s*18px;/, "paired sidebar content should share one column gap");
+  assert.match(source, /--sidebar-pair-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "paired sidebar content should share one two-column definition");
   assert.match(titleRule, /padding:\s*7px var\(--sidebar-card-x\);/, "card titles should align with body text");
   assert.match(bodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\) 11px;/, "standard card bodies should use the shared gutter");
   assert.match(compactBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "compact card bodies should keep the same left and right gutter");
   assert.match(timingBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "timing card body should align to the shared sidebar gutter");
   assert.match(infoLineRule, /font-size:\s*10\.8px;[\s\S]*?line-height:\s*1\.38;/, "about text should keep a readable body rhythm");
   assert.match(teamGridRule, /row-gap:\s*5px;[\s\S]*?align-content:\s*center;/, "team list should have demo-like vertical breathing room");
-  assert.match(teamGridRule, /padding-left:\s*57px;[\s\S]*?padding-right:\s*57px;/, "team columns should share the same vertical guide as timing labels and values");
+  assert.doesNotMatch(teamGridRule, /padding-left:\s*57px;[\s\S]*?padding-right:\s*57px;/, "team columns should not rely on a separate inset from the shared paired grid");
   assert.match(teamRowRule, /font-size:\s*10\.4px;[\s\S]*?line-height:\s*1\.38;/, "team rows should be readable without feeling cramped");
-  assert.match(qrRowRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?align-items:\s*center;/, "QR blocks should sit in equal-width columns and align vertically");
-  assert.match(teamRowRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "team names should use equal-width columns for cleaner left and right edges");
-  assert.match(teamNameRule, /text-align:\s*right;/, "member names should align to the right card edge");
-  assert.match(timingValueRule, /text-align:\s*right;/, "timing rule values should align to the right edge of each rule row");
+  assert.match(qrRowRule, /width:\s*min\(100%,\s*var\(--sidebar-pair-grid-width\)\);[\s\S]*?grid-template-columns:\s*var\(--sidebar-pair-columns\);[\s\S]*?column-gap:\s*var\(--sidebar-pair-gap\);/, "QR blocks should sit on the same paired column centers as the team and timing rows");
+  assert.match(teamRowRule, /width:\s*min\(100%,\s*var\(--sidebar-pair-grid-width\)\);[\s\S]*?grid-template-columns:\s*var\(--sidebar-pair-columns\);[\s\S]*?column-gap:\s*var\(--sidebar-pair-gap\);/, "team rows should use the shared paired column centers");
+  assert.match(teamRoleRule, /text-align:\s*center;/, "member roles should center within their shared left column");
+  assert.match(teamNameRule, /text-align:\s*center;/, "member names should center within their shared right column");
+  assert.match(timingTokenRule, /justify-content:\s*center;/, "timing rule labels should center within their shared left column");
+  assert.match(timingValueRule, /text-align:\s*center;/, "timing rule values should center within their shared right column");
   assert.match(source, /\.about-card \.info-line-list\s*\{[\s\S]*?height:\s*100%;[\s\S]*?align-content:\s*space-between;/, "about text should balance vertically inside its card");
 });
 
