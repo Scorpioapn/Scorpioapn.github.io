@@ -223,6 +223,13 @@ test("parseRelayText normalizes full-width digits in meeting number and times", 
   assert.equal(result.startTime, "19:30");
 });
 
+test("parseRelayText keeps full-width digits inside person names and locations", () => {
+  const result = parseRelayText("地点：讯美科技广场３号楼\n主席致辞：木子１号\n备稿演讲１：小明", { now: new Date("2026-01-15T00:00:00+08:00") });
+  assert.equal(result.location, "讯美科技广场３号楼", "locations should keep their original digit width");
+  assert.equal(itemByTitle(result, "主席致辞").person, "木子１号", "person names should not be rewritten");
+  assert.equal(itemByTitle(result, "备稿演讲1").person, "小明", "full-width digits in role keys should still be recognized");
+});
+
 test("parseRelayText recognizes 总主持人 and 主持人 as the host role", () => {
   const result = parseRelayText("总主持人：文星", {});
   assert.equal(itemByTitle(result, "总主持开场，介绍会议流程").person, "文星");

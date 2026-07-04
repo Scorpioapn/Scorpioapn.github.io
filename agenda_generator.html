@@ -5383,6 +5383,7 @@
           autoScheduleAgenda();
           renderAll();
           saveData();
+          els.relayImportBtn?.focus();
           showToast("已恢复导入前的内容");
         });
       } catch (error) {
@@ -5574,6 +5575,7 @@
           autoScheduleAgenda();
           renderAll();
           saveData();
+          els.changeTemplateBtn?.focus();
           showToast("已恢复更换模板前的内容");
         });
       } catch (error) {

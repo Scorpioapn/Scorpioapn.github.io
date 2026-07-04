@@ -66,9 +66,14 @@
     return String(value ?? "")
       .replace(/\u00a0/g, " ")
       .replace(/\u3000/g, " ")
-      .replace(/[\uff10-\uff19]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
       .replace(/[ \t]+/g, " ")
       .trim();
+  }
+
+  // \u53ea\u5728\u7ed3\u6784\u5b57\u6bb5\uff08\u671f\u6570\u3001\u65e5\u671f\u65f6\u95f4\u3001\u89d2\u8272\u540d\uff09\u91cc\u505a\u5168\u89d2\u8f6c\u534a\u89d2\uff0c
+  // \u4eba\u540d\u548c\u5730\u70b9\u4fdd\u6301\u539f\u6837\uff0c\u907f\u514d\u628a\u201c\u6728\u5b50\uff11\u53f7\u201d\u8fd9\u7c7b\u540d\u5b57\u6539\u5199\u6389\u3002
+  function toHalfWidthDigits(value) {
+    return String(value ?? "").replace(/[\uff10-\uff19]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0));
   }
 
   function normalizeText(text) {
@@ -105,7 +110,7 @@
   }
 
   function normalizeRoleKey(key) {
-    const compact = normalizeSpaces(key).replace(/\s+/g, "");
+    const compact = toHalfWidthDigits(normalizeSpaces(key)).replace(/\s+/g, "");
     return ROLE_ALIASES.get(compact) || compact;
   }
 
@@ -119,8 +124,9 @@
   }
 
   function parseMeetingNo(line) {
-    const match = line.match(/畅言\s*(\d+)\s*期(?:报名帖|报名|例会)?/)
-      || line.match(/(\d{1,5})\s*期\s*(?:报名帖|报名|例会)/);
+    const normalized = toHalfWidthDigits(line);
+    const match = normalized.match(/畅言\s*(\d+)\s*期(?:报名帖|报名|例会)?/)
+      || normalized.match(/(\d{1,5})\s*期\s*(?:报名帖|报名|例会)/);
     return match ? match[1] : "";
   }
 
@@ -129,7 +135,7 @@
   }
 
   function parseDateTime(value, now) {
-    const text = normalizeSpaces(value);
+    const text = toHalfWidthDigits(normalizeSpaces(value));
     const match = text.match(/(?:(\d{4})\s*年\s*)?(\d{1,2})\s*月\s*(\d{1,2})\s*日?.*?(\d{1,2})[:：](\d{2})\s*(?:-|–|—|~|～|至|到)\s*(\d{1,2})[:：](\d{2})/);
     if (!match) return {};
     const year = Number(match[1] || now.getFullYear());
