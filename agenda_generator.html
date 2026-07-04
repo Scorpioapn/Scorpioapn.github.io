@@ -5512,7 +5512,11 @@
       els.guideCard?.removeAttribute("style");
       restoreGuideWindowScroll();
       syncBackgroundInert();
-      els.guideReplayBtn?.focus();
+      try {
+        els.guideReplayBtn?.focus({ preventScroll: true });
+      } catch (error) {
+        els.guideReplayBtn?.focus();
+      }
     }
 
     function completeGuide() {
