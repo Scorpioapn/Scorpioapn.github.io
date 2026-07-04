@@ -172,18 +172,72 @@ test("desktop editor header gives the brand title enough room", () => {
 });
 
 
-test("default member team roster matches the updated club officers", () => {
+test("default member team roster matches the 2026-2027 club officers", () => {
   const defaultData = templates.getDefaultData();
+  const loadDataSource = functionBlock("loadData");
 
   assert.match(source, /const DEFAULT_OFFICERS\s*=\s*AgendaTemplates\.DEFAULT_OFFICERS/, "agenda page should read the shared updated officer roster from templates");
   assert.ok(templatesSource.includes("LEGACY_DEFAULT_OFFICERS"), "old saved default roster should remain available for migration");
+  assert.match(loadDataSource, /LEGACY_DEFAULT_OFFICERS\.includes\(merged\.officers\)/, "saved data using a previous default roster should migrate to the current officer team");
   for (const text of [
-    "会长：卡卡  秘书长：浩岩",
-    "教育副会长：斯敏  财务官：燕薇",
-    "会员副会长：莫婷  事务官：文星",
-    "公关副会长：聪聪"
+    "President会长：贾燕微",
+    "VPE 教育副会长：莫婷",
+    "VPM 会员副会长：Jessica",
+    "VPPR 公关副会长：史迪仔",
+    "Secretary 秘书：女侠",
+    "Treasurer 财务：聪聪",
+    "Sergeant at Arms 接待官：Venus Deng斯敏"
   ]) {
     assert.ok(defaultData.officers.includes(text), `updated default roster should include: ${text}`);
+  }
+});
+
+test("member team preview preserves bilingual officer role labels", () => {
+  const labelsMatch = source.match(/const OFFICER_ROLE_LABELS = \[([\s\S]*?)\];/);
+  assert.ok(labelsMatch, "officer role label list should exist");
+  const parseOfficerEntries = new Function(`
+    const OFFICER_ROLE_LABELS = [${labelsMatch[1]}];
+    const OFFICER_ROLE_PATTERN = OFFICER_ROLE_LABELS.join("|");
+    ${functionBlock("parseOfficerEntries")}
+    return parseOfficerEntries;
+  `)();
+  const entries = parseOfficerEntries(templates.getDefaultData().officers);
+
+  assert.deepEqual(entries.map((entry) => entry.role), [
+    "President会长",
+    "VPE 教育副会长",
+    "VPM 会员副会长",
+    "VPPR 公关副会长",
+    "Secretary 秘书",
+    "Treasurer 财务",
+    "Sergeant at Arms 接待官"
+  ]);
+});
+
+test("regular meeting template uses the supplied 782 agenda JSON as the default", () => {
+  const defaultData = templates.getDefaultData();
+
+  assert.equal(defaultData.meetingNo, "782");
+  assert.equal(defaultData.theme, "复盘：我过的怎么样");
+  assert.equal(defaultData.wordOfDay, "看见");
+  assert.equal(defaultData.date, "2026-06-30");
+  assert.equal(defaultData.startTime, "19:20");
+  assert.equal(defaultData.endTime, "21:30");
+  assert.equal(defaultData.manager, "斯敏");
+  assert.equal(defaultData.posterDesigner, "Jessica");
+  assert.equal(defaultData.nextTheme, "人生暂停5分钟");
+  assert.equal(defaultData.nextMeetingDate, "2026-07-07");
+  assert.ok(defaultData.items.some((item) => item.title === "茶歇+大合照"), "supplied default agenda should include the feedback break");
+  assert.ok(defaultData.items.some((item) => item.title === "主席总结本期活动，结束会议"), "supplied default agenda should keep the closing item");
+});
+
+test("agenda duration suggestions cover every individual officer declaration and report", () => {
+  const match = source.match(/const DEFAULT_MATCHES = \[([\s\S]*?)\];\n\n    const AGENDA_GUIDE_STEPS/);
+  assert.ok(match, "duration suggestion table should exist");
+  const suggestions = match[1];
+
+  for (const title of ["时间官宣言", "语法官宣言", "哼哈官宣言", "时间官报告", "语法官报告", "哼哈官报告"]) {
+    assert.ok(suggestions.includes(`"${title}"`), `duration suggestions should include ${title}`);
   }
 });
 
@@ -788,7 +842,7 @@ test("agenda generator exposes selectable agenda templates", () => {
   assert.match(source, /<script src="js\/agenda-templates\.js"><\/script>[\s\S]*?<script src="js\/agenda-data\.js"><\/script>/, "agenda templates should load before agenda app initialization");
   assert.ok(names.includes("常规例会模板"), "regular meeting template should be listed");
   assert.ok(names.includes("即兴马拉松模板"), "impromptu marathon template should be listed");
-  assert.equal(templates.getDefaultData().theme, "去运动", "default data should still come from the regular meeting template");
+  assert.equal(templates.getDefaultData().theme, "复盘：我过的怎么样", "default data should still come from the regular meeting template");
   assert.ok(regular.data.items.some((item) => item.title === "主席总结本期活动，结束会议"), "regular template should keep the existing default agenda content");
   assert.ok(marathon.data.items.some((item) => String(item.title).includes("即兴演讲 Round 2")), "marathon template should provide a distinct agenda");
 });

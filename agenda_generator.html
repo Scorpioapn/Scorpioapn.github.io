@@ -4084,12 +4084,22 @@
     const DEFAULT_OFFICERS = AgendaTemplates.DEFAULT_OFFICERS;
     const LEGACY_DEFAULT_OFFICERS = AgendaTemplates.LEGACY_DEFAULT_OFFICERS;
     const OFFICER_ROLE_LABELS = [
+      "Sergeant at Arms 接待官",
+      "President会长",
+      "VPE 教育副会长",
+      "VPM 会员副会长",
+      "VPPR 公关副会长",
+      "Secretary 秘书",
+      "Treasurer 财务",
       "教育副会长",
       "会员副会长",
       "公关副会长",
       "公共副会长",
+      "接待官",
       "秘书长",
+      "秘书",
       "财务官",
+      "财务",
       "事务官",
       "会长"
     ];
@@ -4101,13 +4111,13 @@
       { keywords: ["事务官"], duration: "1", recommendation: "1分钟" },
       { keywords: ["主席"], duration: "3", recommendation: "3分钟" },
       { keywords: ["总主持", "串场"], duration: "3", recommendation: "2-3分钟" },
-      { keywords: ["三官宣言", "时间官宣言", "哼哈官宣言"], duration: "2", recommendation: "2分钟" },
+      { keywords: ["三官宣言", "时间官宣言", "语法官宣言", "哼哈官宣言"], duration: "2", recommendation: "2分钟" },
       { keywords: ["即兴演讲"], duration: "15", durationNote: "2min/人", recommendation: "15分钟，2min/人" },
       { keywords: ["备稿演讲", "精心备稿"], duration: "5-7", recommendation: "5-7分钟" },
       { keywords: ["来宾介绍"], duration: "5", recommendation: "5分钟" },
       { keywords: ["即兴点评"], duration: "5", recommendation: "5分钟" },
       { keywords: ["备稿点评"], duration: "3", recommendation: "3分钟" },
-      { keywords: ["三官报告", "时间官报告", "哼哈官报告"], duration: "3", recommendation: "3分钟" },
+      { keywords: ["三官报告", "时间官报告", "语法官报告", "哼哈官报告"], duration: "3", recommendation: "3分钟" },
       { keywords: ["总点评"], duration: "8", recommendation: "8分钟" },
       { keywords: ["颁奖", "分享"], duration: "5", recommendation: "5分钟" }
     ];
@@ -4283,7 +4293,7 @@
           merged.clubNameEnglish = DEFAULT_DATA.clubNameEnglish;
           migrated = true;
         }
-        if (merged.officers === LEGACY_DEFAULT_OFFICERS) {
+        if (LEGACY_DEFAULT_OFFICERS.includes(merged.officers)) {
           merged.officers = DEFAULT_OFFICERS;
           migrated = true;
         }

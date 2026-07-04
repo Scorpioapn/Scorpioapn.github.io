@@ -12,17 +12,28 @@
     "入会咨询请联系会员副会长"
   ];
   const DEFAULT_OFFICERS = [
-    "会长：卡卡  秘书长：浩岩",
-    "教育副会长：斯敏  财务官：燕薇",
-    "会员副会长：莫婷  事务官：文星",
-    "公关副会长：聪聪"
+    "President会长：贾燕微",
+    "VPE 教育副会长：莫婷",
+    "VPM 会员副会长：Jessica",
+    "VPPR 公关副会长：史迪仔",
+    "Secretary 秘书：女侠",
+    "Treasurer 财务：聪聪",
+    "Sergeant at Arms 接待官：Venus Deng斯敏"
   ].join("\n");
   const LEGACY_DEFAULT_OFFICERS = [
-    "会长：女侠  秘书长：夏奈",
-    "教育副会长：聪聪  财务官：王兵伟",
-    "会员副会长：Venus斯敏  事务官：Jeff",
-    "公关副会长：水杨酸"
-  ].join("\n");
+    [
+      "会长：卡卡  秘书长：浩岩",
+      "教育副会长：斯敏  财务官：燕薇",
+      "会员副会长：莫婷  事务官：文星",
+      "公关副会长：聪聪"
+    ].join("\n"),
+    [
+      "会长：女侠  秘书长：夏奈",
+      "教育副会长：聪聪  财务官：王兵伟",
+      "会员副会长：Venus斯敏  事务官：Jeff",
+      "公关副会长：水杨酸"
+    ].join("\n")
+  ];
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -32,24 +43,24 @@
     return {
       clubName: "畅言中文国际演讲俱乐部",
       clubNameEnglish: "Charm Voice Mandarin Toastmasters Club",
-      meetingNo: "739",
-      theme: "去运动",
-      wordOfDay: "越来越好",
-      date: "2025-07-15",
-      startTime: "19:25",
+      meetingNo: "782",
+      theme: "复盘：我过的怎么样",
+      wordOfDay: "看见",
+      date: "2026-06-30",
+      startTime: "19:20",
       endTime: "21:30",
       location: "深圳市南山区科技园讯美科技广场3号楼4楼SPACE MAX会议室(高新中A出口)",
-      manager: "卡卡",
-      posterDesigner: "水杨酸",
+      manager: "斯敏",
+      posterDesigner: "Jessica",
       logoData: "",
       wechatQrData: "",
       joinQrData: "",
       voteQrData: "",
-      nextTheme: "夏日穿搭",
-      nextMeetingDate: "",
+      nextTheme: "人生暂停5分钟",
+      nextMeetingDate: "2026-07-07",
       nextMeetingTime: "",
-      residentPeople: "女侠\nMaggie\nBell\n聪聪\nVenus斯敏\n纳纳\nIsabel\nRui（Soar High）\nDavid（MAD）\n筠筠\n卡卡\n水杨酸\nJeff",
-      clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D2小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
+      residentPeople: "女侠\n聪聪\nVenus斯敏\n纳纳\nIsabel\nRui（Soar High）\nDavid（MAD）\n筠筠\n卡卡\n水杨酸\nJeff\nJessica\n莫婷\n燕微\n晓墨（D118大区 Elect CGD）\n冰洁（D2 Past AD）\n神秘人",
+      clubIntro: "畅言中文国际演讲俱乐部，成立于2009年，是南山第一家中文俱乐部，隶属于第118大区、D中区、D5小区。\n愿景：打造全球最具人格魅力的演讲俱乐部。\n每周二晚，我们一起练习表达、倾听、反馈与领导力。",
       officers: DEFAULT_OFFICERS,
       meetingRules: DEFAULT_MEETING_RULES.join("\n"),
       meetingVision: "会议愿景：很开心与大家建立一种愉悦的学习旅程，谢谢大家~",
@@ -63,35 +74,37 @@ ${GUEST_PARTICIPATION_NOTE}`,
   const REGULAR_MEETING_DATA = baseAgendaData({
     items: [
       { id: "s-open", kind: "section", title: "一、开场环节" },
-      { id: "i-guest-checkin", kind: "item", time: "19:15", title: "来宾入会，相互认识与交流", detail: "", duration: "10", person: "全体会员" },
+      { id: "i-guest-checkin", kind: "item", time: "19:20", title: "来宾入会，相互认识与交流", detail: "", duration: "5", person: "全体会员" },
       { id: "i-warmup", kind: "item", time: "19:25", title: "暖场互动", detail: "", duration: "5", person: "全体会员" },
-      { id: "i-rules", kind: "item", time: "19:30", title: "事务官宣布会议规则", detail: "", duration: "1", person: "女侠" },
-      { id: "i-president", kind: "item", time: "19:32", title: "主席致词", detail: "", duration: "3", person: "女侠" },
-      { id: "i-host-open", kind: "item", time: "19:35", title: "总主持开场，介绍会议流程", detail: "30秒 × 4 + 1", duration: "3", person: "女侠" },
-      { id: "i-timer-declare", kind: "item", time: "19:38", title: "时间官宣言", detail: "", duration: "2", person: "纳纳（来宾）" },
-      { id: "i-ah-declare", kind: "item", time: "19:41", title: "哼哈官宣言", detail: "", duration: "2", person: "Isabel（来宾）" },
-      { id: "s-impromptu", kind: "section", title: "二、即兴马拉松" },
-      { id: "i-impromptu", kind: "item", time: "19:43", title: "即兴演讲", detail: "即兴主持介绍规则\n即兴主持人设计规则，现场所有人参与", duration: "15", durationNote: "2min/人", person: "Maggie" },
+      { id: "i-rules", kind: "item", time: "19:30", title: "事务官宣布会议规则", detail: "", duration: "1", person: "文星" },
+      { id: "i-president", kind: "item", time: "19:31", title: "主席致词", detail: "", duration: "3", person: "卡卡" },
+      { id: "i-host-open", kind: "item", time: "19:34", title: "总主持开场，介绍会议流程", detail: "", duration: "2", person: "" },
+      { id: "i-timer-declare", kind: "item", time: "19:36", title: "时间官宣言", detail: "", duration: "2", person: "卡卡" },
+      { id: "i-ah-declare", kind: "item", time: "19:38", title: "哼哈官宣言", detail: "", duration: "2", person: "亮哥" },
+      { id: "i-grammar-declare", kind: "item", time: "19:40", title: "语法官宣言", detail: "", duration: "2", person: "Jessica" },
+      { id: "s-impromptu", kind: "section", title: "二、即兴演讲" },
+      { id: "i-impromptu-rule", kind: "item", time: "19:42", title: "即兴主持介绍规则", detail: "", duration: "2", person: "史迪仔" },
+      { id: "i-impromptu", kind: "item", time: "19:44", title: "即兴演讲", detail: "", duration: "16", durationNote: "2min/人", person: "全员" },
       { id: "s-prepared", kind: "section", title: "三、精心演讲环节" },
-      { id: "i-prepared-intro", kind: "item", time: "20:04", title: "总主持人介绍本环节+串场", detail: "30秒 × 4", duration: "2", person: "女侠" },
-      { id: "i-speech-1", kind: "item", time: "20:06", title: "精心备稿1", detail: "《选择和努力》PM L1-2 撰写带有目的性的演讲稿", duration: "5-7", person: "Maggie" },
-      { id: "i-speech-2", kind: "item", time: "20:13", title: "精心备稿2", detail: "《走出能力陷阱》PM L1-4 评估与反馈", duration: "5-7", person: "Bell" },
-      { id: "i-speech-3", kind: "item", time: "20:21", title: "精心备稿3", detail: "《“冷”“战”》PM L3-1 说服型演讲", duration: "5-7", person: "聪聪" },
-      { id: "i-guests", kind: "item", time: "20:29", title: "来宾介绍", detail: "", duration: "6", person: "Venus斯敏" },
+      { id: "i-prepared-intro", kind: "item", time: "20:00", title: "总主持人介绍本环节+串场", detail: "", duration: "2", person: "" },
+      { id: "i-speech-1", kind: "item", time: "20:02", title: "《今天只做一件事 》自由演讲", detail: "自由演讲", duration: "5", person: "文星" },
+      { id: "i-speech-2", kind: "item", time: "20:07", title: "《工作就是排忧解难》Level 4 在困境中领导", detail: "练习针对意外变化进行调整以确定最终计划的策略。", duration: "15-20", person: "Venus斯敏" },
+      { id: "i-guests", kind: "item", time: "20:27", title: "来宾介绍", detail: "", duration: "5", person: "莫婷" },
+      { id: "i-surprise", kind: "item", time: "20:32", title: "惊喜环节", detail: "", duration: "7", person: "聪聪、春晖" },
       { id: "s-feedback", kind: "section", title: "四、茶歇&会议反馈环节" },
-      { id: "i-break", kind: "item", time: "20:35", title: "茶歇+大合照", detail: "", duration: "5", person: "全场人员" },
-      { id: "i-feedback-intro", kind: "item", time: "20:41", title: "总主持人介绍本环节+串场", detail: "30秒 × 4", duration: "2", person: "女侠" },
-      { id: "i-impromptu-eval", kind: "item", time: "20:43", title: "即兴点评", detail: "", duration: "7", person: "Rui（Soar High）" },
-      { id: "i-eval-1", kind: "item", time: "20:51", title: "备稿点评1", detail: "《选择和努力》PM L1-2 撰写带有目的性的演讲稿", duration: "5", person: "David（MAD）" },
-      { id: "i-eval-2", kind: "item", time: "20:56", title: "备稿点评2", detail: "《走出能力陷阱》PM L1-4 评估与反馈", duration: "5", person: "女侠" },
-      { id: "i-eval-3", kind: "item", time: "21:02", title: "备稿点评3", detail: "《“冷”“战”》PM L3-1 说服型演讲", duration: "5", person: "筠筠" },
-      { id: "i-ah-report", kind: "item", time: "21:07", title: "哼哈官报告", detail: "", duration: "3", person: "Isabel（来宾）" },
-      { id: "i-timer-report", kind: "item", time: "21:11", title: "时间官报告", detail: "", duration: "3", person: "纳纳（来宾）" },
-      { id: "i-vote", kind: "item", time: "21:13", title: "电子投票", detail: "", duration: "1", person: "女侠" },
-      { id: "i-general-eval", kind: "item", time: "21:14", title: "总点评", detail: "", duration: "8", person: "Venus斯敏" },
+      { id: "i-break", kind: "item", time: "20:39", title: "茶歇+大合照", detail: "", duration: "5", person: "全场人员" },
+      { id: "i-feedback-intro", kind: "item", time: "20:44", title: "总主持人介绍本环节+串场", detail: "", duration: "4", person: "" },
+      { id: "i-impromptu-eval", kind: "item", time: "20:48", title: "即兴点评", detail: "", duration: "8", person: "莫婷" },
+      { id: "i-eval-1", kind: "item", time: "20:56", title: "备稿点评 -《今天只做一件事 》", detail: "", duration: "3", person: "女侠" },
+      { id: "i-eval-2", kind: "item", time: "20:59", title: "备稿点评 -《工作就是排忧解难》", detail: "", duration: "3", person: "燕微" },
+      { id: "i-grammar-report", kind: "item", time: "21:02", title: "语法官报告", detail: "", duration: "3", person: "Jessica" },
+      { id: "i-ah-report", kind: "item", time: "21:05", title: "哼哈官报告", detail: "", duration: "3", person: "亮哥" },
+      { id: "i-timer-report", kind: "item", time: "21:08", title: "时间官报告", detail: "", duration: "3", person: "卡卡" },
+      { id: "i-vote", kind: "item", time: "21:11", title: "电子投票", detail: "", duration: "1", person: "卡卡" },
+      { id: "i-general-eval", kind: "item", time: "21:12", title: "总点评", detail: "", duration: "8", person: "春晖" },
       { id: "s-share", kind: "section", title: "五、分享环节" },
-      { id: "i-award", kind: "item", time: "21:22", title: "颁奖&真情分享", detail: "", duration: "5", person: "女侠&雪花组合" },
-      { id: "i-close", kind: "item", time: "21:28", title: "主席总结本期活动，结束会议", detail: "", duration: "1", person: "女侠" }
+      { id: "i-award", kind: "item", time: "21:20", title: "颁奖&真情分享", detail: "", duration: "5", person: "卡卡" },
+      { id: "i-close", kind: "item", time: "21:25", title: "主席总结本期活动，结束会议", detail: "", duration: "1", person: "卡卡" }
     ]
   });
 
