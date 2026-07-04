@@ -72,6 +72,19 @@ test("agenda guide persists completion and supports keyboard/mobile behavior", (
   assert.match(source, /scrollIntoView\(\{ block:\s*"center",\s*inline:\s*"nearest"/, "guide should scroll the highlighted target into view");
 });
 
+test("agenda guide restores desktop window scroll after target scrolling", () => {
+  const openGuideSource = functionBlock("openGuide");
+  const renderGuideStepSource = functionBlock("renderGuideStep");
+  const closeGuideSource = functionBlock("closeGuide");
+  const restoreGuideWindowScrollSource = functionBlock("restoreGuideWindowScroll");
+
+  assert.match(openGuideSource, /guideWindowScroll\s*=\s*{\s*x:\s*window\.scrollX,\s*y:\s*window\.scrollY\s*}/, "guide should remember the page scroll position before highlighting targets");
+  assert.match(renderGuideStepSource, /target\.scrollIntoView[\s\S]*?restoreGuideWindowScroll\(\);/, "target scrolling should not leave the desktop app shell shifted upward");
+  assert.match(closeGuideSource, /restoreGuideWindowScroll\(\);/, "closing the guide should restore any remaining page scroll");
+  assert.match(restoreGuideWindowScrollSource, /window\.innerWidth\s*<=\s*920[\s\S]*?return;/, "mobile guide should keep its normal page scroll behavior");
+  assert.match(restoreGuideWindowScrollSource, /window\.scrollTo\(\{ top:\s*guideWindowScroll\.y,\s*left:\s*guideWindowScroll\.x,\s*behavior:\s*"auto"\s*}\);/, "desktop guide should restore the exact pre-guide window scroll");
+});
+
 test("agenda guide overlay does not participate in normal page layout", () => {
   const overlayCss = cssRule(".guide-overlay");
   assert.match(overlayCss, /position:\s*fixed;/);

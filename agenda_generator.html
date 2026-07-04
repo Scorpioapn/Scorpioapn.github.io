@@ -4232,6 +4232,7 @@
     let guideStepIndex = 0;
     let activeGuideSteps = [];
     let guidePositionTimer = null;
+    let guideWindowScroll = { x: 0, y: 0 };
     let parsedRelayImport = null;
 
     const CLOUD_SYNC_STATUS_LABELS = {
@@ -5348,6 +5349,12 @@
       guidePositionTimer = window.setTimeout(() => positionGuideElements(target), 240);
     }
 
+    function restoreGuideWindowScroll() {
+      if (window.innerWidth <= 920) return;
+      if (window.scrollX === guideWindowScroll.x && window.scrollY === guideWindowScroll.y) return;
+      window.scrollTo({ top: guideWindowScroll.y, left: guideWindowScroll.x, behavior: "auto" });
+    }
+
     function renderGuideStep() {
       if (!isGuideOpen() || !activeGuideSteps.length) return;
       const step = activeGuideSteps[guideStepIndex];
@@ -5362,6 +5369,7 @@
 
       if (!guideTargetIsVisible(target)) {
         target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+        restoreGuideWindowScroll();
       }
       queueGuidePositionUpdate(target);
     }
@@ -5371,6 +5379,7 @@
       activeGuideSteps = availableGuideSteps();
       if (!activeGuideSteps.length) return;
       guideStepIndex = Math.min(Math.max(startIndex, 0), activeGuideSteps.length - 1);
+      guideWindowScroll = { x: window.scrollX, y: window.scrollY };
       els.guideOverlay.hidden = false;
       document.body.classList.add("guide-open");
       renderGuideStep();
@@ -5391,6 +5400,7 @@
       window.clearTimeout(guidePositionTimer);
       els.guideSpotlight?.removeAttribute("style");
       els.guideCard?.removeAttribute("style");
+      restoreGuideWindowScroll();
     }
 
     function completeGuide() {
