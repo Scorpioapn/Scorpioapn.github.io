@@ -839,7 +839,12 @@ test("agenda generator exposes a WeChat relay text import modal", () => {
   const renderRelayImportPreviewSource = functionBlock("renderRelayImportPreview");
 
   assert.match(source, /<script src="js\/agenda-relay-importer\.js"><\/script>[\s\S]*?<script src="js\/agenda-data\.js"><\/script>/, "relay importer should load before agenda app initialization");
-  assert.match(panel, /id="exportJsonBtn"[\s\S]*?id="importJsonBtn"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"/, "relay import should sit beside JSON backup controls");
+  assert.match(
+    source,
+    /id="agendaPanel"[\s\S]*?id="agendaSourceActions"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"[\s\S]*?id="addAgendaItemBtn"/,
+    "relay import and template switching should lead the agenda panel, ahead of manual add buttons"
+  );
+  assert.equal(panel.includes('id="relayImportBtn"'), false, "relay import should no longer hide among JSON backup controls");
   assert.ok(source.includes('id="relayImportModal"'), "relay import modal should exist");
   assert.ok(source.includes('id="relayImportText"'), "relay import modal should provide a paste textarea");
   assert.ok(source.includes('id="relayImportPreview"'), "relay import modal should show parsed preview");
@@ -875,7 +880,8 @@ test("template picker confirms before overwriting agenda state", () => {
   const loadDataSource = functionBlock("loadData");
   const applyTemplateSource = functionBlock("applyAgendaTemplate");
 
-  assert.ok(panel.includes('id="changeTemplateBtn"'), "export panel should expose a template switch button near backup actions");
+  assert.equal(panel.includes('id="changeTemplateBtn"'), false, "template switch should live in the agenda panel, not among backup actions");
+  assert.match(source, /id="agendaSourceActions"[\s\S]*?id="changeTemplateBtn"/, "agenda panel should expose the template switch button");
   assert.ok(source.includes('id="templateModal"'), "template picker modal should be present");
   assert.match(applyTemplateSource, /AgendaTemplates\.getTemplate\(templateId\)/, "template application should load data from the shared template module");
   assert.match(applyTemplateSource, /window\.confirm\("更换模板会替换整份议程和会议信息（主题、期数、日期、人员安排等），已上传的图片会保留。是否继续？"\)[\s\S]*?return;/, "template switch should confirm with an accurate description of what gets replaced");

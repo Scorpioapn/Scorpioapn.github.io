@@ -943,6 +943,17 @@
       margin-bottom: 14px;
     }
 
+    .agenda-source-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .agenda-source-note {
+      margin: 0 0 12px;
+    }
+
     .agenda-form-card {
       margin: 0 0 14px;
       padding: 16px;
@@ -3729,6 +3740,11 @@
             <h2 id="agendaListTitle">当前议程</h2>
             <span class="meta" id="agendaCount">0 个项目</span>
           </div>
+          <div class="agenda-source-actions" id="agendaSourceActions">
+            <button class="button tonal" id="relayImportBtn" type="button">导入接龙</button>
+            <button class="button tonal" id="changeTemplateBtn" type="button">更换模板</button>
+          </div>
+          <p class="helper-text agenda-source-note">每周从这里开工：粘贴微信接龙一键生成本期议程，或先套用流程模板再手动调整。</p>
           <div class="agenda-toolbar">
             <button class="button filled" id="addAgendaItemBtn" type="button">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
@@ -3913,8 +3929,6 @@
               <div class="export-actions backup">
                 <button class="button tonal" id="exportJsonBtn" type="button">导出 JSON</button>
                 <button class="button subtle" id="importJsonBtn" type="button">导入 JSON</button>
-                <button class="button subtle" id="relayImportBtn" type="button">导入接龙</button>
-                <button class="button subtle" id="changeTemplateBtn" type="button">更换模板</button>
               </div>
             </div>
             <div class="export-action-group cloud-sync-group" id="cloudSyncPanel">
@@ -4138,6 +4152,11 @@
         target: "#meetingInfoPanel",
         title: "会议信息",
         description: "先填写期数、主题、日期、时间和地点；这些内容会同步更新到右侧 A4 预览。"
+      },
+      {
+        target: "#agendaSourceActions",
+        title: "导入接龙 / 更换模板",
+        description: "每周开工推荐从这里开始：粘贴微信群接龙一键生成本期议程，或先套用流程模板再补充细节。"
       },
       {
         target: "#agendaPanel",
