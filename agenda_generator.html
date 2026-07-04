@@ -5229,8 +5229,15 @@
           </div>
         `).join("")}</div>`
         : `<p class="relay-import-empty">未识别到会议信息。</p>`;
+      const currentTitles = state.items.filter((item) => item.kind === "item").map((item) => String(item.title || "")).filter(Boolean);
+      const nextTitleSet = new Set((result.items || []).filter((item) => item.kind === "item").map((item) => String(item.title || "")));
+      const removedTitles = currentTitles.filter((title) => !nextTitleSet.has(title));
+      const removedPreview = removedTitles.slice(0, 6).join("、") + (removedTitles.length > 6 ? `（等 ${removedTitles.length} 项）` : "");
+      const replaceNotice = result.items?.length && currentTitles.length
+        ? `<div class="relay-import-warning">确认导入会用下方议程替换当前全部 ${currentTitles.length} 项${removedTitles.length ? `；这些环节不在接龙里，将被移除：${escapeHtml(removedPreview)}` : ""}。导入后可在提示条中撤销。</div>`
+        : "";
       const itemHtml = result.items?.length
-        ? `<h3 class="relay-import-section-title">议程预览</h3>
+        ? `${replaceNotice}<h3 class="relay-import-section-title">议程预览</h3>
           <div class="relay-import-items">${result.items.map((item) => item.kind === "section"
             ? `<div class="relay-import-section-preview">${escapeHtml(item.title || "栏目")}</div>`
             : `<div class="relay-import-item-preview">
@@ -5300,7 +5307,16 @@
         renderAll();
         saveData();
         closeRelayImportModal({ restoreFocus: false });
-        showToast("接龙已导入");
+        showToast("接龙已导入", "撤销", () => {
+          state = previousState;
+          editingId = null;
+          dragId = null;
+          undoDelete = null;
+          autoScheduleAgenda();
+          renderAll();
+          saveData();
+          showToast("已恢复导入前的内容");
+        });
       } catch (error) {
         console.error(error);
         state = previousState;

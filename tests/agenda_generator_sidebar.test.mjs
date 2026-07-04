@@ -851,6 +851,9 @@ test("agenda generator exposes a WeChat relay text import modal", () => {
   assert.match(source, /window\.parseRelayText\s*=\s*RelayImporter\.parseRelayText/, "parser should be exposed for browser console testing");
   assert.match(renderRelayImportPreviewSource, /item\.kind === "section"/, "relay preview should render imported sections as section dividers");
   assert.ok(source.includes(".relay-import-section-preview"), "relay section preview should have dedicated styling");
+  assert.match(renderRelayImportPreviewSource, /removedTitles/, "relay preview should compute which current rows the import would remove");
+  assert.match(renderRelayImportPreviewSource, /替换当前全部/, "relay preview should state that the import replaces the whole agenda");
+  assert.match(applyRelayImportSource, /showToast\("接龙已导入",\s*"撤销",/, "confirmed relay import should offer an undo action in the toast");
 });
 
 test("agenda generator exposes selectable agenda templates", () => {
