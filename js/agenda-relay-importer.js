@@ -250,31 +250,42 @@
     });
   }
 
-  function uniqueRealNames(names) {
-    const seen = new Set();
-    return names
-      .map(normalizePerson)
-      .filter((name) => name && name !== PENDING_VALUE)
-      .filter((name) => {
-        if (seen.has(name)) return false;
-        seen.add(name);
-        return true;
-      });
-  }
+  const OFFICER_ROLE_ITEMS = [
+    {
+      role: "时间官",
+      declarationId: "relay-i-timer-declaration",
+      declarationTitle: "时间官宣言",
+      reportId: "relay-i-timer-report",
+      reportTitle: "时间官报告"
+    },
+    {
+      role: "语法官",
+      declarationId: "relay-i-grammarian-declaration",
+      declarationTitle: "语法官宣言",
+      reportId: "relay-i-grammarian-report",
+      reportTitle: "语法官报告"
+    },
+    {
+      role: "哼哈官",
+      declarationId: "relay-i-ah-counter-declaration",
+      declarationTitle: "哼哈官宣言",
+      reportId: "relay-i-ah-counter-report",
+      reportTitle: "哼哈官报告"
+    }
+  ];
 
-  function buildRoleDeclarations(roles) {
-    const declarationRoles = ["时间官", "哼哈官", "语法官", "提问官"];
-    if (!declarationRoles.some((role) => Object.prototype.hasOwnProperty.call(roles, role))) return null;
-    const values = declarationRoles.map((role) => roleValue(roles, role));
-    const names = uniqueRealNames(values);
-    return {
-      id: "relay-i-role-declarations",
-      kind: "item",
-      title: "三官宣言",
-      duration: "2",
-      detail: declarationRoles.map((role, index) => `${role}：${values[index]}`).join("\n"),
-      person: names.length ? names.join("、") : PENDING_VALUE
-    };
+  function addOfficerRoleItems(items, roles, variant) {
+    OFFICER_ROLE_ITEMS.forEach((officer) => {
+      if (!Object.prototype.hasOwnProperty.call(roles, officer.role)) return;
+      const isReport = variant === "report";
+      items.push({
+        id: isReport ? officer.reportId : officer.declarationId,
+        kind: "item",
+        title: isReport ? officer.reportTitle : officer.declarationTitle,
+        duration: isReport ? "3" : "2",
+        person: roleValue(roles, officer.role)
+      });
+    });
   }
 
   function sectionItem(id, title) {
@@ -297,8 +308,7 @@
     addRoleItem(openingItems, roles, "主席致辞", "relay-i-president", "主席致辞", "3");
     addRoleItem(openingItems, roles, "总主持", "relay-i-host-open", "总主持开场，介绍会议流程", "3");
     addRoleItem(openingItems, roles, "来宾介绍", "relay-i-guest-intro", "来宾介绍", "5");
-    const declarations = buildRoleDeclarations(roles);
-    if (declarations) openingItems.push(declarations);
+    addOfficerRoleItems(openingItems, roles, "declaration");
     appendSection(items, "relay-s-opening", "开场环节", openingItems);
 
     const impromptuItems = [];
@@ -312,6 +322,7 @@
     const feedbackItems = [];
     addRoleItem(feedbackItems, roles, "即兴点评", "relay-i-impromptu-eval", "即兴点评", "5");
     addNumberedRoleItems(feedbackItems, roles, "备稿点评", "relay-i-prepared-eval", "3");
+    addOfficerRoleItems(feedbackItems, roles, "report");
     addRoleItem(feedbackItems, roles, "总点评", "relay-i-general-eval", "总点评", "8");
     appendSection(items, "relay-s-feedback", "茶歇&会议反馈环节", feedbackItems);
 

@@ -50,14 +50,16 @@ test("parseRelayText extracts meeting metadata and mapped agenda items from WeCh
   assert.equal(result.startTime, "19:30");
   assert.equal(result.endTime, "21:30");
   assert.equal(result.location, "深圳南山•讯美科技3号楼4楼Space Max会议室");
-  assert.equal(result.items.length, 21);
+  assert.equal(result.items.length, 26);
   assert.deepEqual(titleSequence(result), [
     "开场环节",
     "事务官开场",
     "主席致辞",
     "总主持开场，介绍会议流程",
     "来宾介绍",
-    "三官宣言",
+    "时间官宣言",
+    "语法官宣言",
+    "哼哈官宣言",
     "即兴马拉松",
     "即兴演讲",
     "精心演讲环节",
@@ -69,6 +71,9 @@ test("parseRelayText extracts meeting metadata and mapped agenda items from WeCh
     "备稿点评1",
     "备稿点评2",
     "备稿点评3",
+    "时间官报告",
+    "语法官报告",
+    "哼哈官报告",
     "总点评",
     "分享环节",
     "颁奖&真情分享",
@@ -83,20 +88,26 @@ test("parseRelayText extracts meeting metadata and mapped agenda items from WeCh
   assert.deepEqual(itemByTitle(result, "事务官开场"), { id: "relay-i-officer-open", kind: "item", title: "事务官开场", duration: "1", person: "文星" });
   assert.deepEqual(itemByTitle(result, "主席致辞"), { id: "relay-i-president", kind: "item", title: "主席致辞", duration: "3", person: "卡卡" });
   assert.deepEqual(itemByTitle(result, "总主持开场，介绍会议流程"), { id: "relay-i-host-open", kind: "item", title: "总主持开场，介绍会议流程", duration: "3", person: "待定" });
+  assert.deepEqual(itemByTitle(result, "时间官宣言"), { id: "relay-i-timer-declaration", kind: "item", title: "时间官宣言", duration: "2", person: "待定" });
+  assert.deepEqual(itemByTitle(result, "语法官宣言"), { id: "relay-i-grammarian-declaration", kind: "item", title: "语法官宣言", duration: "2", person: "待定" });
+  assert.deepEqual(itemByTitle(result, "哼哈官宣言"), { id: "relay-i-ah-counter-declaration", kind: "item", title: "哼哈官宣言", duration: "2", person: "待定" });
   assert.deepEqual(itemByTitle(result, "即兴演讲"), { id: "relay-i-impromptu", kind: "item", title: "即兴演讲", duration: "15", durationNote: "2min/人", person: "Jessica" });
+  assert.deepEqual(itemByTitle(result, "时间官报告"), { id: "relay-i-timer-report", kind: "item", title: "时间官报告", duration: "3", person: "待定" });
+  assert.deepEqual(itemByTitle(result, "语法官报告"), { id: "relay-i-grammarian-report", kind: "item", title: "语法官报告", duration: "3", person: "待定" });
+  assert.deepEqual(itemByTitle(result, "哼哈官报告"), { id: "relay-i-ah-counter-report", kind: "item", title: "哼哈官报告", duration: "3", person: "待定" });
   assert.deepEqual(itemByTitle(result, "拍照侠 / 大合照"), { id: "relay-i-photo", kind: "item", title: "拍照侠 / 大合照", duration: "3", person: "ALL" });
+  assert.equal(itemByTitle(result, "三官宣言"), undefined);
 });
 
-test("parseRelayText normalizes placeholders and combines timer/grammar/question roles into one item", () => {
+test("parseRelayText normalizes placeholders and creates separate officer declarations and reports", () => {
   const result = parseRelayText(sampleRelayText, { now: new Date("2026-01-15T00:00:00+08:00") });
-  const declarations = itemByTitle(result, "三官宣言");
 
-  assert.equal(declarations.duration, "2");
-  assert.equal(declarations.person, "待定");
-  assert.match(declarations.detail, /时间官：待定/);
-  assert.match(declarations.detail, /哼哈官：待定/);
-  assert.match(declarations.detail, /语法官：待定/);
-  assert.match(declarations.detail, /提问官：待定/);
+  assert.equal(itemByTitle(result, "时间官宣言").person, "待定");
+  assert.equal(itemByTitle(result, "语法官宣言").person, "待定");
+  assert.equal(itemByTitle(result, "哼哈官宣言").person, "待定");
+  assert.equal(itemByTitle(result, "时间官报告").person, "待定");
+  assert.equal(itemByTitle(result, "语法官报告").person, "待定");
+  assert.equal(itemByTitle(result, "哼哈官报告").person, "待定");
   assert.equal(itemByTitle(result, "即兴点评").person, "待定");
   assert.equal(itemByTitle(result, "总点评").person, "待定");
 });
@@ -128,8 +139,14 @@ test("parseRelayText handles relay text whose line breaks were collapsed into sp
   assert.equal(result.theme, "志愿者");
   assert.equal(result.manager, "莫婷");
   assert.equal(itemByTitle(result, "总主持开场，介绍会议流程").person, "simon");
-  assert.equal(itemByTitle(result, "三官宣言").person, "May、Jessica、莫婷、文星");
+  assert.equal(itemByTitle(result, "时间官宣言").person, "May");
+  assert.equal(itemByTitle(result, "语法官宣言").person, "莫婷");
+  assert.equal(itemByTitle(result, "哼哈官宣言").person, "Jessica");
+  assert.equal(itemByTitle(result, "时间官报告").person, "May");
+  assert.equal(itemByTitle(result, "语法官报告").person, "莫婷");
+  assert.equal(itemByTitle(result, "哼哈官报告").person, "Jessica");
   assert.equal(itemByTitle(result, "备稿演讲3").person, "待定");
+  assert.equal(itemByTitle(result, "三官宣言"), undefined);
   assert.deepEqual(result.items.filter((item) => item.kind === "section").map((item) => item.title), [
     "开场环节",
     "即兴马拉松",
@@ -160,7 +177,9 @@ test("parseRelayText merges duplicated posts and keeps real names over placehold
   assert.equal(result.manager, "莫婷");
   assert.equal(itemByTitle(result, "总主持开场，介绍会议流程").person, "Jessica");
   assert.equal(itemByTitle(result, "备稿演讲1").person, "卡卡");
-  assert.match(itemByTitle(result, "三官宣言").detail, /时间官：Tim/);
+  assert.equal(itemByTitle(result, "时间官宣言").person, "Tim");
+  assert.equal(itemByTitle(result, "时间官报告").person, "Tim");
+  assert.equal(itemByTitle(result, "三官宣言"), undefined);
 });
 
 test("parseRelayText uses the current year for yearless dates and warns for old dates", () => {
