@@ -875,8 +875,10 @@ test("template picker confirms before overwriting agenda state", () => {
   assert.ok(panel.includes('id="changeTemplateBtn"'), "export panel should expose a template switch button near backup actions");
   assert.ok(source.includes('id="templateModal"'), "template picker modal should be present");
   assert.match(applyTemplateSource, /AgendaTemplates\.getTemplate\(templateId\)/, "template application should load data from the shared template module");
-  assert.match(applyTemplateSource, /window\.confirm\("更换模板会覆盖当前议程内容，是否继续？"\)[\s\S]*?return;/, "template switch should confirm before replacing state");
+  assert.match(applyTemplateSource, /window\.confirm\("更换模板会替换整份议程和会议信息（主题、期数、日期、人员安排等），已上传的图片会保留。是否继续？"\)[\s\S]*?return;/, "template switch should confirm with an accurate description of what gets replaced");
   assert.match(applyTemplateSource, /state\s*=\s*nextState/, "template switch should replace the current agenda only after confirmation");
+  assert.match(applyTemplateSource, /\["logoData",\s*"wechatQrData",\s*"joinQrData",\s*"voteQrData"\]\.forEach[\s\S]*?previousState\[field\]/, "template switch should preserve uploaded images from the previous state");
+  assert.match(applyTemplateSource, /showToast\(`已切换为\$\{template\.name\}`,\s*"撤销",/, "template switch should offer an undo action in the toast");
   assert.match(applyTemplateSource, /autoScheduleAgenda\(\);\s*renderAll\(\);\s*saveData\(\);/, "template switch should reschedule, rerender, and save through the normal path");
   assert.match(loadDataSource, /if \(!saved\) return normalizeEscapedNewlines\(clone\(DEFAULT_DATA\)\)/, "default template should only seed the page when no saved local data exists");
 });

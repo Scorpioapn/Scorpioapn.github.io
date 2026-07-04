@@ -3993,7 +3993,7 @@
       <div class="panel-title">
         <div>
           <h2 id="templateModalTitle">更换模板</h2>
-          <p class="helper-text">选择后会先提示确认，再覆盖当前议程内容。</p>
+          <p class="helper-text">选择后会先提示确认，再替换整份议程和会议信息（已上传图片会保留）；确认后可在提示条中撤销。</p>
         </div>
         <button class="mini-button" id="closeTemplateModalBtn" type="button" title="关闭模板选择" aria-label="关闭模板选择">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -5455,12 +5455,15 @@
         showToast("模板不存在");
         return;
       }
-      if (!window.confirm("更换模板会覆盖当前议程内容，是否继续？")) return;
+      if (!window.confirm("更换模板会替换整份议程和会议信息（主题、期数、日期、人员安排等），已上传的图片会保留。是否继续？")) return;
 
       const previousState = state;
       try {
         const nextState = normalizeEscapedNewlines(AgendaData.normalizeAgendaData(template.data, DEFAULT_DATA, { strict: false }));
         nextState.items = normalizeAgendaItems(nextState.items).items;
+        ["logoData", "wechatQrData", "joinQrData", "voteQrData"].forEach((field) => {
+          nextState[field] = previousState[field] || "";
+        });
         state = nextState;
         editingId = null;
         dragId = null;
@@ -5472,7 +5475,16 @@
         renderAll();
         saveData();
         closeTemplateModal();
-        showToast(`已切换为${template.name}`);
+        showToast(`已切换为${template.name}`, "撤销", () => {
+          state = previousState;
+          editingId = null;
+          dragId = null;
+          undoDelete = null;
+          autoScheduleAgenda();
+          renderAll();
+          saveData();
+          showToast("已恢复更换模板前的内容");
+        });
       } catch (error) {
         console.error(error);
         state = previousState;
