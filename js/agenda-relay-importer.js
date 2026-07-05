@@ -374,6 +374,11 @@
       .map((postLines) => parsePostLines(postLines, now))
       .forEach((post) => mergePost(merged, post));
 
+    const roles = {};
+    Object.keys(merged.roles).forEach((role) => {
+      roles[role] = normalizePerson(merged.roles[role]);
+    });
+
     const result = {
       meetingNo: merged.meetingNo,
       theme: merged.theme,
@@ -383,6 +388,7 @@
       startTime: merged.startTime,
       endTime: merged.endTime,
       location: merged.location,
+      roles,
       items: buildItems(merged.roles),
       warnings: []
     };
@@ -391,8 +397,120 @@
     return result;
   }
 
+  function isPendingPerson(value) {
+    return normalizePerson(value) === PENDING_VALUE;
+  }
+
+  // 报名角色 → 现有议程行的匹配规则。broadcast 角色（主席、时间官等）
+  // 会同时填到所有匹配行；带编号的备稿/点评按出现顺序对号入座。
+  function isSpeechRow(title) {
+    return !/点评/.test(title) && (/备稿/.test(title) || /《/.test(title) || /自由演讲/.test(title));
+  }
+
+  function isSpeechEvalRow(title) {
+    return /点评/.test(title) && !/即兴/.test(title) && !/总点评/.test(title) && (/备稿/.test(title) || /《/.test(title));
+  }
+
+  function matchRoleToRows(role, rows) {
+    const titles = rows.map((row) => String(row.title || ""));
+    const collect = (predicate) => {
+      const indices = [];
+      titles.forEach((title, index) => {
+        if (predicate(title)) indices.push(index);
+      });
+      return indices;
+    };
+    const numbered = (prefixPredicate, roleNumber) => {
+      const candidates = collect(prefixPredicate);
+      if (!roleNumber) return candidates;
+      const slot = candidates[roleNumber - 1];
+      return slot === undefined ? [] : [slot];
+    };
+
+    const numberMatch = role.match(/^(备稿演讲|备稿点评)([123])$/);
+    if (numberMatch) {
+      const roleNumber = Number(numberMatch[2]);
+      if (numberMatch[1] === "备稿演讲") return numbered(isSpeechRow, roleNumber);
+      return numbered(isSpeechEvalRow, roleNumber);
+    }
+    if (role === "事务官开场") return collect((t) => t.includes("事务官"));
+    if (role === "主席致辞") return collect((t) => t.includes("主席"));
+    if (role === "总主持") return collect((t) => t.includes("总主持"));
+    if (role === "来宾介绍") return collect((t) => t.includes("来宾介绍"));
+    if (role === "时间官") return collect((t) => t.includes("时间官"));
+    if (role === "语法官") return collect((t) => t.includes("语法官"));
+    if (role === "哼哈官") return collect((t) => t.includes("哼哈官"));
+    if (role === "提问官") return collect((t) => t.includes("提问官"));
+    if (role === "即兴主持") {
+      const hostRows = collect((t) => t.includes("即兴主持"));
+      if (hostRows.length) return hostRows;
+      return collect((t) => t.includes("即兴演讲") && !t.includes("点评"));
+    }
+    if (role === "即兴点评") return collect((t) => t.includes("即兴") && t.includes("点评"));
+    if (role === "总点评") return collect((t) => t.includes("总点评"));
+    if (role === "颁奖&真情分享") return collect((t) => t.includes("颁奖") || t.includes("真情分享"));
+    if (role === "拍照侠") return collect((t) => t.includes("拍照"));
+    return collect((t) => t.includes(role));
+  }
+
+  // 把接龙报名合并进现有议程：默认只填空缺/待定的行，已有人员保持不变；
+  // overwrite 为 true 时接龙报名覆盖已有人员。现有议程为空时退回整份接龙议程。
+  function mergeRelayIntoAgenda(currentItems, relayResult, options = {}) {
+    const overwrite = Boolean(options.overwrite);
+    const items = (Array.isArray(currentItems) ? currentItems : []).map((item) => ({ ...item }));
+    const rows = [];
+    items.forEach((item, index) => {
+      if (item.kind === "item") rows.push({ index, title: String(item.title || "") });
+    });
+    const roles = relayResult?.roles || {};
+    const filled = [];
+    const skipped = [];
+    const overwritten = [];
+    const unmatched = [];
+
+    if (!rows.length) {
+      return {
+        items: (relayResult?.items || []).map((item) => ({ ...item })),
+        filled,
+        skipped,
+        overwritten,
+        unmatched,
+        usedFallbackItems: true
+      };
+    }
+
+    Object.keys(roles).forEach((role) => {
+      const person = normalizePerson(roles[role]);
+      if (person === PENDING_VALUE) return;
+      const targets = matchRoleToRows(role, rows);
+      if (!targets.length) {
+        unmatched.push({ role, person });
+        return;
+      }
+      targets.forEach((rowPosition) => {
+        const itemIndex = rows[rowPosition].index;
+        const item = items[itemIndex];
+        const existing = normalizeSpaces(item.person);
+        if (existing === person) return;
+        if (isPendingPerson(existing)) {
+          item.person = person;
+          filled.push({ index: itemIndex, title: item.title, person });
+        } else if (overwrite) {
+          overwritten.push({ index: itemIndex, title: item.title, previousPerson: existing, person });
+          item.person = person;
+        } else {
+          skipped.push({ index: itemIndex, title: item.title, existingPerson: existing, person });
+        }
+      });
+    });
+
+    return { items, filled, skipped, overwritten, unmatched, usedFallbackItems: false };
+  }
+
   return {
     parseRelayText,
-    normalizePerson
+    normalizePerson,
+    isPendingPerson,
+    mergeRelayIntoAgenda
   };
 });
