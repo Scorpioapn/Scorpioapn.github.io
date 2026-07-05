@@ -454,3 +454,35 @@ test("forking a conflict creates a new draft from the local payload", async () =
   assert.ok(urls.at(-1).includes("fork_12345678901234567890"));
   assert.ok(fake.calls.some((call) => call[0] === "removeChannel"));
 });
+
+test("cloud sync requests fail fast with sync-timeout when the backend hangs", async () => {
+  const hangingLibrary = {
+    createClient() {
+      return {
+        functions: {
+          invoke() {
+            return new Promise(() => {});
+          }
+        }
+      };
+    }
+  };
+  const controller = CloudSync.createAgendaCloudSync({
+    config: { url: "https://example.supabase.co", publishableKey: "pk_test" },
+    supabaseLibrary: hangingLibrary,
+    storage: storageFake(),
+    getRandomValues: deterministicRandom,
+    requestTimeoutMs: 10,
+    getPayload: () => ({ meetingNo: "1" }),
+    nowHref: () => "https://example.com/agenda_generator.html",
+    setStatus: () => {},
+    renderLink: () => {},
+    setBrowserUrl: () => {}
+  });
+
+  await assert.rejects(
+    controller.createDraft(),
+    (error) => error.code === "sync-timeout",
+    "a hanging backend (e.g. paused free project) should reject with sync-timeout instead of hanging forever"
+  );
+});

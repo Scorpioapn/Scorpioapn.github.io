@@ -182,6 +182,54 @@ ${GUEST_PARTICIPATION_NOTE}`,
     return clone(REGULAR_MEETING_DATA);
   }
 
+  // “全体会员”这类集体值属于流程结构，套用模板时保留；具体人名清空。
+  const COLLECTIVE_PERSON_PATTERN = /^(?:全体会员|全场人员|现场所有人|全员|ALL)$/i;
+
+  function isSpeechTitle(title) {
+    return !/点评/.test(title) && (/备稿/.test(title) || /《/.test(title) || /自由演讲/.test(title));
+  }
+
+  function isSpeechEvalTitle(title) {
+    return /点评/.test(title) && !/即兴/.test(title) && !/总点评/.test(title) && (/备稿/.test(title) || /《/.test(title));
+  }
+
+  function skeletonItems(items) {
+    let speechIndex = 0;
+    let evalIndex = 0;
+    return (items || []).map((item) => {
+      if (item.kind !== "item") return { ...item };
+      const next = { ...item };
+      const title = String(next.title || "");
+      if (isSpeechTitle(title)) {
+        speechIndex += 1;
+        next.title = `备稿演讲${speechIndex}`;
+        next.detail = "";
+      } else if (isSpeechEvalTitle(title)) {
+        evalIndex += 1;
+        next.title = `备稿点评${evalIndex}`;
+        next.detail = "";
+      }
+      if (!COLLECTIVE_PERSON_PATTERN.test(String(next.person || "").trim())) {
+        next.person = "";
+      }
+      return next;
+    });
+  }
+
+  // 模板骨架：只包含流程结构（环节、时长、开始/结束时间），
+  // 人员留空、往期演讲题目改回通用名，供“接龙导入”往里填人。
+  function getTemplateSkeleton(idOrName) {
+    const template = getTemplate(idOrName);
+    if (!template) return null;
+    return {
+      id: template.id,
+      name: template.name,
+      startTime: template.data.startTime || "",
+      endTime: template.data.endTime || "",
+      items: skeletonItems(template.data.items)
+    };
+  }
+
   return {
     DEFAULT_MEETING_RULES,
     DEFAULT_OFFICERS,
@@ -190,6 +238,7 @@ ${GUEST_PARTICIPATION_NOTE}`,
     GUEST_PARTICIPATION_NOTE,
     listTemplates,
     getTemplate,
+    getTemplateSkeleton,
     getDefaultData
   };
 });

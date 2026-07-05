@@ -118,14 +118,37 @@
       saveTimer = null;
     }
 
+    function withRequestTimeout(promise) {
+      const timeoutMs = Number(options.requestTimeoutMs) > 0 ? Number(options.requestTimeoutMs) : 8000;
+      return new Promise((resolve, reject) => {
+        const timer = setTimeoutFn(() => {
+          const timeoutError = new Error("Agenda sync request timed out");
+          timeoutError.code = "sync-timeout";
+          reject(timeoutError);
+        }, timeoutMs);
+        promise.then(
+          (value) => {
+            clearTimeoutFn(timer);
+            resolve(value);
+          },
+          (error) => {
+            clearTimeoutFn(timer);
+            reject(error);
+          }
+        );
+      });
+    }
+
     async function requestDraft(action, body = {}) {
       if (options.transport) return normalizeRpcRow(await options.transport(action, body));
       const client = resolveSupabaseClient();
       if (!client) throw new Error("Supabase sync is not configured");
       if (!client.functions?.invoke) throw new Error("Supabase Edge sync is not available");
-      const { data, error } = await client.functions.invoke("agenda-drafts", {
+      // 免费版 Supabase 项目休眠时请求会长时间挂起；超时后按普通同步失败处理，
+      // 本机保存不受影响。
+      const { data, error } = await withRequestTimeout(client.functions.invoke("agenda-drafts", {
         body: { action, ...body }
-      });
+      }));
       if (error) throw error;
       if (data?.error) {
         const requestError = new Error(data.error.message || data.error.code || "Agenda sync failed");

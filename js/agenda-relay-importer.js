@@ -8,6 +8,9 @@
   const PENDING_PATTERN = /^(?:待定|待报名|空|tbd|n\/a|na|none|null|-|—|--|无)$/i;
   const ROLE_ALIASES = new Map([
     ["主席致词", "主席致辞"],
+    ["总主持人", "总主持"],
+    ["主持人", "总主持"],
+    ["即兴主持人", "即兴主持"],
     ["颁奖＆真情分享", "颁奖&真情分享"],
     ["颁奖和真情分享", "颁奖&真情分享"],
     ["颁奖/真情分享", "颁奖&真情分享"],
@@ -67,17 +70,21 @@
       .trim();
   }
 
+  // \u53ea\u5728\u7ed3\u6784\u5b57\u6bb5\uff08\u671f\u6570\u3001\u65e5\u671f\u65f6\u95f4\u3001\u89d2\u8272\u540d\uff09\u91cc\u505a\u5168\u89d2\u8f6c\u534a\u89d2\uff0c
+  // \u4eba\u540d\u548c\u5730\u70b9\u4fdd\u6301\u539f\u6837\uff0c\u907f\u514d\u628a\u201c\u6728\u5b50\uff11\u53f7\u201d\u8fd9\u7c7b\u540d\u5b57\u6539\u5199\u6389\u3002
+  function toHalfWidthDigits(value) {
+    return String(value ?? "").replace(/[\uff10-\uff19]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0));
+  }
+
   function normalizeText(text) {
-    const normalizedLines = String(text ?? "")
+    // \u6bcf\u4e00\u884c\u90fd\u6309\u201c\u7a7a\u683c+\u5df2\u77e5\u5b57\u6bb5\u540d+\u5192\u53f7\u201d\u518d\u62c6\u5206\u4e00\u6b21\uff0c\u517c\u5bb9\u5fae\u4fe1\u628a\u591a\u4e2a
+    // \u5b57\u6bb5\u6298\u53e0\u5230\u540c\u4e00\u884c\uff08\u6216\u6574\u5e16\u6298\u53e0\u6210\u4e00\u884c\uff09\u7c98\u8d34\u51fa\u6765\u7684\u60c5\u51b5\u3002
+    return String(text ?? "")
       .replace(/\r\n?/g, "\n")
       .split("\n")
       .map(normalizeSpaces)
-      .filter(Boolean);
-    if (normalizedLines.length !== 1) return normalizedLines;
-
-    return normalizedLines[0]
-      .replace(RELAY_FIELD_BOUNDARY, "\n$1$2")
-      .split("\n")
+      .filter(Boolean)
+      .flatMap((line) => line.replace(RELAY_FIELD_BOUNDARY, "\n$1$2").split("\n"))
       .map(normalizeSpaces)
       .filter(Boolean);
   }
@@ -103,7 +110,7 @@
   }
 
   function normalizeRoleKey(key) {
-    const compact = normalizeSpaces(key).replace(/\s+/g, "");
+    const compact = toHalfWidthDigits(normalizeSpaces(key)).replace(/\s+/g, "");
     return ROLE_ALIASES.get(compact) || compact;
   }
 
@@ -117,7 +124,9 @@
   }
 
   function parseMeetingNo(line) {
-    const match = line.match(/畅言\s*(\d+)\s*期(?:报名帖|报名|例会)?/);
+    const normalized = toHalfWidthDigits(line);
+    const match = normalized.match(/畅言\s*(\d+)\s*期(?:报名帖|报名|例会)?/)
+      || normalized.match(/(\d{1,5})\s*期\s*(?:报名帖|报名|例会)/);
     return match ? match[1] : "";
   }
 
@@ -126,7 +135,7 @@
   }
 
   function parseDateTime(value, now) {
-    const text = normalizeSpaces(value);
+    const text = toHalfWidthDigits(normalizeSpaces(value));
     const match = text.match(/(?:(\d{4})\s*年\s*)?(\d{1,2})\s*月\s*(\d{1,2})\s*日?.*?(\d{1,2})[:：](\d{2})\s*(?:-|–|—|~|～|至|到)\s*(\d{1,2})[:：](\d{2})/);
     if (!match) return {};
     const year = Number(match[1] || now.getFullYear());
@@ -137,6 +146,13 @@
     const endHour = Number(match[6]);
     const endMinute = Number(match[7]);
     if ([year, month, day, startHour, startMinute, endHour, endMinute].some((part) => !Number.isFinite(part))) {
+      return {};
+    }
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (month < 1 || month > 12 || day < 1 || day > daysInMonth) {
+      return {};
+    }
+    if (startHour > 23 || endHour > 23 || startMinute > 59 || endMinute > 59) {
       return {};
     }
     return {
@@ -358,6 +374,11 @@
       .map((postLines) => parsePostLines(postLines, now))
       .forEach((post) => mergePost(merged, post));
 
+    const roles = {};
+    Object.keys(merged.roles).forEach((role) => {
+      roles[role] = normalizePerson(merged.roles[role]);
+    });
+
     const result = {
       meetingNo: merged.meetingNo,
       theme: merged.theme,
@@ -367,6 +388,7 @@
       startTime: merged.startTime,
       endTime: merged.endTime,
       location: merged.location,
+      roles,
       items: buildItems(merged.roles),
       warnings: []
     };
@@ -375,8 +397,120 @@
     return result;
   }
 
+  function isPendingPerson(value) {
+    return normalizePerson(value) === PENDING_VALUE;
+  }
+
+  // 报名角色 → 现有议程行的匹配规则。broadcast 角色（主席、时间官等）
+  // 会同时填到所有匹配行；带编号的备稿/点评按出现顺序对号入座。
+  function isSpeechRow(title) {
+    return !/点评/.test(title) && (/备稿/.test(title) || /《/.test(title) || /自由演讲/.test(title));
+  }
+
+  function isSpeechEvalRow(title) {
+    return /点评/.test(title) && !/即兴/.test(title) && !/总点评/.test(title) && (/备稿/.test(title) || /《/.test(title));
+  }
+
+  function matchRoleToRows(role, rows) {
+    const titles = rows.map((row) => String(row.title || ""));
+    const collect = (predicate) => {
+      const indices = [];
+      titles.forEach((title, index) => {
+        if (predicate(title)) indices.push(index);
+      });
+      return indices;
+    };
+    const numbered = (prefixPredicate, roleNumber) => {
+      const candidates = collect(prefixPredicate);
+      if (!roleNumber) return candidates;
+      const slot = candidates[roleNumber - 1];
+      return slot === undefined ? [] : [slot];
+    };
+
+    const numberMatch = role.match(/^(备稿演讲|备稿点评)([123])$/);
+    if (numberMatch) {
+      const roleNumber = Number(numberMatch[2]);
+      if (numberMatch[1] === "备稿演讲") return numbered(isSpeechRow, roleNumber);
+      return numbered(isSpeechEvalRow, roleNumber);
+    }
+    if (role === "事务官开场") return collect((t) => t.includes("事务官"));
+    if (role === "主席致辞") return collect((t) => t.includes("主席"));
+    if (role === "总主持") return collect((t) => t.includes("总主持"));
+    if (role === "来宾介绍") return collect((t) => t.includes("来宾介绍"));
+    if (role === "时间官") return collect((t) => t.includes("时间官"));
+    if (role === "语法官") return collect((t) => t.includes("语法官"));
+    if (role === "哼哈官") return collect((t) => t.includes("哼哈官"));
+    if (role === "提问官") return collect((t) => t.includes("提问官"));
+    if (role === "即兴主持") {
+      const hostRows = collect((t) => t.includes("即兴主持"));
+      if (hostRows.length) return hostRows;
+      return collect((t) => t.includes("即兴演讲") && !t.includes("点评"));
+    }
+    if (role === "即兴点评") return collect((t) => t.includes("即兴") && t.includes("点评"));
+    if (role === "总点评") return collect((t) => t.includes("总点评"));
+    if (role === "颁奖&真情分享") return collect((t) => t.includes("颁奖") || t.includes("真情分享"));
+    if (role === "拍照侠") return collect((t) => t.includes("拍照"));
+    return collect((t) => t.includes(role));
+  }
+
+  // 把接龙报名合并进现有议程：默认只填空缺/待定的行，已有人员保持不变；
+  // overwrite 为 true 时接龙报名覆盖已有人员。现有议程为空时退回整份接龙议程。
+  function mergeRelayIntoAgenda(currentItems, relayResult, options = {}) {
+    const overwrite = Boolean(options.overwrite);
+    const items = (Array.isArray(currentItems) ? currentItems : []).map((item) => ({ ...item }));
+    const rows = [];
+    items.forEach((item, index) => {
+      if (item.kind === "item") rows.push({ index, title: String(item.title || "") });
+    });
+    const roles = relayResult?.roles || {};
+    const filled = [];
+    const skipped = [];
+    const overwritten = [];
+    const unmatched = [];
+
+    if (!rows.length) {
+      return {
+        items: (relayResult?.items || []).map((item) => ({ ...item })),
+        filled,
+        skipped,
+        overwritten,
+        unmatched,
+        usedFallbackItems: true
+      };
+    }
+
+    Object.keys(roles).forEach((role) => {
+      const person = normalizePerson(roles[role]);
+      if (person === PENDING_VALUE) return;
+      const targets = matchRoleToRows(role, rows);
+      if (!targets.length) {
+        unmatched.push({ role, person });
+        return;
+      }
+      targets.forEach((rowPosition) => {
+        const itemIndex = rows[rowPosition].index;
+        const item = items[itemIndex];
+        const existing = normalizeSpaces(item.person);
+        if (existing === person) return;
+        if (isPendingPerson(existing)) {
+          item.person = person;
+          filled.push({ index: itemIndex, title: item.title, person });
+        } else if (overwrite) {
+          overwritten.push({ index: itemIndex, title: item.title, previousPerson: existing, person });
+          item.person = person;
+        } else {
+          skipped.push({ index: itemIndex, title: item.title, existingPerson: existing, person });
+        }
+      });
+    });
+
+    return { items, filled, skipped, overwritten, unmatched, usedFallbackItems: false };
+  }
+
   return {
     parseRelayText,
-    normalizePerson
+    normalizePerson,
+    isPendingPerson,
+    mergeRelayIntoAgenda
   };
 });

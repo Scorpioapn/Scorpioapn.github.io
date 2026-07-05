@@ -53,6 +53,13 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --yes
 
+      # Without this secret the edge function falls back to
+      # Access-Control-Allow-Origin: * (see functions/agenda-drafts/index.ts).
+      - name: Ensure Edge Function CORS secret
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase secrets set AGENDA_ALLOWED_ORIGINS="$AGENDA_ALLOWED_ORIGIN" --project-ref "$SUPABASE_PROJECT_REF"
+
       - name: Dry-run database migrations
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

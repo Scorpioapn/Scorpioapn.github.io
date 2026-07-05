@@ -839,7 +839,12 @@ test("agenda generator exposes a WeChat relay text import modal", () => {
   const renderRelayImportPreviewSource = functionBlock("renderRelayImportPreview");
 
   assert.match(source, /<script src="js\/agenda-relay-importer\.js"><\/script>[\s\S]*?<script src="js\/agenda-data\.js"><\/script>/, "relay importer should load before agenda app initialization");
-  assert.match(panel, /id="exportJsonBtn"[\s\S]*?id="importJsonBtn"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"/, "relay import should sit beside JSON backup controls");
+  assert.match(
+    source,
+    /id="agendaPanel"[\s\S]*?id="agendaSourceActions"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"[\s\S]*?id="addAgendaItemBtn"/,
+    "relay import and template switching should lead the agenda panel, ahead of manual add buttons"
+  );
+  assert.equal(panel.includes('id="relayImportBtn"'), false, "relay import should no longer hide among JSON backup controls");
   assert.ok(source.includes('id="relayImportModal"'), "relay import modal should exist");
   assert.ok(source.includes('id="relayImportText"'), "relay import modal should provide a paste textarea");
   assert.ok(source.includes('id="relayImportPreview"'), "relay import modal should show parsed preview");
@@ -847,10 +852,20 @@ test("agenda generator exposes a WeChat relay text import modal", () => {
   assert.ok(source.includes('id="relayImportCancelBtn"'), "relay import modal should allow canceling without changes");
   assert.ok(source.includes('id="relayImportConfirmBtn"'), "relay import modal should require explicit confirmation");
   assert.match(applyRelayImportSource, /autoScheduleAgenda\(\);\s*renderAll\(\);\s*saveData\(\);/, "confirmed relay import should reschedule, rerender, and save through the normal path");
-  assert.match(applyRelayImportSource, /\.\.\.state[\s\S]*?items:\s*parsedRelayImport\.items/, "relay import should preserve fixed information while replacing agenda items");
+  assert.match(applyRelayImportSource, /RelayImporter\.mergeRelayIntoAgenda\(state\.items,\s*parsedRelayImport,\s*\{\s*overwrite\s*\}\)/, "relay import should merge signups into the standing agenda instead of replacing it");
+  assert.match(applyRelayImportSource, /\.\.\.state[\s\S]*?items:\s*mergeResult\.items/, "relay import should preserve fixed information and apply the merged agenda");
+  assert.ok(source.includes('id="relayOverwriteToggle"'), "relay modal should offer the 覆盖已有人员 checkbox");
+  assert.match(source, /覆盖已有人员/, "the overwrite option should be labeled in plain Chinese");
+  assert.match(renderRelayImportPreviewSource, /mergeRelayIntoAgenda/, "relay preview should show the same merge plan that confirming would apply");
+  assert.match(renderRelayImportPreviewSource, /将填入/, "relay preview should list rows that will be filled");
+  assert.match(renderRelayImportPreviewSource, /已跳过/, "relay preview should list rows skipped because they already have people");
+  assert.match(renderRelayImportPreviewSource, /未匹配的报名/, "relay preview should list signups without a matching agenda row");
+  assert.match(renderRelayImportPreviewSource, /usedFallbackItems/, "relay preview should fall back to the full relay agenda when the current agenda is empty");
+  assert.match(source, /relayOverwriteToggle\?\.addEventListener\("change",\s*refreshRelayImportPreview\)/, "toggling overwrite mode should refresh the preview");
   assert.match(source, /window\.parseRelayText\s*=\s*RelayImporter\.parseRelayText/, "parser should be exposed for browser console testing");
   assert.match(renderRelayImportPreviewSource, /item\.kind === "section"/, "relay preview should render imported sections as section dividers");
   assert.ok(source.includes(".relay-import-section-preview"), "relay section preview should have dedicated styling");
+  assert.match(applyRelayImportSource, /showToast\(message,\s*"撤销",/, "confirmed relay import should offer an undo action in the toast");
 });
 
 test("agenda generator exposes selectable agenda templates", () => {
@@ -872,11 +887,14 @@ test("template picker confirms before overwriting agenda state", () => {
   const loadDataSource = functionBlock("loadData");
   const applyTemplateSource = functionBlock("applyAgendaTemplate");
 
-  assert.ok(panel.includes('id="changeTemplateBtn"'), "export panel should expose a template switch button near backup actions");
+  assert.equal(panel.includes('id="changeTemplateBtn"'), false, "template switch should live in the agenda panel, not among backup actions");
+  assert.match(source, /id="agendaSourceActions"[\s\S]*?id="changeTemplateBtn"/, "agenda panel should expose the template switch button");
   assert.ok(source.includes('id="templateModal"'), "template picker modal should be present");
-  assert.match(applyTemplateSource, /AgendaTemplates\.getTemplate\(templateId\)/, "template application should load data from the shared template module");
-  assert.match(applyTemplateSource, /window\.confirm\("更换模板会覆盖当前议程内容，是否继续？"\)[\s\S]*?return;/, "template switch should confirm before replacing state");
+  assert.match(applyTemplateSource, /AgendaTemplates\.getTemplateSkeleton\(templateId\)/, "template application should use the people-free skeleton from the shared template module");
+  assert.match(applyTemplateSource, /window\.confirm\(`更换模板会用「\$\{skeleton\.name\}」的流程结构替换当前议程列表（人员留空，等待接龙导入或手动填写）；会议信息、图片和固定信息保持不变。是否继续？`\)[\s\S]*?return;/, "template switch should confirm with an accurate description of skeleton-only replacement");
   assert.match(applyTemplateSource, /state\s*=\s*nextState/, "template switch should replace the current agenda only after confirmation");
+  assert.match(applyTemplateSource, /\.\.\.state[\s\S]*?items:\s*skeleton\.items/, "template switch should keep meeting info, images, and fixed info by spreading the current state");
+  assert.match(applyTemplateSource, /showToast\(`已切换为\$\{skeleton\.name\}（人员留空）`,\s*"撤销",/, "template switch should offer an undo action in the toast");
   assert.match(applyTemplateSource, /autoScheduleAgenda\(\);\s*renderAll\(\);\s*saveData\(\);/, "template switch should reschedule, rerender, and save through the normal path");
   assert.match(loadDataSource, /if \(!saved\) return normalizeEscapedNewlines\(clone\(DEFAULT_DATA\)\)/, "default template should only seed the page when no saved local data exists");
 });

@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { test } from "node:test";
 
 const require = createRequire(import.meta.url);
-const { parseRelayText } = require("../js/agenda-relay-importer.js");
+const { parseRelayText, mergeRelayIntoAgenda } = require("../js/agenda-relay-importer.js");
 
 const sampleRelayText = `@所有人
 [烟花]畅言779期报名帖[烟花]
@@ -196,4 +196,161 @@ test("parseRelayText keeps empty input empty instead of inventing pending fields
   assert.equal(result.manager, "");
   assert.equal(result.items.length, 0);
   assert.equal(result.meetingNo, "");
+});
+
+test("parseRelayText rejects invalid clock values instead of storing them", () => {
+  for (const range of ["19:99-21:30", "25:30-26:10", "12:60-13:00", "19:30-24:01"]) {
+    const result = parseRelayText(`畅言779期报名帖\n时间：6月9日 ${range}`, { now: new Date("2026-01-15T00:00:00+08:00") });
+    assert.equal(result.startTime, "", `${range} should not produce a start time`);
+    assert.equal(result.endTime, "", `${range} should not produce an end time`);
+    assert.equal(result.date, "", `${range} should not produce a date either`);
+  }
+});
+
+test("parseRelayText rejects impossible calendar dates", () => {
+  for (const dateText of ["13月32日", "2月30日", "0月5日"]) {
+    const result = parseRelayText(`时间：${dateText} 19:30-21:30`, { now: new Date("2026-01-15T00:00:00+08:00") });
+    assert.equal(result.date, "", `${dateText} should be rejected`);
+  }
+  const leap = parseRelayText("时间：2028年2月29日 19:30-21:30", { now: new Date("2026-01-15T00:00:00+08:00") });
+  assert.equal(leap.date, "2028-02-29", "valid leap-year date should still parse");
+});
+
+test("parseRelayText normalizes full-width digits in meeting number and times", () => {
+  const result = parseRelayText("畅言７７９期报名帖\n时间：６月９日 １９:３０-２１:３０", { now: new Date("2026-01-15T00:00:00+08:00") });
+  assert.equal(result.meetingNo, "779");
+  assert.equal(result.date, "2026-06-09");
+  assert.equal(result.startTime, "19:30");
+});
+
+test("parseRelayText keeps full-width digits inside person names and locations", () => {
+  const result = parseRelayText("地点：讯美科技广场３号楼\n主席致辞：木子１号\n备稿演讲１：小明", { now: new Date("2026-01-15T00:00:00+08:00") });
+  assert.equal(result.location, "讯美科技广场３号楼", "locations should keep their original digit width");
+  assert.equal(itemByTitle(result, "主席致辞").person, "木子１号", "person names should not be rewritten");
+  assert.equal(itemByTitle(result, "备稿演讲1").person, "小明", "full-width digits in role keys should still be recognized");
+});
+
+test("parseRelayText recognizes 总主持人 and 主持人 as the host role", () => {
+  const result = parseRelayText("总主持人：文星", {});
+  assert.equal(itemByTitle(result, "总主持开场，介绍会议流程").person, "文星");
+  const result2 = parseRelayText("主持人：莫婷", {});
+  assert.equal(itemByTitle(result2, "总主持开场，介绍会议流程").person, "莫婷");
+});
+
+test("parseRelayText reads the meeting number without the club name prefix", () => {
+  assert.equal(parseRelayText("780期报名帖", {}).meetingNo, "780");
+  assert.equal(parseRelayText("第781期例会 主题：练习", {}).meetingNo, "781");
+  assert.equal(parseRelayText("隶属于第118大区", {}).meetingNo, "", "district numbers should not be mistaken for meeting numbers");
+});
+
+test("parseRelayText splits inline key-value pairs on any line, not only single-line pastes", () => {
+  const result = parseRelayText(`畅言779期报名帖
+主席致辞：卡卡 总主持：文星
+备稿演讲1：Ada`, { now: new Date("2026-01-15T00:00:00+08:00") });
+
+  assert.equal(itemByTitle(result, "主席致辞").person, "卡卡");
+  assert.equal(itemByTitle(result, "总主持开场，介绍会议流程").person, "文星");
+  assert.equal(itemByTitle(result, "备稿演讲1").person, "Ada");
+});
+
+function skeletonAgenda() {
+  return [
+    { id: "s-open", kind: "section", title: "一、开场环节" },
+    { id: "i-warmup", kind: "item", title: "暖场互动", person: "全体会员" },
+    { id: "i-president", kind: "item", title: "主席致词", person: "" },
+    { id: "i-host", kind: "item", title: "总主持开场，介绍会议流程", person: "待定" },
+    { id: "i-timer-declare", kind: "item", title: "时间官宣言", person: "" },
+    { id: "i-speech-1", kind: "item", title: "《今天只做一件事》自由演讲", person: "" },
+    { id: "i-speech-2", kind: "item", title: "备稿演讲2", person: "手动指定的人" },
+    { id: "i-eval-1", kind: "item", title: "备稿点评 -《今天只做一件事》", person: "" },
+    { id: "i-timer-report", kind: "item", title: "时间官报告", person: "" },
+    { id: "i-close", kind: "item", title: "主席总结本期活动，结束会议", person: "" }
+  ];
+}
+
+function relayResultFor(text) {
+  return parseRelayText(text, { now: new Date("2026-01-15T00:00:00+08:00") });
+}
+
+test("mergeRelayIntoAgenda fills empty and 待定 rows without touching manual assignments", () => {
+  const relay = relayResultFor("主席致辞：卡卡\n总主持：文星\n时间官：莫婷\n备稿演讲1：小明\n备稿演讲2：小红");
+  const result = mergeRelayIntoAgenda(skeletonAgenda(), relay, { overwrite: false });
+
+  const byId = Object.fromEntries(result.items.map((item) => [item.id, item]));
+  assert.equal(byId["i-president"].person, "卡卡", "empty chairman row should be filled");
+  assert.equal(byId["i-close"].person, "卡卡", "chairman should broadcast to the closing row");
+  assert.equal(byId["i-host"].person, "文星", "待定 rows count as fillable");
+  assert.equal(byId["i-timer-declare"].person, "莫婷");
+  assert.equal(byId["i-timer-report"].person, "莫婷", "officer roles should fill declaration and report rows");
+  assert.equal(byId["i-speech-1"].person, "小明", "speech 1 should map to the first speech row by order");
+  assert.equal(byId["i-speech-2"].person, "手动指定的人", "manually assigned people must be preserved by default");
+  assert.equal(result.skipped.length, 1);
+  assert.equal(result.skipped[0].existingPerson, "手动指定的人");
+  assert.equal(result.skipped[0].person, "小红");
+  assert.equal(result.overwritten.length, 0);
+  assert.ok(result.filled.length >= 5);
+});
+
+test("mergeRelayIntoAgenda overwrites manual assignments only when overwrite is on", () => {
+  const relay = relayResultFor("备稿演讲2：小红");
+  const result = mergeRelayIntoAgenda(skeletonAgenda(), relay, { overwrite: true });
+
+  const speech2 = result.items.find((item) => item.id === "i-speech-2");
+  assert.equal(speech2.person, "小红");
+  assert.equal(result.overwritten.length, 1);
+  assert.equal(result.overwritten[0].previousPerson, "手动指定的人");
+  assert.equal(result.skipped.length, 0);
+});
+
+test("mergeRelayIntoAgenda reports signups that have no matching agenda row", () => {
+  const relay = relayResultFor("提问官：小刚\n语法官：小美");
+  const result = mergeRelayIntoAgenda(skeletonAgenda(), relay, { overwrite: false });
+
+  assert.deepEqual(
+    result.unmatched.map((entry) => [entry.role, entry.person]).sort(),
+    [["提问官", "小刚"], ["语法官", "小美"]],
+    "roles without agenda rows should be reported, not silently dropped"
+  );
+});
+
+test("mergeRelayIntoAgenda ignores pending relay signups entirely", () => {
+  const relay = relayResultFor("主席致辞：[玫瑰]\n时间官：待定");
+  const result = mergeRelayIntoAgenda(skeletonAgenda(), relay, { overwrite: true });
+
+  assert.equal(result.items.find((item) => item.id === "i-president").person, "");
+  assert.equal(result.filled.length, 0);
+  assert.equal(result.unmatched.length, 0);
+});
+
+test("mergeRelayIntoAgenda falls back to the relay agenda when the current agenda is empty", () => {
+  const relay = relayResultFor("主席致辞：卡卡\n备稿演讲1：小明");
+  const result = mergeRelayIntoAgenda([{ id: "s", kind: "section", title: "空壳" }], relay, { overwrite: false });
+
+  assert.equal(result.usedFallbackItems, true);
+  assert.ok(result.items.some((item) => item.title === "主席致辞" && item.person === "卡卡"));
+});
+
+test("mergeRelayIntoAgenda does not mutate the input items", () => {
+  const items = skeletonAgenda();
+  mergeRelayIntoAgenda(items, relayResultFor("主席致辞：卡卡"), { overwrite: true });
+  assert.equal(items.find((item) => item.id === "i-president").person, "");
+});
+
+test("mergeRelayIntoAgenda keeps 茶歇大合照 rows away from the 拍照侠 signup", () => {
+  const items = [
+    { id: "i-break", kind: "item", title: "茶歇+大合照", person: "全场人员" },
+    { id: "i-photo", kind: "item", title: "拍照侠 / 大合照", person: "" }
+  ];
+  const result = mergeRelayIntoAgenda(items, relayResultFor("拍照侠：ALL"), { overwrite: true });
+
+  assert.equal(result.items[0].person, "全场人员", "the tea-break row must not be claimed by the photographer signup");
+  assert.equal(result.items[1].person, "ALL");
+});
+
+test("mergeRelayIntoAgenda treats identical existing names as a no-op instead of a skip", () => {
+  const items = [{ id: "i-president", kind: "item", title: "主席致辞", person: "卡卡" }];
+  const result = mergeRelayIntoAgenda(items, relayResultFor("主席致辞：卡卡"), { overwrite: false });
+
+  assert.equal(result.filled.length, 0);
+  assert.equal(result.skipped.length, 0);
 });
