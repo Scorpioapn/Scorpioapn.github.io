@@ -572,6 +572,57 @@
       background: rgba(255, 255, 255, 0.72);
     }
 
+    .relay-overwrite-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(0, 82, 122, 0.06);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--md-on-surface);
+    }
+
+    .relay-overwrite-option input {
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      accent-color: var(--md-primary);
+      flex: none;
+    }
+
+    .relay-overwrite-option small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--md-on-surface-variant);
+    }
+
+    .relay-merge-mode {
+      margin: 0;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--md-on-surface-variant);
+    }
+
+    .relay-merge-list {
+      margin: 6px 0 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .relay-merge-hint {
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--md-on-surface-variant);
+    }
+
     .relay-import-empty {
       color: var(--md-on-surface-variant);
       font-size: 13px;
@@ -4015,7 +4066,7 @@
       <div class="panel-title">
         <div>
           <h2 id="templateModalTitle">更换模板</h2>
-          <p class="helper-text">选择后会先提示确认，再替换整份议程和会议信息（已上传图片会保留）；确认后可在提示条中撤销。</p>
+          <p class="helper-text">模板只替换议程流程（人员留空，可再用“导入接龙”填人）；会议信息、图片和固定信息保持不变。确认后可在提示条中撤销。</p>
         </div>
         <button class="mini-button" id="closeTemplateModalBtn" type="button" title="关闭模板选择" aria-label="关闭模板选择">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -4039,6 +4090,10 @@
       <label class="field relay-import-field" for="relayImportText">
         <span>接龙文字</span>
         <textarea class="textarea" id="relayImportText" placeholder="粘贴微信群接龙报名帖..."></textarea>
+      </label>
+      <label class="relay-overwrite-option" for="relayOverwriteToggle">
+        <input type="checkbox" id="relayOverwriteToggle" />
+        <span>覆盖已有人员<small>默认只填空缺和“待定”的行，已手动安排的人员不受影响</small></span>
       </label>
       <div class="relay-import-warnings" id="relayImportWarnings" hidden></div>
       <div class="relay-import-preview" id="relayImportPreview" aria-live="polite"></div>
@@ -4241,6 +4296,7 @@
       relayImportWarnings: document.querySelector("#relayImportWarnings"),
       relayImportCancelBtn: document.querySelector("#relayImportCancelBtn"),
       relayImportConfirmBtn: document.querySelector("#relayImportConfirmBtn"),
+      relayOverwriteToggle: document.querySelector("#relayOverwriteToggle"),
       closeRelayImportModalBtn: document.querySelector("#closeRelayImportModalBtn"),
       cloudSyncStatus: document.querySelector("#cloudSyncStatus"),
       cloudSyncVersion: document.querySelector("#cloudSyncVersion"),
@@ -5295,26 +5351,51 @@
           </div>
         `).join("")}</div>`
         : `<p class="relay-import-empty">未识别到会议信息。</p>`;
-      const currentTitles = state.items.filter((item) => item.kind === "item").map((item) => String(item.title || "")).filter(Boolean);
-      const nextTitleSet = new Set((result.items || []).filter((item) => item.kind === "item").map((item) => String(item.title || "")));
-      const removedTitles = currentTitles.filter((title) => !nextTitleSet.has(title));
-      const removedPreview = removedTitles.slice(0, 6).join("、") + (removedTitles.length > 6 ? `（等 ${removedTitles.length} 项）` : "");
-      const replaceNotice = result.items?.length && currentTitles.length
-        ? `<div class="relay-import-warning">确认导入会用下方议程替换当前全部 ${currentTitles.length} 项${removedTitles.length ? `；这些环节不在接龙里，将被移除：${escapeHtml(removedPreview)}` : ""}。导入后可在提示条中撤销。</div>`
-        : "";
-      const itemHtml = result.items?.length
-        ? `${replaceNotice}<h3 class="relay-import-section-title">议程预览</h3>
-          <div class="relay-import-items">${result.items.map((item) => item.kind === "section"
-            ? `<div class="relay-import-section-preview">${escapeHtml(item.title || "栏目")}</div>`
-            : `<div class="relay-import-item-preview">
-                <div>
-                  <strong>${escapeHtml(item.title || "未命名环节")}</strong>
-                  <span>${escapeHtml(item.person || "待定")}</span>
-                </div>
-                <small>${escapeHtml(item.duration || "")}${item.durationNote ? ` · ${escapeHtml(item.durationNote)}` : ""}</small>
-                ${item.detail ? `<em>${escapeHtml(item.detail)}</em>` : ""}
-              </div>`).join("")}</div>`
-        : `<p class="relay-import-empty">未识别到议程环节，确认后当前议程列表会变为空。</p>`;
+      const overwrite = Boolean(els.relayOverwriteToggle?.checked);
+      const mergePlan = RelayImporter.mergeRelayIntoAgenda(state.items, result, { overwrite });
+      let itemHtml = "";
+      if (mergePlan.usedFallbackItems) {
+        itemHtml = result.items?.length
+          ? `<div class="relay-import-warning">当前议程为空，将直接使用接龙生成的完整议程。导入后可在提示条中撤销。</div>
+            <h3 class="relay-import-section-title">议程预览</h3>
+            <div class="relay-import-items">${result.items.map((item) => item.kind === "section"
+              ? `<div class="relay-import-section-preview">${escapeHtml(item.title || "栏目")}</div>`
+              : `<div class="relay-import-item-preview">
+                  <div>
+                    <strong>${escapeHtml(item.title || "未命名环节")}</strong>
+                    <span>${escapeHtml(item.person || "待定")}</span>
+                  </div>
+                  <small>${escapeHtml(item.duration || "")}${item.durationNote ? ` · ${escapeHtml(item.durationNote)}` : ""}</small>
+                  ${item.detail ? `<em>${escapeHtml(item.detail)}</em>` : ""}
+                </div>`).join("")}</div>`
+          : `<p class="relay-import-empty">未识别到议程环节。</p>`;
+      } else {
+        const planList = (entries, renderEntry) => {
+          const shown = entries.slice(0, 10);
+          const rest = entries.length - shown.length;
+          return `<ul class="relay-merge-list">${shown.map((entry) => `<li>${renderEntry(entry)}</li>`).join("")}${rest > 0 ? `<li>…等共 ${entries.length} 项</li>` : ""}</ul>`;
+        };
+        const sections = [];
+        sections.push(`<p class="relay-merge-mode">${overwrite
+          ? "已开启「覆盖已有人员」：接龙报名会替换已安排的人员。"
+          : "默认模式：只填入空缺或“待定”的行，已安排的人员保持不变。"}</p>`);
+        if (mergePlan.filled.length) {
+          sections.push(`<h3 class="relay-import-section-title">将填入 ${mergePlan.filled.length} 个角色</h3>${planList(mergePlan.filled, (entry) => `${escapeHtml(entry.title)} ← ${escapeHtml(entry.person)}`)}`);
+        }
+        if (mergePlan.overwritten.length) {
+          sections.push(`<h3 class="relay-import-section-title">将覆盖 ${mergePlan.overwritten.length} 个已有人员</h3>${planList(mergePlan.overwritten, (entry) => `${escapeHtml(entry.title)}：${escapeHtml(entry.previousPerson)} → ${escapeHtml(entry.person)}`)}`);
+        }
+        if (mergePlan.skipped.length) {
+          sections.push(`<h3 class="relay-import-section-title">已跳过 ${mergePlan.skipped.length} 个已有人员</h3>${planList(mergePlan.skipped, (entry) => `${escapeHtml(entry.title)} 已有 ${escapeHtml(entry.existingPerson)}（接龙报名 ${escapeHtml(entry.person)} 未采用）`)}<p class="relay-merge-hint">如需替换，请勾选上方“覆盖已有人员”。</p>`);
+        }
+        if (mergePlan.unmatched.length) {
+          sections.push(`<h3 class="relay-import-section-title">未匹配的报名 ${mergePlan.unmatched.length} 条</h3>${planList(mergePlan.unmatched, (entry) => `${escapeHtml(entry.role)}：${escapeHtml(entry.person)}`)}<p class="relay-merge-hint">当前议程里没有对应环节，需要的话请手动添加。</p>`);
+        }
+        if (!mergePlan.filled.length && !mergePlan.overwritten.length && !mergePlan.skipped.length && !mergePlan.unmatched.length) {
+          sections.push(`<p class="relay-import-empty">接龙中没有可填入的角色报名；确认后只会更新上方会议信息。</p>`);
+        }
+        itemHtml = sections.join("");
+      }
 
       els.relayImportPreview.innerHTML = `${fieldHtml}${itemHtml}`;
     }
@@ -5334,6 +5415,7 @@
       if (!els.relayImportModal) return;
       parsedRelayImport = null;
       if (els.relayImportText) els.relayImportText.value = "";
+      if (els.relayOverwriteToggle) els.relayOverwriteToggle.checked = false;
       renderRelayImportPreview(null);
       els.relayImportModal.hidden = false;
       syncBackgroundInert();
@@ -5358,10 +5440,12 @@
       });
 
       try {
+        const overwrite = Boolean(els.relayOverwriteToggle?.checked);
+        const mergeResult = RelayImporter.mergeRelayIntoAgenda(state.items, parsedRelayImport, { overwrite });
         const nextState = normalizeEscapedNewlines(AgendaData.normalizeAgendaData({
           ...state,
           ...relayFields,
-          items: parsedRelayImport.items
+          items: mergeResult.items
         }, DEFAULT_DATA, { strict: false }));
         nextState.items = normalizeAgendaItems(nextState.items).items;
         state = nextState;
@@ -5375,7 +5459,16 @@
         renderAll();
         saveData();
         closeRelayImportModal({ restoreFocus: false });
-        showToast("接龙已导入", "撤销", () => {
+        let message = "接龙已导入";
+        if (mergeResult.usedFallbackItems) {
+          message = "接龙已导入（已生成完整议程）";
+        } else {
+          const parts = [`填入 ${mergeResult.filled.length + mergeResult.overwritten.length} 个角色`];
+          if (mergeResult.skipped.length) parts.push(`保留 ${mergeResult.skipped.length} 个已有人员`);
+          if (mergeResult.unmatched.length) parts.push(`${mergeResult.unmatched.length} 条报名未匹配`);
+          message = `接龙已导入：${parts.join("，")}`;
+        }
+        showToast(message, "撤销", () => {
           state = previousState;
           editingId = null;
           dragId = null;
@@ -5542,20 +5635,22 @@
     }
 
     function applyAgendaTemplate(templateId) {
-      const template = AgendaTemplates.getTemplate(templateId);
-      if (!template) {
+      const skeleton = AgendaTemplates.getTemplateSkeleton(templateId);
+      if (!skeleton) {
         showToast("模板不存在");
         return;
       }
-      if (!window.confirm("更换模板会替换整份议程和会议信息（主题、期数、日期、人员安排等），已上传的图片会保留。是否继续？")) return;
+      if (!window.confirm(`更换模板会用「${skeleton.name}」的流程结构替换当前议程列表（人员留空，等待接龙导入或手动填写）；会议信息、图片和固定信息保持不变。是否继续？`)) return;
 
       const previousState = state;
       try {
-        const nextState = normalizeEscapedNewlines(AgendaData.normalizeAgendaData(template.data, DEFAULT_DATA, { strict: false }));
+        const nextState = normalizeEscapedNewlines(AgendaData.normalizeAgendaData({
+          ...state,
+          startTime: skeleton.startTime || state.startTime,
+          endTime: skeleton.endTime || state.endTime,
+          items: skeleton.items
+        }, DEFAULT_DATA, { strict: false }));
         nextState.items = normalizeAgendaItems(nextState.items).items;
-        ["logoData", "wechatQrData", "joinQrData", "voteQrData"].forEach((field) => {
-          nextState[field] = previousState[field] || "";
-        });
         state = nextState;
         editingId = null;
         dragId = null;
@@ -5567,7 +5662,7 @@
         renderAll();
         saveData();
         closeTemplateModal();
-        showToast(`已切换为${template.name}`, "撤销", () => {
+        showToast(`已切换为${skeleton.name}（人员留空）`, "撤销", () => {
           state = previousState;
           editingId = null;
           dragId = null;
@@ -6736,6 +6831,7 @@
       els.jsonImportInput.addEventListener("change", () => importJson(els.jsonImportInput));
       els.relayImportBtn?.addEventListener("click", openRelayImportModal);
       els.relayImportText?.addEventListener("input", refreshRelayImportPreview);
+      els.relayOverwriteToggle?.addEventListener("change", refreshRelayImportPreview);
       els.relayImportCancelBtn?.addEventListener("click", () => closeRelayImportModal());
       els.closeRelayImportModalBtn?.addEventListener("click", () => closeRelayImportModal());
       els.relayImportConfirmBtn?.addEventListener("click", applyRelayImport);
