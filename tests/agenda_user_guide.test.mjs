@@ -49,11 +49,12 @@ test("agenda generator exposes a replayable first-run guide shell", () => {
 
 test("agenda guide highlights the required existing sections", () => {
   assert.match(source, /id="fixedInfoPanel"/, "fixed information section should have a guide target id");
+  assert.match(source, /id="settingsDrawer"/, "settings drawer should have a guide target id");
 
   for (const target of [
     "#meetingInfoPanel",
     "#agendaPanel",
-    "#fixedInfoPanel",
+    "#settingsDrawer",
     "#previewPanel",
     "#exportPanel",
     "#cloudSyncPanel"
