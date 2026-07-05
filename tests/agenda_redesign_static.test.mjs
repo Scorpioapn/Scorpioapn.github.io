@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-const source = readFileSync(new URL("../agenda_generator.html", import.meta.url), "utf8");
+const source = readFileSync(new URL("../agenda_generator_modern.html", import.meta.url), "utf8");
 
 function cssRule(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

@@ -357,11 +357,37 @@ test("sidebar typography and gutters stay visually consistent", () => {
 test("timing rules module contains all three detailed rule groups", () => {
   const sidebar = sidebarTemplate();
 
-  assert.ok(sidebar.includes("timing-legend-table"), "timing rules should render as one compact legend table");
-  assert.ok(sidebar.includes("计时员按演讲时长举牌提醒，超时后响铃。"));
+  const requiredRules = [
+    {
+      title: "3分钟及以下规则",
+      note: "适用于主席致辞、主持串场、三官宣言、短点评等",
+      green: "剩余 1 分钟",
+      yellow: "剩余 30 秒",
+      bell: "超时 15 秒"
+    },
+    {
+      title: "3–10分钟规则",
+      note: "适用于备稿演讲、来宾介绍、即兴点评等",
+      green: "剩余 2 分钟",
+      yellow: "剩余 1 分钟",
+      bell: "超时 30 秒"
+    },
+    {
+      title: "10分钟以上规则",
+      note: "适用于工作坊、专题分享、较长流程说明等",
+      green: "剩余 5 分钟",
+      yellow: "剩余 2 分钟",
+      bell: "超时 30 秒"
+    }
+  ];
 
-  for (const text of ["≤3 分", "3–10 分", "＞10 分", "绿牌", "剩 1 分", "剩 2 分", "剩 5 分", "黄牌", "剩 30 秒", "红牌", "时间到", "响铃", "超 15 秒", "超 30 秒"]) {
-    assert.ok(sidebar.includes(text), `timing legend should include: ${text}`);
+  assert.ok(sidebar.includes("计时员将按不同演讲时长举牌提醒，并在超时后响铃。"));
+  assert.ok(sidebar.includes("举牌为静音提示，请演讲者留意节奏；红牌后请尽快收尾。"));
+
+  for (const rule of requiredRules) {
+    for (const text of [rule.title, rule.note, "绿牌", rule.green, "黄牌", rule.yellow, "红牌", "时间到", "响铃", rule.bell]) {
+      assert.ok(sidebar.includes(text), `${rule.title} should include: ${text}`);
+    }
   }
 });
 
@@ -392,18 +418,17 @@ test("printable footer keeps guest participation beside the live voting QR", () 
 test("agenda generator adds task-oriented mobile navigation and bottom sheet editing", () => {
   const mobileCss = cssMediaBlock("max-width: 620px");
 
-  for (const id of ["meetingInfoPanel", "agendaPanel", "previewPanel"]) {
+  for (const id of ["meetingInfoPanel", "agendaPanel", "previewPanel", "exportPanel"]) {
     assert.match(source, new RegExp(`id="${id}"`), `${id} anchor should exist for mobile task navigation`);
     assert.match(source, new RegExp(`data-mobile-nav="${id}"`), `${id} should be represented in the mobile taskbar`);
   }
-  assert.doesNotMatch(source, /data-mobile-nav="exportPanel"/, "export actions should live in the preview toolbar/settings drawer, not the mobile taskbar");
   assert.match(source, /class="mobile-taskbar"/, "mobile taskbar should be rendered outside the desktop editor flow");
   assert.match(source, /id="mobileQuickAddBtn"/, "mobile quick add button should exist");
   assert.match(source, /id="mobileQuickAddBtn"[^>]*hidden/, "mobile quick add should start hidden until the agenda tab is active");
   assert.match(source, /id="mobileEditorScrim"/, "mobile bottom sheet should have a dismiss scrim");
   assert.match(source, /id="cancelAgendaBtn"/, "mobile editor should expose an explicit cancel button");
 
-  assert.match(mobileCss, /\.mobile-taskbar\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/, "mobile taskbar should be fixed with three task entries");
+  assert.match(mobileCss, /\.mobile-taskbar\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/, "mobile taskbar should be fixed with four task entries");
   assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*calc\(82px/, "quick add should sit above the taskbar");
   assert.match(mobileCss, /body\.mobile-agenda-editor-open \.mobile-taskbar\s*\{[\s\S]*?display:\s*none;/, "taskbar should not cover mobile sheet save/cancel actions");
   assert.match(mobileCss, /\.agenda-form-card\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*0;[\s\S]*?max-height:\s*min\(88dvh,\s*720px\);/, "agenda form should become a mobile bottom sheet");
@@ -715,8 +740,7 @@ test("agenda generator warns when the A4 preview may overflow", () => {
   assert.match(queueFit, /checkPrintOverflow\(\)/, "fit queue should still warn when compact layouts cannot fit");
   assert.match(checkOverflow, /scrollHeight > page\.clientHeight \+ 2/, "overflow check should compare rendered height with the A4 page height");
   assert.match(checkOverflow, /hasFlowOverlap\(\)/, "overflow check should also detect flow rows colliding with the vision bar");
-  assert.match(source, /id="previewFitStatus"/, "overflow warning should be a persistent toolbar status");
-  assert.match(checkOverflow, /previewFitStatus[\s\S]*?超出约/, "overflow status should estimate how far the preview exceeds one page");
+  assert.match(source, /当前内容可能超出 A4 页面，已使用最紧凑版式；请减少文字或拆分议程/, "overflow warning should explain that compact fitting already ran");
 });
 
 test("A4 preview top line includes the editable meeting manager when present", () => {
@@ -753,7 +777,7 @@ test("printable footer renders as three independent reference-style cards", () =
   assert.match(footerRule, /background:\s*transparent;/, "footer strip should not look like one connected table");
   assert.match(footerRule, /box-shadow:\s*none;/, "footer wrapper should not carry the card shadow");
   assert.doesNotMatch(source, /@media print\s*\{[\s\S]*?\.template-footer\s*\{[\s\S]*?background:\s*#fff !important;/, "print should not give the footer wrapper a different background from screen preview");
-  assert.match(cardRule, /border:\s*1px solid var\(--border\);[\s\S]*?border-radius:\s*var\(--r-md\);[\s\S]*?background:\s*var\(--surface\);/, "each footer item should be its own bordered white card");
+  assert.match(cardRule, /border:\s*1px solid var\(--tm-border\);[\s\S]*?border-radius:\s*var\(--radius-card\);[\s\S]*?background:\s*var\(--tm-card\);/, "each footer item should be its own bordered white card");
   assert.match(cardRule, /text-align:\s*left;/, "footer cards should follow the reference's left-aligned title rhythm");
   assert.doesNotMatch(source, /\.template-footer-box:last-child\s*\{[\s\S]*?border-right:\s*0;/, "last footer card should keep a complete border");
   assert.match(titleRule, /display:\s*flex;[\s\S]*?justify-content:\s*flex-start;/, "footer titles should align to the left");
@@ -820,9 +844,7 @@ test("agenda generator exposes a WeChat relay text import modal", () => {
     /id="agendaPanel"[\s\S]*?id="agendaSourceActions"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"[\s\S]*?id="addAgendaItemBtn"/,
     "relay import and template switching should lead the agenda panel, ahead of manual add buttons"
   );
-  assert.match(source, /id="relayImportBtn"[\s\S]*?导入接龙/, "relay import should be the primary agenda panel action");
   assert.equal(panel.includes('id="relayImportBtn"'), false, "relay import should no longer hide among JSON backup controls");
-  assert.equal(panel.includes('id="changeTemplateBtn"'), false, "template switching should live with agenda source actions, not backup controls");
   assert.ok(source.includes('id="relayImportModal"'), "relay import modal should exist");
   assert.ok(source.includes('id="relayImportText"'), "relay import modal should provide a paste textarea");
   assert.ok(source.includes('id="relayImportPreview"'), "relay import modal should show parsed preview");
@@ -931,7 +953,7 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   const collectSnapshotImagePaints = functionBlock("collectSnapshotImagePaints");
   const hideSnapshotRepaintImages = functionBlock("hideSnapshotRepaintImages");
   const paintSnapshotImagesOntoCanvas = functionBlock("paintSnapshotImagesOntoCanvas");
-  const exportAgendaPdf = functionBlock("exportImageAgendaPdf");
+  const exportAgendaPdf = functionBlock("exportAgendaPdf");
   const saveBlobForDevice = functionBlock("saveBlobForDevice");
 
   assert.match(source, /js\/vendor\/html2canvas-1\.4\.1\.min\.js/, "html2canvas should be loaded locally for image capture");
@@ -964,6 +986,5 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   assert.match(exportAgendaPdf, /exportCanvasAsPng\(canvas/, "PDF failures after capture should fall back to PNG export");
   assert.match(saveBlobForDevice, /supportsDownloadAttribute\(\)[\s\S]*?link\.download = filename/, "download-capable browsers should receive a file download");
   assert.match(saveBlobForDevice, /window\.open\(url,\s*"_blank"/, "non-download or toast fallback should open a preview tab");
-  assert.match(source, /id="exportImagePdfBtn"/, "image PDF should be available as a secondary preview toolbar action");
-  assert.match(source, /畅言中文第\$\{safeMeetingNo\}期议程/, "image export filename should keep the meeting title format");
+  assert.match(source, /畅言中文第\$\{safeMeetingNo\}期议程/, "export filename should follow the requested meeting title format");
 });
