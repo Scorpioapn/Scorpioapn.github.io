@@ -429,6 +429,7 @@ test("agenda generator adds task-oriented mobile navigation and bottom sheet edi
   assert.match(source, /id="cancelAgendaBtn"/, "mobile editor should expose an explicit cancel button");
 
   assert.match(mobileCss, /\.mobile-taskbar\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/, "mobile taskbar should be fixed with four task entries");
+  assert.match(mobileCss, /\.toast\s*\{[\s\S]*?bottom:\s*calc\(88px \+ env\(safe-area-inset-bottom\)\);[\s\S]*?z-index:\s*90;/, "mobile toast should sit above the fixed taskbar so undo remains tappable");
   assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*calc\(82px/, "quick add should sit above the taskbar");
   assert.match(mobileCss, /body\.mobile-agenda-editor-open \.mobile-taskbar\s*\{[\s\S]*?display:\s*none;/, "taskbar should not cover mobile sheet save/cancel actions");
   assert.match(mobileCss, /\.agenda-form-card\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*0;[\s\S]*?max-height:\s*min\(88dvh,\s*720px\);/, "agenda form should become a mobile bottom sheet");

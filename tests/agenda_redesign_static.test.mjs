@@ -84,6 +84,7 @@ test("editor chrome, settings drawer, and mobile taskbar match the redesign shel
   assert.match(source, /id="settingsToggleBtn"/, "top bar should expose a settings button");
   assert.match(source, /id="relayImportBtn"[\s\S]*?导入接龙/, "agenda panel should make relay import the primary action");
   assert.match(mobileCss, /\.mobile-taskbar\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/, "mobile taskbar should only expose information, agenda, and preview");
+  assert.match(mobileCss, /\.toast\s*\{[\s\S]*?bottom:\s*calc\(88px \+ env\(safe-area-inset-bottom\)\);[\s\S]*?z-index:\s*90;/, "mobile toast should sit above the fixed taskbar so undo remains tappable");
   assert.doesNotMatch(source, /data-mobile-nav="exportPanel"/, "export should no longer be a mobile bottom task");
 });
 
