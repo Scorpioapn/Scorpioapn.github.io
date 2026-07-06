@@ -57,6 +57,25 @@
     return code === "40001" || code === "version_conflict" || /version[ _-]conflict/i.test(message);
   }
 
+  async function normalizeFunctionInvokeError(error) {
+    const response = error?.context || error?.response;
+    let edgeError = null;
+    if (response && typeof response.clone === "function") {
+      try {
+        edgeError = (await response.clone().json())?.error || null;
+      } catch (parseError) {
+        edgeError = null;
+      }
+    }
+    if (!edgeError) return error;
+
+    const normalized = new Error(edgeError.message || edgeError.code || error?.message || "Agenda sync failed");
+    normalized.code = edgeError.code || error?.code || "";
+    normalized.status = response?.status || error?.status || 0;
+    normalized.cause = error;
+    return normalized;
+  }
+
   function isSupabaseConfigured(config) {
     return Boolean(config?.url && (config?.publishableKey || config?.anonKey || config?.key));
   }
@@ -149,7 +168,7 @@
       const { data, error } = await withRequestTimeout(client.functions.invoke("agenda-drafts", {
         body: { action, ...body }
       }));
-      if (error) throw error;
+      if (error) throw await normalizeFunctionInvokeError(error);
       if (data?.error) {
         const requestError = new Error(data.error.message || data.error.code || "Agenda sync failed");
         requestError.code = data.error.code || "";

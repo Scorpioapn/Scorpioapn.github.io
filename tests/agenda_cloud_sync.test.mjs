@@ -232,6 +232,34 @@ test("cloud sync rejects stale saves without broadcasting success", async () => 
   assert.deepEqual(conflicts, [{ remoteVersion: 7, reason: "version-conflict" }]);
 });
 
+test("cloud sync reads Edge Function error bodies from non-2xx function responses", async () => {
+  const conflicts = [];
+  const edgeError = new Error("Edge Function returned a non-2xx status code");
+  edgeError.context = new Response(JSON.stringify({
+    error: { code: "version_conflict", message: "version_conflict" }
+  }), {
+    status: 409,
+    headers: { "content-type": "application/json" }
+  });
+  const { controller, statuses } = createController({
+    payload: { meetingNo: "stale-local" },
+    rpcHandler(name) {
+      if (name === "save_agenda_draft") {
+        return Promise.resolve({ data: null, error: edgeError });
+      }
+      return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 4 }, error: null });
+    },
+    onConflict: (conflict) => conflicts.push(conflict)
+  });
+
+  await controller.init();
+  await assert.rejects(() => controller.saveNow(), /version_conflict/);
+
+  assert.equal(controller.hasConflict(), true);
+  assert.ok(statuses.some(([status, detail]) => status === CloudSync.SYNC_STATUS.error && detail === "version-conflict"));
+  assert.deepEqual(conflicts, [{ remoteVersion: 4, reason: "version-conflict" }]);
+});
+
 test("existing drafts cannot save before the first remote load succeeds", async () => {
   let saveCalls = 0;
   const { controller, fake } = createController({

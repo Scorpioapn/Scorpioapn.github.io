@@ -52,6 +52,10 @@ test("Supabase deploy workflow runs backend deploy and live smoke checks", () =>
   assert.match(workflow, /npm run smoke:supabase/);
   assert.match(workflow, /SUPABASE_ACCESS_TOKEN/);
   assert.doesNotMatch(workflow, /SUPABASE_DB_PASSWORD/);
+  assert.ok(
+    workflow.indexOf("supabase db push --linked --yes") < workflow.indexOf("supabase functions deploy agenda-drafts"),
+    "database migrations should deploy before the Edge Function to avoid transient contract mismatches"
+  );
 });
 
 test("timekeeper storage writes use guarded helpers", () => {

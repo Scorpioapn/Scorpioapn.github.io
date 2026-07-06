@@ -66,13 +66,24 @@ test("hardening migration revokes public draft RPC access", () => {
   assert.match(sql, /expected_version is null or expected_version < 1/i);
 });
 
+test("latest draft save migration returns business conflicts without retryable SQLSTATE", () => {
+  const url = new URL("../supabase/migrations/20260706000000_fix_agenda_draft_conflict.sql", import.meta.url);
+  assert.equal(existsSync(url), true);
+  const sql = readFileSync(url, "utf8");
+  assert.match(sql, /returns table\(version bigint, updated_at timestamptz, status text\)/i);
+  assert.match(sql, /'version_conflict'::text/i);
+  assert.match(sql, /'not_found'::text/i);
+  assert.doesNotMatch(sql, /40001/, "business version conflicts should not use retryable serialization_failure");
+});
+
 test("Edge gateway exists and never exposes raw database errors", () => {
   const url = new URL("../supabase/functions/agenda-drafts/index.ts", import.meta.url);
   assert.equal(existsSync(url), true);
   const source = readFileSync(url, "utf8");
   assert.match(source, /Deno\.serve/);
   assert.match(source, /consume_agenda_draft_rate_limit/);
-  assert.match(source, /version_conflict/);
+  assert.match(source, /row\?\.status === "version_conflict"/);
+  assert.match(source, /message\.includes\("agenda draft version conflict"\)/);
   assert.match(source, /x-client-info/);
   assert.match(source, /x-region/);
   assert.doesNotMatch(source, /error\.message\s*\}/);

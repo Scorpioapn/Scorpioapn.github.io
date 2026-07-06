@@ -73,6 +73,15 @@ async function assertOkJson(response, label) {
   return json;
 }
 
+async function readJsonResponse(response, label) {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    throw new Error(`${label} returned non-JSON response: ${text.slice(0, 240)}`);
+  }
+}
+
 async function invokeAgendaDraft(config, body) {
   const response = await fetch(config.functionUrl, {
     method: "POST",
@@ -86,6 +95,33 @@ async function invokeAgendaDraft(config, body) {
     body: JSON.stringify(body)
   });
   return assertOkJson(response, body.action);
+}
+
+async function invokeAgendaDraftRaw(config, body, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(config.functionUrl, {
+      method: "POST",
+      headers: {
+        "apikey": config.publishableKey,
+        "authorization": `Bearer ${config.publishableKey}`,
+        "content-type": "application/json",
+        "origin": config.origin,
+        "x-client-info": "agenda-smoke-test/1.0"
+      },
+      signal: controller.signal,
+      body: JSON.stringify(body)
+    });
+    return {
+      response,
+      json: await readJsonResponse(response, body.action),
+      elapsedMs: Date.now() - startedAt
+    };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function verifyPreflight(config) {
@@ -136,6 +172,17 @@ async function run() {
     payload: { ...payload, meetingNo: `${payload.meetingNo}-saved` }
   });
   assert.equal(Number(saved?.data?.version), version + 1);
+
+  const stale = await invokeAgendaDraftRaw(config, {
+    action: "save",
+    draftId,
+    clientId: "agenda-client-smoke-test",
+    expectedVersion: version,
+    payload: { ...payload, meetingNo: `${payload.meetingNo}-stale` }
+  });
+  assert.equal(stale.response.status, 409, `stale save should return 409, got ${stale.response.status}`);
+  assert.equal(stale.json?.error?.code, "version_conflict");
+  assert.ok(stale.elapsedMs < 6000, `stale save should fail fast, took ${stale.elapsedMs}ms`);
 
   console.log(`Supabase smoke test passed for ${FUNCTION_NAME}: ${draftId} v${version}->v${version + 1}`);
 }
