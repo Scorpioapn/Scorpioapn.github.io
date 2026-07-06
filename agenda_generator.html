@@ -3047,7 +3047,7 @@
 
     @media (max-width: 620px) {
       body {
-        padding-bottom: calc(78px + env(safe-area-inset-bottom));
+        padding-bottom: calc(66px + env(safe-area-inset-bottom));
       }
 
       body.mobile-agenda-editor-open {
@@ -3058,24 +3058,47 @@
       .editor-scroll,
       .preview-toolbar,
       .preview-viewport {
-        padding-left: 12px;
-        padding-right: 12px;
+        padding-left: 10px;
+        padding-right: 10px;
       }
 
       h1 {
-        font-size: 25px;
+        font-size: 22px;
       }
 
       .field-grid {
         grid-template-columns: 1fr;
       }
 
+      .editor-header {
+        padding: 12px 12px 8px;
+        gap: 8px;
+      }
+
       .brand-row {
-        align-items: flex-start;
+        align-items: center;
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+      }
+
+      .eyebrow {
+        font-size: 10px;
+        margin-bottom: 0;
       }
 
       .header-actions {
-        justify-content: flex-end;
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        justify-content: stretch;
       }
 
       .guide-actions {
@@ -3087,14 +3110,97 @@
         scroll-margin-top: 10px;
       }
 
+      .surface-panel {
+        padding: 16px;
+        margin-bottom: 12px;
+        border-radius: 26px;
+      }
+
+      .panel-title {
+        margin-bottom: 12px;
+      }
+
+      .panel-title h2 {
+        font-size: 21px;
+      }
+
+      .panel-title h3 {
+        font-size: 18px;
+      }
+
+      .panel-title .meta,
+      .helper-text {
+        font-size: 12px;
+      }
+
+      .field {
+        gap: 5px;
+      }
+
+      .field-grid {
+        gap: 10px;
+      }
+
+      .field label {
+        font-size: 12px;
+      }
+
+      .input,
+      .select {
+        min-height: 48px;
+        padding: 0 14px;
+        border-radius: 18px;
+        font-size: 15px;
+      }
+
+      .textarea {
+        min-height: 86px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        font-size: 15px;
+      }
+
+      .button {
+        min-height: 46px;
+        border-radius: 18px;
+        font-size: 14px;
+      }
+
+      .agenda-source-actions {
+        gap: 8px;
+      }
+
+      .agenda-source-note,
+      .agenda-toolbar-note {
+        margin-top: 8px;
+        line-height: 1.45;
+      }
+
+      .preview-toolbar {
+        padding-top: 10px;
+        padding-bottom: 6px;
+        gap: 8px;
+      }
+
+      .preview-title h2 {
+        font-size: 20px;
+      }
+
+      .preview-title p,
+      #previewChip,
+      #copyBtnTop {
+        display: none;
+      }
+
       .preview-viewport {
-        min-height: min(560px, calc(100dvh - 300px));
-        padding-top: 8px;
+        min-height: min(660px, calc(100dvh - 170px));
+        padding-top: 0;
       }
 
       .preview-frame {
+        margin-top: 4px;
         background: #fffdf8;
-        border-radius: 18px;
+        border-radius: 16px;
         box-shadow: var(--shadow-2);
       }
 
@@ -3103,47 +3209,56 @@
       }
 
       .nav-button {
-        width: 48px;
-        padding: 0;
+        min-height: 42px;
+        width: 100%;
+        padding: 0 8px;
+        gap: 6px;
+        border-radius: 16px;
+        font-size: 12px;
       }
 
       .nav-button-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        clip-path: inset(50%);
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip: auto;
+        clip-path: none;
         white-space: nowrap;
+      }
+
+      .nav-button svg {
+        width: 17px;
+        height: 17px;
       }
 
       .mobile-taskbar {
         position: fixed;
-        left: 12px;
-        right: 12px;
-        bottom: calc(10px + env(safe-area-inset-bottom));
+        left: 10px;
+        right: 10px;
+        bottom: calc(8px + env(safe-area-inset-bottom));
         z-index: 70;
-        min-height: 58px;
-        padding: 6px;
+        min-height: 52px;
+        padding: 5px;
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 4px;
-        border-radius: 24px;
+        border-radius: 20px;
         background: rgba(255, 251, 247, 0.96);
-        box-shadow: 0 16px 36px rgba(54, 42, 32, 0.22);
+        box-shadow: 0 10px 26px rgba(54, 42, 32, 0.18);
         backdrop-filter: blur(18px);
       }
 
       .mobile-taskbar a {
         min-width: 0;
-        min-height: 46px;
+        min-height: 42px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 5px;
-        border-radius: 18px;
+        border-radius: 15px;
         color: var(--md-secondary);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 950;
         text-decoration: none;
       }
@@ -3154,7 +3269,7 @@
       }
 
       .toast {
-        bottom: calc(88px + env(safe-area-inset-bottom));
+        bottom: calc(76px + env(safe-area-inset-bottom));
         z-index: 90;
       }
 
@@ -3171,20 +3286,21 @@
 
       .mobile-quick-add {
         position: fixed;
-        right: 18px;
-        bottom: calc(82px + env(safe-area-inset-bottom));
+        right: 14px;
+        bottom: calc(72px + env(safe-area-inset-bottom));
         z-index: 65;
-        min-height: 52px;
-        padding: 0 18px;
+        min-height: 46px;
+        padding: 0 14px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
         border-radius: 999px;
         color: var(--md-on-primary);
         background: var(--md-primary);
-        box-shadow: 0 14px 32px rgba(0, 82, 122, 0.32);
+        box-shadow: 0 10px 24px rgba(0, 82, 122, 0.28);
         font-weight: 950;
+        font-size: 14px;
       }
 
       .mobile-quick-add[hidden] {
@@ -3224,7 +3340,8 @@
 
       .agenda-toolbar {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 44px;
+        gap: 8px;
       }
 
       .agenda-toolbar .button {
@@ -3262,25 +3379,20 @@
 
       .toolbar-actions {
         display: grid;
-        grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-        gap: 10px;
-      }
-
-      .toolbar-actions .status-chip {
-        min-height: 56px;
+        grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+        gap: 8px;
       }
 
       .toolbar-actions .export-pdf-button {
-        grid-column: 2;
-        min-height: 56px;
+        min-height: 46px;
       }
 
       .toolbar-actions .print-button {
-        min-height: 48px;
+        min-height: 44px;
       }
 
       .mobile-sort-toggle {
-        width: 48px;
+        width: 44px;
         padding: 0;
         display: inline-grid;
         place-items: center;
@@ -3309,8 +3421,8 @@
         z-index: 60;
         max-height: min(88dvh, 720px);
         margin: 0;
-        padding: 18px 16px 0;
-        border-radius: 28px 28px 0 0;
+        padding: 16px 14px 0;
+        border-radius: 24px 24px 0 0;
         overflow-y: auto;
         box-shadow: 0 -18px 42px rgba(54, 42, 32, 0.28);
       }
@@ -3352,35 +3464,36 @@
       }
 
       .agenda-row {
-        min-height: 58px;
-        grid-template-columns: 24px minmax(0, 1fr) 42px;
-        gap: 8px;
-        padding: 10px 10px;
-        border-radius: 20px;
+        min-height: 50px;
+        grid-template-columns: 20px minmax(0, 1fr) 36px;
+        gap: 7px;
+        padding: 8px 8px;
+        border-radius: 17px;
       }
 
       .agenda-row.section {
-        min-height: 52px;
-        grid-template-columns: 24px minmax(0, 1fr) 42px;
+        min-height: 46px;
+        grid-template-columns: 20px minmax(0, 1fr) 36px;
       }
 
       .drag-handle {
-        width: 24px;
-        height: 38px;
-        font-size: 18px;
-      }
-
-      .agenda-main.button {
-        min-height: 38px;
-      }
-
-      .agenda-title {
-        margin-bottom: 2px;
+        width: 20px;
+        height: 34px;
         font-size: 16px;
       }
 
+      .agenda-main.button {
+        min-height: 34px;
+      }
+
+      .agenda-title {
+        margin-bottom: 1px;
+        font-size: 14px;
+        line-height: 1.22;
+      }
+
       .agenda-meta {
-        font-size: 12px;
+        font-size: 11px;
       }
 
       .agenda-actions {
@@ -3400,8 +3513,8 @@
       }
 
       .agenda-more-button {
-        width: 42px;
-        height: 42px;
+        width: 36px;
+        height: 36px;
       }
 
       .agenda-overflow-menu {
@@ -3413,7 +3526,7 @@
         display: none;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
-        padding-left: 32px;
+        padding-left: 27px;
       }
 
       .agenda-list.sort-mode .agenda-mobile-sort {
@@ -3426,15 +3539,15 @@
 
       .agenda-sort-button {
         width: 100%;
-        height: 40px;
+        height: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
-        border-radius: 16px;
+        border-radius: 14px;
         color: var(--md-primary);
         background: var(--md-primary-container);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 950;
         box-shadow: none;
       }
@@ -3728,6 +3841,34 @@
   /* A-04 字段分组留白：组间更松，用留白表达分组 */
   .field-grid{gap:16px;}
   .editor-scroll .surface-panel{margin-bottom:24px;}
+
+  @media (max-width: 620px){
+    .editor-header{padding:10px 10px 6px;}
+    .brand-row{grid-template-columns:34px minmax(0,1fr);gap:8px;}
+    .brand-mark{width:34px;height:34px;border-radius:12px;}
+    h1{font-size:20px;line-height:1.05;}
+    .nav-button{min-height:40px;padding:0 6px;border-radius:15px;}
+    .surface-panel{padding:14px;border-radius:22px;}
+    .editor-scroll .surface-panel{margin-bottom:12px;}
+    .panel-title{margin-bottom:8px;}
+    .panel-title h2{font-size:20px;}
+    .field-grid{gap:8px 10px;}
+    #meetingInfoPanel .field-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    #meetingInfoPanel .field:nth-child(2),
+    #meetingInfoPanel .field.full{grid-column:1/-1;}
+    .field label{font-size:11px;}
+    .input,.select{min-height:44px;padding:0 12px;border-radius:16px;font-size:14px;}
+    .textarea{min-height:76px;padding:10px 12px;border-radius:16px;font-size:14px;}
+    .button{min-height:44px;}
+    .agenda-source-note,
+    .agenda-toolbar-note{display:none;}
+    .agenda-source-actions{gap:8px;margin-bottom:8px;}
+    .agenda-source-actions .button,
+    .agenda-toolbar .button{min-height:44px;}
+    .agenda-row{min-height:48px;padding:7px 8px;border-radius:16px;}
+    .mobile-quick-add{width:46px;min-height:46px;padding:0;font-size:0;}
+    .mobile-quick-add svg{width:22px;height:22px;}
+  }
 </style>
 </head>
 <body>
@@ -4046,7 +4187,7 @@
     </main>
   </div>
 
-  <button class="mobile-quick-add" id="mobileQuickAddBtn" type="button" hidden>
+  <button class="mobile-quick-add" id="mobileQuickAddBtn" type="button" aria-label="添加项目" hidden>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
     项目
   </button>
@@ -4175,6 +4316,7 @@
     const DEFAULT_WECHAT_QR_SRC = "assets/quhuo-qr.png";
     const DEFAULT_JOIN_QR_SRC = "assets/join-consult-qr.png";
     const DEFAULT_VOTE_QR_SRC = "assets/vote-qr.png";
+    const MAX_UPLOAD_IMAGE_BYTES = 10 * 1024 * 1024;
     const GUEST_PARTICIPATION_TAGS = AgendaTemplates.GUEST_PARTICIPATION_TAGS;
     const GUEST_PARTICIPATION_NOTE = AgendaTemplates.GUEST_PARTICIPATION_NOTE;
     const DEFAULT_MEETING_RULES = AgendaTemplates.DEFAULT_MEETING_RULES;
@@ -6607,33 +6749,42 @@
       }
     }
 
-    function imageFileToDataUrl(file) {
+    function validateUploadImageFile(file) {
+      if (!file || !file.type.startsWith("image/")) throw new Error("请选择图片文件");
+      if (file.size > MAX_UPLOAD_IMAGE_BYTES) throw new Error("图片太大，请选择 10MB 以内的图片");
+      if (!window.URL?.createObjectURL) throw new Error("当前浏览器不支持本地图片预览");
+    }
+
+    function loadImageFromFile(file) {
       return new Promise((resolve, reject) => {
-        if (!file || !file.type.startsWith("image/")) {
-          reject(new Error("请选择图片文件"));
-          return;
-        }
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error("读取图片失败"));
-        reader.onload = () => {
-          const image = new Image();
-          image.onerror = () => reject(new Error("图片格式无法读取"));
-          image.onload = () => {
-            const maxSide = 720;
-            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-            const canvas = document.createElement("canvas");
-            canvas.width = Math.max(1, Math.round(image.width * scale));
-            canvas.height = Math.max(1, Math.round(image.height * scale));
-            const context = canvas.getContext("2d");
-            context.fillStyle = "#fff";
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/png"));
-          };
-          image.src = reader.result;
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("图片格式无法读取"));
         };
-        reader.readAsDataURL(file);
+        image.onload = () => resolve({ image, objectUrl });
+        image.src = objectUrl;
       });
+    }
+
+    async function imageFileToDataUrl(file) {
+      validateUploadImageFile(file);
+      const { image, objectUrl } = await loadImageFromFile(file);
+      try {
+        const maxSide = 720;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/png");
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
     }
 
     async function handleImageUpload(input) {

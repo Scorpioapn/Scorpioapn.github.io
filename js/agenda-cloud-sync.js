@@ -57,6 +57,22 @@
     return code === "40001" || code === "version_conflict" || /version[ _-]conflict/i.test(message);
   }
 
+  function isSyncTimeoutError(error) {
+    return String(error?.code || "") === "sync-timeout";
+  }
+
+  function stableJson(value) {
+    if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+    if (value && typeof value === "object") {
+      return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+    }
+    return JSON.stringify(value);
+  }
+
+  function payloadsEqual(left, right) {
+    return stableJson(left) === stableJson(right);
+  }
+
   async function normalizeFunctionInvokeError(error) {
     const response = error?.context || error?.response;
     let edgeError = null;
@@ -175,6 +191,43 @@
         throw requestError;
       }
       return normalizeRpcRow(data?.data ?? data);
+    }
+
+    async function finishSuccessfulSave(row) {
+      pendingOfflineSave = false;
+      version = Number(row.version || version + 1);
+      dirty = false;
+      conflict = null;
+      remoteReady = true;
+      applyStatus(SYNC_STATUS.synced);
+      if (channel?.send) {
+        await channel.send({
+          type: "broadcast",
+          event: "agenda-updated",
+          payload: { version, updated_by: clientId }
+        });
+      }
+      return { version, updatedAt: row.updated_at };
+    }
+
+    async function reconcilePossiblyCompletedSave(payload, reason) {
+      if (!draftId) return null;
+      let row = null;
+      try {
+        row = await requestDraft("get", { draftId });
+      } catch (error) {
+        return null;
+      }
+      if (!row?.payload) return null;
+      const remoteVersion = Number(row.version || 0);
+      if (payloadsEqual(row.payload, payload)) {
+        return { synced: true, row };
+      }
+      if (remoteVersion > version) {
+        enterConflict(remoteVersion, reason);
+        return { conflict: true };
+      }
+      return null;
     }
 
     async function loadRemoteDraft({ force = false } = {}) {
@@ -306,22 +359,18 @@
       try {
         row = await requestDraft("save", saveArgs);
       } catch (error) {
+        if (isSyncTimeoutError(error) || isVersionConflictError(error)) {
+          const reconciled = await reconcilePossiblyCompletedSave(
+            payload,
+            isVersionConflictError(error) ? "version-conflict" : "save-timeout"
+          );
+          if (reconciled?.synced) return finishSuccessfulSave(reconciled.row);
+          if (reconciled?.conflict) throw error;
+        }
         markSaveFailure(error);
         throw error;
       }
-      pendingOfflineSave = false;
-      version = Number(row.version || version + 1);
-      dirty = false;
-      conflict = null;
-      applyStatus(SYNC_STATUS.synced);
-      if (channel?.send) {
-        await channel.send({
-          type: "broadcast",
-          event: "agenda-updated",
-          payload: { version, updated_by: clientId }
-        });
-      }
-      return { version, updatedAt: row.updated_at };
+      return finishSuccessfulSave(row);
     }
 
     function scheduleSave() {

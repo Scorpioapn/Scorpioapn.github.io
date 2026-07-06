@@ -178,8 +178,8 @@
   }
 
   function mergeTimekeeperAgendaItems(nextAgenda, currentAgenda) {
-    const incoming = (Array.isArray(nextAgenda) ? nextAgenda : []).map(normalizeTimekeeperAgendaItem);
-    const current = (Array.isArray(currentAgenda) ? currentAgenda : []).map(normalizeTimekeeperAgendaItem);
+    const incoming = (Array.isArray(nextAgenda) ? nextAgenda : []).map((item, index) => normalizeTimekeeperAgendaItem(item, index));
+    const current = (Array.isArray(currentAgenda) ? currentAgenda : []).map((item, index) => normalizeTimekeeperAgendaItem(item, index));
     const incomingNameCounts = incoming.reduce((counts, item) => {
       counts.set(item.name, (counts.get(item.name) || 0) + 1);
       return counts;
