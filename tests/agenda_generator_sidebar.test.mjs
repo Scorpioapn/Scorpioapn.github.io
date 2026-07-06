@@ -25,7 +25,7 @@ function footerTemplate() {
 
 function fixedInfoDetails(summaryText) {
   const escaped = summaryText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = source.match(new RegExp(`<details class="fixed-info">\\s*<summary>${escaped}</summary>([\\s\\S]*?)</details>`));
+  const match = source.match(new RegExp(`<details class="fixed-info">\\s*<summary>${escaped}[^<]*</summary>([\\s\\S]*?)</details>`));
   assert.ok(match, `${summaryText} fixed-info details should exist`);
   return match[1];
 }
@@ -299,7 +299,7 @@ test("image uploads reject oversized files before decoding and use object URLs",
 });
 
 test("printable sidebar keeps a single aligned four-card grid", () => {
-  assert.match(source, /--template-sidebar-width:\s*316px;/, "sidebar should gain a little width for a calmer left column");
+  assert.match(source, /--template-sidebar-width:\s*276px;/, "sidebar should be narrow enough to keep the agenda table dominant");
   assert.match(
     source,
     /\.template-sidebar\s*\{[\s\S]*?grid-template-rows:\s*0\.90fr 2\.22fr 0\.66fr 0\.80fr;[\s\S]*?align-content:\s*stretch;/,
@@ -313,25 +313,20 @@ test("printable sidebar keeps a single aligned four-card grid", () => {
     "timing content should fill its allotted card without creating a bottom void"
   );
   assert.doesNotMatch(source, /\.timing-rule-groups\s*\{[\s\S]*?align-content:\s*space-between;/, "rule groups should not be artificially spread apart");
-  assert.match(
-    source,
-    /\.timing-rule-groups\s*\{[\s\S]*?grid-template-rows:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/,
-    "rule groups should fill the timing card as three evenly weighted light blocks"
-  );
+  assert.match(source, /class="timing-rule-summary"/, "timing rules should use a compact summary table instead of three tall cards");
 });
 
-test("timing rule groups read as calm vertical instruction cards", () => {
-  const listRule = cssRule(".timing-rule-list");
-  const itemRule = cssRule(".timing-rule-item");
+test("timing rules read as a compact print summary", () => {
+  const summaryRule = cssRule(".timing-rule-summary");
+  const summaryCellRule = cssRule(".timing-rule-summary th,\n    .timing-rule-summary td");
 
-  assert.doesNotMatch(listRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "timing rules should not use 2 × 2 cell grids");
-  assert.match(listRule, /width:\s*min\(100%,\s*var\(--sidebar-pair-grid-width\)\);/, "rule lists should use the shared centered two-column measure");
-  assert.match(listRule, /justify-self:\s*center;/, "rule lists should sit on the same center line as other paired sidebar content");
-  assert.match(itemRule, /grid-template-columns:\s*var\(--sidebar-pair-columns\);/, "rule rows should use the shared paired column definition");
-  assert.match(itemRule, /column-gap:\s*var\(--sidebar-pair-gap\);/, "rule rows should use the shared paired column gap");
-  assert.doesNotMatch(source, /class="timing-rule-line"/, "timing rules should not render as four-row mini tables");
-  assert.doesNotMatch(itemRule, /background:/, "individual rule rows should not look like boxed cells");
-  assert.match(source, /\.timing-rule-heading\s*\{[\s\S]*?grid-template-columns:\s*26px minmax\(0,\s*1fr\);/, "each rule card should have a clear icon-led heading");
+  assert.match(summaryRule, /border-collapse:\s*collapse;/, "timing rules should read as one compact reference table");
+  assert.match(summaryRule, /font-size:\s*11px;/, "timing rule text should stay at the readable A4 floor");
+  assert.match(summaryCellRule, /white-space:\s*nowrap;/, "short timing values should stay scan-friendly");
+  assert.match(source, /<th>时长<\/th><th><span class="signal-card green"><\/span>绿<\/th>/, "summary should label signal colors directly");
+  assert.match(source, /<tr><td>≤3 分钟<\/td><td>1:00<\/td><td>0:30<\/td><td>到时<\/td><td>\+15s<\/td><\/tr>/, "short speeches should keep the 15s bell rule");
+  assert.match(source, /<tr><td>3–10 分钟<\/td><td>2:00<\/td><td>1:00<\/td><td>到时<\/td><td>\+30s<\/td><\/tr>/, "normal speeches should keep the 30s bell rule");
+  assert.doesNotMatch(sidebarTemplate(), /class="timing-rule-card"/, "the live sidebar should not render three tall timing cards");
 });
 
 test("sidebar typography and gutters stay visually consistent", () => {
@@ -345,8 +340,7 @@ test("sidebar typography and gutters stay visually consistent", () => {
   const teamRowRule = cssRule(".team-row");
   const teamNameRule = cssRule(".team-name");
   const teamRoleRule = cssRule(".team-role");
-  const timingTokenRule = cssRule(".timing-rule-token");
-  const timingValueRule = cssRule(".timing-rule-value");
+  const timingSummaryRule = cssRule(".timing-rule-summary");
 
   assert.match(source, /--sidebar-card-x:\s*14px;/, "sidebar cards should share one horizontal padding token");
   assert.match(source, /--sidebar-pair-grid-width:\s*218px;/, "paired sidebar content should share one centered grid width");
@@ -356,54 +350,27 @@ test("sidebar typography and gutters stay visually consistent", () => {
   assert.match(bodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\) 11px;/, "standard card bodies should use the shared gutter");
   assert.match(compactBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "compact card bodies should keep the same left and right gutter");
   assert.match(timingBodyRule, /padding:\s*var\(--sidebar-card-y\) var\(--sidebar-card-x\);/, "timing card body should align to the shared sidebar gutter");
-  assert.match(infoLineRule, /font-size:\s*10\.8px;[\s\S]*?line-height:\s*1\.38;/, "about text should keep a readable body rhythm");
+  assert.match(infoLineRule, /font-size:\s*11\.4px;[\s\S]*?line-height:\s*1\.38;/, "about text should keep a readable body rhythm");
   assert.match(teamGridRule, /row-gap:\s*5px;[\s\S]*?align-content:\s*center;/, "team list should have demo-like vertical breathing room");
   assert.doesNotMatch(teamGridRule, /padding-left:\s*57px;[\s\S]*?padding-right:\s*57px;/, "team columns should not rely on a separate inset from the shared paired grid");
-  assert.match(teamRowRule, /font-size:\s*10\.4px;[\s\S]*?line-height:\s*1\.38;/, "team rows should be readable without feeling cramped");
+  assert.match(teamRowRule, /font-size:\s*11px;[\s\S]*?line-height:\s*1\.38;/, "team rows should be readable without feeling cramped");
   assert.match(qrRowRule, /width:\s*min\(100%,\s*var\(--sidebar-pair-grid-width\)\);[\s\S]*?grid-template-columns:\s*var\(--sidebar-pair-columns\);[\s\S]*?column-gap:\s*var\(--sidebar-pair-gap\);/, "QR blocks should sit on the same paired column centers as the team and timing rows");
   assert.match(teamRowRule, /width:\s*min\(100%,\s*var\(--sidebar-pair-grid-width\)\);[\s\S]*?grid-template-columns:\s*var\(--sidebar-pair-columns\);[\s\S]*?column-gap:\s*var\(--sidebar-pair-gap\);/, "team rows should use the shared paired column centers");
   assert.match(teamRoleRule, /text-align:\s*center;/, "member roles should center within their shared left column");
   assert.match(teamNameRule, /text-align:\s*center;/, "member names should center within their shared right column");
-  assert.match(timingTokenRule, /justify-content:\s*center;/, "timing rule labels should center within their shared left column");
-  assert.match(timingValueRule, /text-align:\s*center;/, "timing rule values should center within their shared right column");
+  assert.match(timingSummaryRule, /font-size:\s*11px;/, "timing summary should preserve the readable A4 text floor");
   assert.match(source, /\.about-card \.info-line-list\s*\{[\s\S]*?height:\s*100%;[\s\S]*?align-content:\s*space-between;/, "about text should balance vertically inside its card");
 });
 
-test("timing rules module contains all three detailed rule groups", () => {
+test("timing rules module contains the compact three-band summary", () => {
   const sidebar = sidebarTemplate();
 
-  const requiredRules = [
-    {
-      title: "3分钟及以下规则",
-      note: "适用于主席致辞、主持串场、三官宣言、短点评等",
-      green: "剩余 1 分钟",
-      yellow: "剩余 30 秒",
-      bell: "超时 15 秒"
-    },
-    {
-      title: "3–10分钟规则",
-      note: "适用于备稿演讲、来宾介绍、即兴点评等",
-      green: "剩余 2 分钟",
-      yellow: "剩余 1 分钟",
-      bell: "超时 30 秒"
-    },
-    {
-      title: "10分钟以上规则",
-      note: "适用于工作坊、专题分享、较长流程说明等",
-      green: "剩余 5 分钟",
-      yellow: "剩余 2 分钟",
-      bell: "超时 30 秒"
-    }
-  ];
-
-  assert.ok(sidebar.includes("计时员将按不同演讲时长举牌提醒，并在超时后响铃。"));
-  assert.ok(sidebar.includes("举牌为静音提示，请演讲者留意节奏；红牌后请尽快收尾。"));
-
-  for (const rule of requiredRules) {
-    for (const text of [rule.title, rule.note, "绿牌", rule.green, "黄牌", rule.yellow, "红牌", "时间到", "响铃", rule.bell]) {
-      assert.ok(sidebar.includes(text), `${rule.title} should include: ${text}`);
-    }
+  assert.ok(sidebar.includes("计时员按演讲时长举牌提醒，红牌后请尽快收尾。"));
+  assert.ok(sidebar.includes("表中时间表示距离结束还剩多久。"));
+  for (const text of ["≤3 分钟", "3–10 分钟", "≥10 分钟", "1:00", "0:30", "2:00", "5:00", "+15s", "+30s"]) {
+    assert.ok(sidebar.includes(text), `timing summary should include: ${text}`);
   }
+  assert.equal((sidebar.match(/class="timing-rule-card"/g) || []).length, 0, "timing rules should not render three tall cards");
 });
 
 test("printable footer keeps guest participation beside the live voting QR", () => {
@@ -447,7 +414,7 @@ test("agenda generator adds task-oriented mobile navigation and bottom sheet edi
   assert.match(mobileCss, /\.mobile-taskbar\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/, "mobile taskbar should be fixed with four task entries");
   assert.match(mobileCss, /\.toast\s*\{[\s\S]*?bottom:\s*calc\(76px \+ env\(safe-area-inset-bottom\)\);[\s\S]*?z-index:\s*90;/, "mobile toast should sit above the lighter fixed taskbar so undo remains tappable");
   assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*calc\(72px/, "quick add should sit above the compact taskbar");
-  assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?width:\s*46px;[\s\S]*?font-size:\s*0;/, "mobile quick add should collapse to an icon button instead of covering agenda rows");
+  assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?display:\s*none !important;/, "mobile quick add should not float over agenda rows");
   assert.match(mobileCss, /body\.mobile-agenda-editor-open \.mobile-taskbar\s*\{[\s\S]*?display:\s*none;/, "taskbar should not cover mobile sheet save/cancel actions");
   assert.match(mobileCss, /\.agenda-form-card\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*0;[\s\S]*?max-height:\s*min\(88dvh,\s*720px\);/, "agenda form should become a mobile bottom sheet");
   assert.match(mobileCss, /\.agenda-form-card \.actions-row\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?bottom:\s*0;/, "mobile save/cancel actions should stay fixed at the bottom of the sheet");
@@ -477,14 +444,14 @@ test("agenda generator mobile list hides risky actions behind a menu and adds so
   assert.match(mobileCss, /\.agenda-menu-actions\s*\{[\s\S]*?display:\s*flex;/, "mobile should show the compact menu action");
   assert.match(mobileCss, /\.agenda-list\.sort-mode \.agenda-mobile-sort\s*\{[\s\S]*?display:\s*grid;/, "sort mode should reveal explicit up/down controls");
   assert.match(mobileCss, /\.agenda-source-note,\s*\.agenda-toolbar-note\s*\{[\s\S]*?display:\s*none;/, "mobile agenda should hide explanatory copy so rows appear earlier");
-  assert.match(mobileCss, /\.agenda-row\s*\{[\s\S]*?min-height:\s*48px;[\s\S]*?padding:\s*7px 8px;/, "mobile agenda rows should stay compact enough for scanning");
+  assert.match(mobileCss, /\.agenda-row\s*\{[\s\S]*?min-height:\s*44px;[\s\S]*?padding:\s*6px 8px;/, "mobile agenda rows should stay compact enough for scanning");
 });
 
 test("agenda generator mobile preview shows a confident thumbnail and export-first actions", () => {
   const mobileCss = cssMediaBlock("max-width: 620px");
 
   assert.match(mobileCss, /\.preview-title p,\s*#previewChip,\s*#copyBtnTop\s*\{[\s\S]*?display:\s*none;/, "mobile preview should remove secondary toolbar content so the poster appears sooner");
-  assert.match(mobileCss, /\.preview-viewport\s*\{[\s\S]*?min-height:\s*min\(660px,\s*calc\(100dvh - 170px\)\);/, "mobile preview should prioritize a tall visible A4 thumbnail area");
+  assert.match(mobileCss, /\.preview-viewport\s*\{[\s\S]*?min-height:\s*min\(660px,\s*calc\(100dvh - 132px\)\);/, "mobile preview should prioritize a tall visible A4 thumbnail area");
   assert.match(mobileCss, /\.preview-frame\s*\{[\s\S]*?background:\s*#fffdf8;[\s\S]*?box-shadow:\s*var\(--shadow-2\);/, "mobile preview frame should read as a loaded document card");
   assert.match(mobileCss, /\.toolbar-actions\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1\.12fr\) minmax\(0,\s*0\.88fr\);/, "mobile toolbar should keep export stronger while fitting one compact row");
   assert.match(mobileCss, /\.toolbar-actions \.export-pdf-button\s*\{[\s\S]*?min-height:\s*46px;/, "mobile PDF export should remain thumb-friendly without delaying the preview");
@@ -501,7 +468,7 @@ test("agenda generator gives the mobile editor dialog semantics and scoped quick
   assert.match(syncMobileEditorState, /setAttribute\("role",\s*"dialog"\)/, "mobile sheet should become a dialog while open");
   assert.match(syncMobileEditorState, /setAttribute\("aria-modal",\s*"true"\)/, "mobile sheet should be modal for assistive technology while open");
   assert.match(syncMobileEditorState, /removeAttribute\("role"\)/, "dialog semantics should be removed outside the mobile open state");
-  assert.match(updateQuickAdd, /targetId === "agendaPanel"[\s\S]*?!mobileSortMode[\s\S]*?els\.agendaFormCard\.hidden/, "quick add should only appear in the agenda task when safe");
+  assert.match(updateQuickAdd, /targetId === "agendaPanel"[\s\S]*?!mobileSortMode[\s\S]*?els\.agendaFormCard\.hidden/, "quick add state should still be scoped if it is re-enabled later");
   assert.match(setActiveMobileNav, /updateMobileQuickAddVisibility\(activeMobilePanel\)/, "mobile task changes should refresh quick add visibility");
 });
 
@@ -531,7 +498,7 @@ test("agenda generator separates total duration from per-person duration notes",
   assert.match(source, /duration:\s*"15"[\s\S]*?durationNote:\s*"2min\/人"/, "default impromptu agenda should use 15 minutes as the scheduled total");
   assert.match(renderPreview, /flow-duration-main/, "A4 preview should render the primary total duration separately");
   assert.match(renderPreview, /flow-duration-note/, "A4 preview should render duration notes as secondary text");
-  assert.match(durationRule, /font-size:\s*9\.5px;/, "duration notes should stay visually secondary inside the compact table cell");
+  assert.match(durationRule, /font-size:\s*11px;/, "duration notes should remain secondary without dropping below the A4 readable floor");
   assert.match(readAgendaForm, /durationNote/, "saving the agenda form should preserve a non-empty duration note");
   assert.match(applyTitleDefault, /match\?\.durationNote/, "title defaults should fill the duration note when available");
   assert.match(autoSchedule, /parseDurationMinutes\(item\.duration\)/, "automatic scheduling should use the total duration field");
@@ -837,7 +804,7 @@ test("printable footer replaces notes with meeting rules", () => {
 });
 
 test("fixed info editor only exposes fields that still appear in the preview", () => {
-  const nextDetails = fixedInfoDetails("下期与页脚信息");
+  const nextDetails = fixedInfoDetails("下期预告");
   const fixedDetails = fixedInfoDetails("固定信息：关于我们、会员团队、会议守则");
 
   assert.equal(nextDetails.includes('id="footerNotes"'), false, "obsolete footer notes editor should be removed");
@@ -990,6 +957,8 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   const hideSnapshotRepaintImages = functionBlock("hideSnapshotRepaintImages");
   const paintSnapshotImagesOntoCanvas = functionBlock("paintSnapshotImagesOntoCanvas");
   const exportAgendaPdf = functionBlock("exportAgendaPdf");
+  const exportAgendaImagePdf = functionBlock("exportAgendaImagePdf");
+  const printAgenda = functionBlock("printAgenda");
   const saveBlobForDevice = functionBlock("saveBlobForDevice");
 
   assert.match(source, /js\/vendor\/html2canvas-1\.4\.1\.min\.js/, "html2canvas should be loaded locally for image capture");
@@ -1017,9 +986,11 @@ test("agenda generator exports a mobile-friendly image PDF from the A4 preview",
   assert.match(paintSnapshotImagesOntoCanvas, /context\.drawImage\(\s*paint\.image,/, "image repaint should draw the frozen image directly onto the export canvas");
   assert.match(capturePrintPageCanvas, /waitForPrintAssets\(els\.printPage\)[\s\S]*?fitFlowLayout\(\)[\s\S]*?renderPrintPageDomCanvas\(\)/, "PDF capture should use the settled visible DOM preview as its source");
   assert.doesNotMatch(capturePrintPageCanvas, /renderPreview\(\)|syncPreviewScale\(\)/, "PDF capture should not re-render or rescale the visible preview before capture");
-  assert.match(exportAgendaPdf, /new jsPDF\(\{ orientation: "portrait", unit: "mm", format: "a4", compress: true \}\)/, "PDF should be a single portrait A4 page");
-  assert.match(exportAgendaPdf, /addImage\([\s\S]*?0,\s*0,\s*210,\s*297/, "captured preview image should fill the A4 page");
-  assert.match(exportAgendaPdf, /exportCanvasAsPng\(canvas/, "PDF failures after capture should fall back to PNG export");
+  assert.match(exportAgendaPdf, /await printAgenda\(\)/, "primary PDF action should use vector browser print");
+  assert.match(printAgenda, /window\.print\(\)/, "browser print should allow saving a vector PDF");
+  assert.match(exportAgendaImagePdf, /new jsPDF\(\{ orientation: "portrait", unit: "mm", format: "a4", compress: true \}\)/, "compat image PDF should remain a single portrait A4 page");
+  assert.match(exportAgendaImagePdf, /addImage\([\s\S]*?0,\s*0,\s*210,\s*297/, "compat image PDF should fill the A4 page");
+  assert.match(exportAgendaImagePdf, /exportCanvasAsPng\(canvas/, "compat PDF failures after capture should fall back to PNG export");
   assert.match(saveBlobForDevice, /supportsDownloadAttribute\(\)[\s\S]*?link\.download = filename/, "download-capable browsers should receive a file download");
   assert.match(saveBlobForDevice, /window\.open\(url,\s*"_blank"/, "non-download or toast fallback should open a preview tab");
   assert.match(source, /畅言中文第\$\{safeMeetingNo\}期议程/, "export filename should follow the requested meeting title format");
