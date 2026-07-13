@@ -1,8 +1,78 @@
-# Toastmasters Agenda Builder 项目交接说明
+# Toastmasters Agenda Builder：AI 项目上下文与交接协议
 
-> 最后核对：2026-07-13（Asia/Shanghai）
-> 线上基线：`main` @ `cc5537c7e7c7984ed56089f19df6ec80b5f262c2`
-> 用途：让新机器、新开发者或新的 Codex 任务快速读取项目现状、历史约束并继续编辑。
+> 主要读者：AI coding agent。人类开发者也可将其作为项目地图使用。
+> 最后人工核对：2026-07-13（Asia/Shanghai）。
+> 唯一远端事实来源：`origin/main`。每次任务开始必须重新 fetch，不得把本文记录的 commit 当成永久最新状态。
+> 最近一次应用代码基线：`cc5537c`；之后可能存在仅修改文档的提交。
+
+## 0. AI 必读：开始任务前的强制协议
+
+### 0.1 启动顺序
+
+AI 在分析或编辑代码前，按顺序执行：
+
+```powershell
+git fetch --prune origin
+git status -sb
+git branch --show-current
+git log -1 --oneline --decorate
+git rev-list --left-right --count HEAD...origin/main
+```
+
+然后：
+
+1. 阅读本文件的第 0、3、5、8、10、12、15、17 节。
+2. 根据用户任务再读取相关源码、测试和历史 commit；不要一次性加载全部大型 HTML。
+3. 如果工作区有未提交改动，先确认其来源和范围，绝不覆盖或回滚未知改动。
+4. 如果本地不是最新 `origin/main`，先判断是否能 `--ff-only` 更新；不要擅自 rebase、reset 或强推。
+5. 先复述当前任务边界，再实施最小必要改动。
+
+### 0.2 当前产品重点
+
+- 当前优先方向是议程生成器，尤其是 `agenda_generator_modern.html` 的跨端视觉与编辑效率。
+- 时间官 `index.html` 已具备独立现场副本、计时和记录能力；除非用户明确要求，不要顺手重构时间官。
+- 经典版 `agenda_generator.html` 是稳定生产基线；Modern 版是正在优化的替代布局。
+- 2026-07-10 至 2026-07-13 的 Modern 视觉审查只产出了问题清单，尚未实施修复。具体见第 15 节。
+
+### 0.3 不可破坏的数据与行为约束
+
+任何实现方案都必须保持：
+
+- 纯静态 HTML/CSS/JS，不引入 React、Vue 或构建系统。
+- localStorage key 及其既有语义保持兼容。
+- 议程生成器数据不会被时间官现场调整反向写回。
+- 时间官同步不得清空 `tm_timekeeper_records_v1`。
+- 时间官中 `active` / `done` 或已有 `actualStart` / `actualEnd` 的项目不得被新议程覆盖。
+- `speaker`、`detail`、`scheduledTime` 在生成器到时间官的同步中保留。
+- 旧 localStorage、旧 JSON 导出和旧云端草稿继续可读取。
+- Supabase 写入只能经过 `agenda-drafts` Edge Function，不恢复匿名直写 RPC。
+- 不提交 access token、service-role key、rate-limit salt、私密 draft URL 或用户数据。
+
+### 0.4 修改路由
+
+| 任务类型 | 首先检查 | 通常需要同步检查 |
+| --- | --- | --- |
+| Agenda 数据字段/导入导出 | `js/agenda-data.js`、`js/agenda-templates.js` | 两个 generator HTML、JSON、localStorage、cloud tests |
+| 生成器到时间官同步 | `js/agenda-schema.js`、`js/storage.js` | 两个 generator HTML、`index.html`、schema tests |
+| 计时规则 | `js/time-rules.js` | generator 规则摘要、timekeeper 上下文、相关 tests |
+| 接龙导入 | `js/agenda-relay-importer.js` | 模板 skeleton、两个 generator HTML、relay tests |
+| 云同步 | `js/agenda-cloud-sync.js`、Edge Function、migration | CORS、版本冲突、smoke test、部署工作流 |
+| 经典版视觉/打印 | `agenda_generator.html` | A4/print/mobile tests 与 1440/390/412 截图 |
+| Modern 视觉/交互 | `agenda_generator_modern.html` | 经典版共享行为是否仍一致、三端截图 |
+| 时间官行为 | `index.html`、`js/timekeeper-state.js` | localStorage、记录、同步兼容与 timer tests |
+
+### 0.5 AI 的完成标准
+
+除非用户明确缩小范围，一个代码任务只有在以下条件满足后才算完成：
+
+1. 实现目标行为，且没有修改无关模块。
+2. `npm test` 通过。
+3. `git diff --check` 通过。
+4. UI 改动按风险检查 1440 × 1000、390 × 844、412 × 915；确认无横向滚动和遮挡。
+5. Supabase 改动运行 `npm run smoke:supabase`，并检查部署 workflow。
+6. 明确报告修改文件、验证结果、未验证项和遗留风险。
+7. 只有用户明确要求发布时才 push；发布后确认目标分支、Pages 和 Supabase workflow 状态。
+8. 如任务改变了架构、协议、部署、当前待办或重要历史，更新本文件。
 
 ## 1. 项目速览
 
@@ -20,10 +90,10 @@
 | 测试命令 | `npm test` |
 | 线上 Supabase smoke test | `npm run smoke:supabase` |
 
-截至上述核对时间：
+截至 2026-07-13 的最近一次核对：
 
-- GitHub Pages 已成功发布 `cc5537c`。
-- `Deploy Supabase Backend` 工作流在 `cc5537c` 上执行成功。
+- GitHub Pages 已成功发布包含 `HANDOFF.md` 的文档提交。
+- 最近一次应用代码提交 `cc5537c` 的 Pages 与 Supabase workflow 均成功。
 - 线上 Pages 来源为 `main` 分支根目录 `/`。
 
 这些状态会变化。开始工作前应重新运行 `git fetch` 和本文中的状态检查命令，不要只依赖这段快照。
