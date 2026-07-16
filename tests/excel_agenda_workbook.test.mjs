@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import { test } from "node:test";
 
@@ -17,6 +18,20 @@ import {
 
 const require = createRequire(import.meta.url);
 const AgendaSchema = require("../js/agenda-schema.js");
+
+test("workbook builder creates every sheet before exporting to the agreed path", async () => {
+  const buildSource = await fs
+    .readFile(new URL("../scripts/excel-agenda/build.mjs", import.meta.url), "utf8")
+    .catch(() => "");
+
+  assert.match(buildSource, /for \(const name of SHEETS\)/);
+  assert.match(buildSource, /workbook\.worksheets\.add\(name\)/);
+  assert.match(buildSource, /SpreadsheetFile\.exportXlsx/);
+  assert.match(
+    buildSource,
+    /outputs\/agenda-excel-20260717\/畅言议程生成器-无宏版\.xlsx/
+  );
+});
 
 const EXPECTED_LABELS = [
   "主题",
