@@ -86,7 +86,7 @@ export function loadTemplateRows() {
 }
 
 export function buildRelayAgendaRows() {
-  const row = (id, sectionNo, sectionName, title, durationText, scheduleMinutes, roleKey) => ({
+  const row = (id, sectionNo, sectionName, title, durationText, scheduleMinutes, roleKey, rowType = rowTypeForTitle(title)) => ({
     id,
     kind: "item",
     sectionNo,
@@ -97,13 +97,13 @@ export function buildRelayAgendaRows() {
     scheduleMinutes,
     roleKey,
     person: "",
-    rowType: rowTypeForTitle(title)
+    rowType
   });
 
   return [
     row("relay-officer-open", 1, "开场环节", "事务官开场", "1", 1, "事务官开场"),
     row("relay-president", 1, "开场环节", "主席致辞", "3", 3, "主席致辞"),
-    row("relay-host", 1, "开场环节", "总主持开场", "3", 3, "总主持"),
+    row("relay-host", 1, "开场环节", "总主持开场，介绍会议流程", "3", 3, "总主持"),
     row("relay-guests", 1, "开场环节", "来宾介绍", "5", 5, "来宾介绍"),
     row("relay-timer-declare", 1, "开场环节", "时间官宣言", "2", 2, "时间官"),
     row("relay-grammar-declare", 1, "开场环节", "语法官宣言", "2", 2, "语法官"),
@@ -121,7 +121,7 @@ export function buildRelayAgendaRows() {
     row("relay-ah-report", 4, "茶歇&会议反馈环节", "哼哈官报告", "3", 3, "哼哈官"),
     row("relay-timer-report", 4, "茶歇&会议反馈环节", "时间官报告", "3", 3, "时间官"),
     row("relay-general-eval", 4, "茶歇&会议反馈环节", "总点评", "8", 8, "总点评"),
-    row("relay-award", 5, "分享环节", "颁奖&真情分享", "5", 5, "颁奖&真情分享")
+    row("relay-award", 5, "分享环节", "颁奖&真情分享", "5", 5, "颁奖&真情分享", "prepared")
   ];
 }
 

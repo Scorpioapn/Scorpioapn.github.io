@@ -47,7 +47,7 @@ const EXPECTED_LABELS = [
 const REQUIRED_RELAY_TITLES = [
   "事务官开场",
   "主席致辞",
-  "总主持开场",
+  "总主持开场，介绍会议流程",
   "来宾介绍",
   "即兴演讲",
   "备稿演讲1",
@@ -176,6 +176,12 @@ test("relay agenda maps three officers to one declaration and one report", () =>
     assert.equal(declarations[0].sectionName, "开场环节");
     assert.equal(reports[0].sectionName, "茶歇&会议反馈环节");
   }
+});
+
+test("relay award and sharing row uses prepared styling", () => {
+  const row = buildRelayAgendaRows().find((item) => item.title === "颁奖&真情分享");
+  assert.ok(row);
+  assert.equal(row.rowType, "prepared");
 });
 
 test("relay 5-7 minute durations follow the schema upper-bound behavior", () => {
