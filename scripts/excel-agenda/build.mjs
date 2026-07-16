@@ -23,32 +23,15 @@ function applyReservedBase(sheet, address, { bold = false, size = 10 } = {}) {
   return range;
 }
 
-function applyTitleBand(sheet, address, text) {
-  const range = applyReservedBase(sheet, address, { bold: true, size: 18 });
+function applyBand(sheet, address, text, { fill, size }) {
+  const range = sheet.getRange(address);
   range.merge();
   range.values = [[text]];
   range.format = {
-    fill: COLORS.blueDeep,
+    fill,
     font: {
       name: BASE_FONT,
-      size: 18,
-      color: COLORS.surface,
-      bold: true
-    },
-    horizontalAlignment: "left",
-    verticalAlignment: "center"
-  };
-}
-
-function applySectionBand(sheet, address, text) {
-  const range = applyReservedBase(sheet, address, { bold: true, size: 15 });
-  range.merge();
-  range.values = [[text]];
-  range.format = {
-    fill: COLORS.maroon,
-    font: {
-      name: BASE_FONT,
-      size: 15,
+      size,
       color: COLORS.surface,
       bold: true
     },
@@ -78,8 +61,14 @@ for (const sheet of sheets.values()) {
   sheet.showGridLines = false;
 }
 
-applyTitleBand(sheets.get("操作台"), "A1:P2", "畅言议程生成器 · 操作台");
-applySectionBand(sheets.get("议程编辑"), "A1:Q2", "议程编辑与手工修正");
+applyBand(sheets.get("操作台"), "A1:P2", "畅言议程生成器 · 操作台", {
+  fill: COLORS.blueDeep,
+  size: 18
+});
+applyBand(sheets.get("议程编辑"), "A1:Q2", "议程编辑与手工修正", {
+  fill: COLORS.maroon,
+  size: 15
+});
 
 for (const name of SHELL_LABELS) {
   addShellLabel(sheets.get(name), name);
@@ -88,5 +77,6 @@ for (const name of SHELL_LABELS) {
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 const output = await SpreadsheetFile.exportXlsx(workbook);
 await output.save(outputPath);
+await fs.rm(`${outputPath}.inspect.ndjson`, { force: true });
 
 console.log(outputPath);
