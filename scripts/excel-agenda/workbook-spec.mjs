@@ -152,10 +152,37 @@ export const RELAY_LABELS = [
   "拍照侠"
 ];
 
+const RELAY_PLACEHOLDERS = Object.freeze([
+  "[玫瑰]",
+  "[烟花]",
+  "待报名",
+  "空",
+  "TBD",
+  "待定"
+]);
+
+const RELAY_PLACEHOLDER_SET = new Set(
+  RELAY_PLACEHOLDERS.map((value) => value.toUpperCase())
+);
+const RELAY_PLACEHOLDER_FORMULA = `{${RELAY_PLACEHOLDERS
+  .map((value) => `"${value}"`)
+  .join(",")}}`;
+
+export function selectLastRealRelayValue(values) {
+  const candidates = Array.isArray(values) ? values : [];
+
+  for (let index = candidates.length - 1; index >= 0; index -= 1) {
+    const value = String(candidates[index] ?? "").trim();
+    if (value && !RELAY_PLACEHOLDER_SET.has(value.toUpperCase())) return value;
+  }
+
+  return "待定";
+}
+
 export function normalizedRelayFormula(rawCell = "'操作台'!$B$18") {
-  return `=LET(raw,${rawCell},colon,SUBSTITUTE(raw,"：",":"),flat,TRIM(SUBSTITUTE(SUBSTITUTE(colon,CHAR(13)," "),CHAR(10)," ")),labels,$A$5:$A$28,TRIM(REDUCE(flat,labels,LAMBDA(acc,label,SUBSTITUTE(acc,label&":","|"&label&":")))))`;
+  return `=LET(raw,${rawCell},flat,TRIM(SUBSTITUTE(SUBSTITUTE(raw,CHAR(13)," "),CHAR(10)," ")),colon,SUBSTITUTE(flat,"：",":"),tight,SUBSTITUTE(SUBSTITUTE(colon," :",":"),": ",":"),labels,$A$5:$A$28,TRIM(REDUCE(tight,labels,LAMBDA(acc,label,SUBSTITUTE(acc,label&":","|"&label&":")))))`;
 }
 
 export function relayValueFormula(labelCell, tokenizedCell = "$B$2") {
-  return `=LET(parts,TEXTSPLIT(${tokenizedCell},"|"),keys,TEXTBEFORE(parts,":",1,0,0,""),vals,TRIM(TEXTAFTER(parts,":",1,0,0,"")),hits,FILTER(vals,keys=${labelCell},NA()),real,FILTER(hits,(hits<>"")*ISNA(XMATCH(UPPER(hits),{"[玫瑰]","[烟花]","待报名","空","TBD"})),NA()),IFERROR(TAKE(real,-1),"待定"))`;
+  return `=LET(parts,TOCOL(TEXTSPLIT(${tokenizedCell},"|"),1),keys,TEXTBEFORE(parts,":",1,0,0,""),vals,TRIM(TEXTAFTER(parts,":",1,0,0,"")),hits,FILTER(vals,keys=${labelCell},NA()),real,FILTER(hits,(hits<>"")*ISNA(XMATCH(UPPER(hits),${RELAY_PLACEHOLDER_FORMULA})),NA()),IFERROR(TAKE(real,-1),"待定"))`;
 }

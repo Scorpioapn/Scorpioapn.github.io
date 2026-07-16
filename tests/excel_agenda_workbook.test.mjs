@@ -11,7 +11,8 @@ import {
   buildRelayAgendaRows,
   loadTemplateRows,
   normalizedRelayFormula,
-  relayValueFormula
+  relayValueFormula,
+  selectLastRealRelayValue
 } from "../scripts/excel-agenda/workbook-spec.mjs";
 
 const require = createRequire(import.meta.url);
@@ -60,6 +61,20 @@ const REQUIRED_RELAY_TITLES = [
   "备稿点评3",
   "总点评",
   "颁奖&真情分享"
+];
+
+const RELAY_ROW_KEYS = [
+  "id",
+  "kind",
+  "sectionNo",
+  "sectionName",
+  "title",
+  "detail",
+  "durationText",
+  "scheduleMinutes",
+  "roleKey",
+  "person",
+  "rowType"
 ];
 
 test("workbook exposes the exact sheet order and page capacities", () => {
@@ -162,6 +177,34 @@ test("relay agenda organizes required item rows under five sections", () => {
   }
 });
 
+test("relay agenda rows have an exact stable shape and unique IDs", () => {
+  const rows = buildRelayAgendaRows();
+  const expectedTypes = {
+    id: "string",
+    kind: "string",
+    sectionNo: "number",
+    sectionName: "string",
+    title: "string",
+    detail: "string",
+    durationText: "string",
+    scheduleMinutes: "number",
+    roleKey: "string",
+    person: "string",
+    rowType: "string"
+  };
+
+  assert.equal(rows.length, 21);
+  assert.equal(new Set(rows.map((row) => row.id)).size, rows.length);
+
+  for (const row of rows) {
+    assert.deepEqual(Object.keys(row), RELAY_ROW_KEYS);
+    assert.equal(row.kind, "item");
+    for (const [key, type] of Object.entries(expectedTypes)) {
+      assert.equal(typeof row[key], type, `${row.id}.${key}`);
+    }
+  }
+});
+
 test("relay agenda maps three officers to one declaration and one report", () => {
   const rows = buildRelayAgendaRows();
   for (const roleKey of ["时间官", "语法官", "哼哈官"]) {
@@ -184,6 +227,21 @@ test("relay award and sharing row uses prepared styling", () => {
   assert.equal(row.rowType, "prepared");
 });
 
+test("relay agenda assigns required row types to representative rows", () => {
+  const rows = buildRelayAgendaRows();
+  for (const [title, rowType] of [
+    ["主席致辞", "plain"],
+    ["即兴演讲", "impromptu"],
+    ["备稿演讲1", "prepared"],
+    ["茶歇+大合照", "break"],
+    ["颁奖&真情分享", "prepared"]
+  ]) {
+    const row = rows.find((item) => item.title === title);
+    assert.ok(row, `missing relay row: ${title}`);
+    assert.equal(row.rowType, rowType);
+  }
+});
+
 test("relay 5-7 minute durations follow the schema upper-bound behavior", () => {
   const expectedMinutes = AgendaSchema.parseDurationToMinutes("5-7", 0);
   assert.equal(expectedMinutes, 7);
@@ -198,6 +256,34 @@ test("relay labels have the exact stable 24-label order", () => {
   assert.deepEqual(RELAY_LABELS, EXPECTED_LABELS);
 });
 
+test("relay value selection uses the last real name from duplicate entries", () => {
+  assert.equal(selectLastRealRelayValue(["Ada", "Grace"]), "Grace");
+});
+
+test("relay value selection ignores placeholders after a real name", () => {
+  assert.equal(
+    selectLastRealRelayValue(["Ada", "[玫瑰]", "待定", "TBD"]),
+    "Ada"
+  );
+});
+
+test("relay value selection returns 待定 for empty or placeholder-only values", () => {
+  for (const values of [
+    [],
+    [""],
+    ["[玫瑰]", "[烟花]", "待报名", "空", "TBD", "待定"]
+  ]) {
+    assert.equal(selectLastRealRelayValue(values), "待定");
+  }
+});
+
+test("relay value selection trims surrounding whitespace", () => {
+  assert.equal(
+    selectLastRealRelayValue(["  Ada Lovelace  "]),
+    "Ada Lovelace"
+  );
+});
+
 test("normalized relay formula tokenizes known labels in a bounded range", () => {
   const formula = normalizedRelayFormula();
   for (const functionName of ["LET", "SUBSTITUTE", "REDUCE", "LAMBDA"]) {
@@ -206,6 +292,14 @@ test("normalized relay formula tokenizes known labels in a bounded range", () =>
   assert.match(formula, /"：",":"/);
   assert.match(formula, /CHAR\(13\)/);
   assert.match(formula, /CHAR\(10\)/);
+  assert.match(
+    formula,
+    /flat,TRIM\(SUBSTITUTE\(SUBSTITUTE\(raw,CHAR\(13\)," "\),CHAR\(10\)," "\)\)/
+  );
+  assert.match(formula, /colon,SUBSTITUTE\(flat,"：",":"\)/);
+  assert.match(formula, /tight,SUBSTITUTE\(SUBSTITUTE\(colon," :",":"\),": ",":"\)/);
+  assert.ok(formula.indexOf("flat,TRIM(") < formula.indexOf("tight,SUBSTITUTE("));
+  assert.match(formula, /REDUCE\(tight,labels/);
   assert.match(formula, /\$A\$5:\$A\$28/);
   assert.doesNotMatch(formula, /\$[A-Z]+:\$[A-Z]+/);
 });
@@ -214,6 +308,7 @@ test("relay value formula chooses the last real value over placeholders", () => 
   const formula = relayValueFormula("A5", "$B$2");
   for (const functionName of [
     "TEXTSPLIT",
+    "TOCOL",
     "FILTER",
     "TEXTBEFORE",
     "TEXTAFTER",
@@ -223,10 +318,9 @@ test("relay value formula chooses the last real value over placeholders", () => 
   ]) {
     assert.match(formula, new RegExp(`${functionName}\\(`));
   }
-  assert.match(formula, /TAKE\(real,-1\)/);
-  for (const placeholder of ["[玫瑰]", "[烟花]", "待报名", "空", "TBD"]) {
-    assert.ok(formula.includes(`"${placeholder}"`));
-  }
-  assert.match(formula, /"待定"/);
+  assert.match(formula, /parts,TOCOL\(TEXTSPLIT\(\$B\$2,"\|"\),1\)/);
+  assert.match(formula, /\{"\[玫瑰\]","\[烟花\]","待报名","空","TBD","待定"\}/);
+  assert.match(formula, /IFERROR\(TAKE\(real,-1\),"待定"\)/);
+  assert.equal((formula.match(/TAKE\(real,-1\)/g) || []).length, 1);
   assert.doesNotMatch(formula, /\$[A-Z]+:\$[A-Z]+/);
 });
