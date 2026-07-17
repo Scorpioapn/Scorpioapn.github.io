@@ -17,6 +17,33 @@ export const SHEETS = [
 export const FIRST_PAGE_ITEMS = 30;
 export const MAX_ITEMS = 60;
 
+export const RELAY_ACCEPTANCE_SAMPLE = `@所有人
+[烟花]畅言779期报名帖[烟花]
+主题：志愿者
+今日一词：服务
+例会经理：莫婷
+时间：6月9日 19:30-21:30
+地点: 深圳南山•讯美科技3号楼4楼Space Max会议室
+事务官开场：文星
+主席致辞：卡卡
+总主持：simon
+来宾介绍：VPM
+时间官：May
+哼哈官：Jessica
+语法官：莫婷
+提问官：文星
+即兴主持：莫婷
+备稿演讲1：卡卡
+备稿演讲2：史迪仔
+备稿演讲3：[玫瑰]
+即兴点评：女侠
+备稿点评1：Jessica
+备稿点评2：聪聪
+备稿点评3：[玫瑰]
+总点评：思玮
+颁奖&真情分享：卡卡
+拍照侠：ALL`;
+
 export const COLORS = Object.freeze({
   blue: "#004165",
   blueDeep: "#00334F",
@@ -46,6 +73,30 @@ function rowTypeForTitle(title) {
   if (/备稿|演讲/.test(text)) return "prepared";
   if (/茶歇|大合照/.test(text)) return "break";
   return "plain";
+}
+
+export function loadDefaultMeetingData() {
+  const data = AgendaTemplates.getDefaultData();
+  return {
+    clubName: String(data.clubName || ""),
+    clubNameEnglish: String(data.clubNameEnglish || ""),
+    meetingNo: String(data.meetingNo || ""),
+    theme: String(data.theme || ""),
+    wordOfDay: String(data.wordOfDay || ""),
+    manager: String(data.manager || ""),
+    date: String(data.date || ""),
+    startTime: String(data.startTime || ""),
+    endTime: String(data.endTime || ""),
+    location: String(data.location || ""),
+    clubIntro: String(data.clubIntro || ""),
+    officers: String(data.officers || ""),
+    meetingRules: String(data.meetingRules || ""),
+    meetingVision: String(data.meetingVision || ""),
+    guestInvitation: String(data.guestInvitation || ""),
+    nextTheme: String(data.nextTheme || ""),
+    nextMeetingDate: String(data.nextMeetingDate || ""),
+    nextMeetingTime: String(data.nextMeetingTime || "")
+  };
 }
 
 export function loadTemplateRows() {
@@ -164,9 +215,6 @@ const RELAY_PLACEHOLDERS = Object.freeze([
 const RELAY_PLACEHOLDER_SET = new Set(
   RELAY_PLACEHOLDERS.map((value) => value.toUpperCase())
 );
-const RELAY_PLACEHOLDER_FORMULA = `{${RELAY_PLACEHOLDERS
-  .map((value) => `"${value}"`)
-  .join(",")}}`;
 
 export function selectLastRealRelayValue(values) {
   const candidates = Array.isArray(values) ? values : [];
@@ -180,9 +228,21 @@ export function selectLastRealRelayValue(values) {
 }
 
 export function normalizedRelayFormula(rawCell = "'操作台'!$B$18") {
-  return `=LET(raw,${rawCell},flat,TRIM(SUBSTITUTE(SUBSTITUTE(raw,CHAR(13)," "),CHAR(10)," ")),colon,SUBSTITUTE(flat,"：",":"),tight,SUBSTITUTE(SUBSTITUTE(colon," :",":"),": ",":"),labels,$A$5:$A$28,TRIM(REDUCE(tight,labels,LAMBDA(acc,label,SUBSTITUTE(acc,label&":","|"&label&":")))))`;
+  const tokenized = RELAY_LABELS.reduce(
+    (expression, label) =>
+      `SUBSTITUTE(${expression},"${label}:","|${label}:")`,
+    "tight"
+  );
+
+  return `=LET(raw,${rawCell},flat,TRIM(SUBSTITUTE(SUBSTITUTE(raw,CHAR(13)," "),CHAR(10)," ")),colon,SUBSTITUTE(flat,"：",":"),tight,SUBSTITUTE(SUBSTITUTE(colon," :",":"),": ",":"),tokens,${tokenized},TRIM(SUBSTITUTE(tokens," |","|")))`;
 }
 
 export function relayValueFormula(labelCell, tokenizedCell = "$B$2") {
-  return `=LET(parts,TOCOL(TEXTSPLIT(${tokenizedCell},"|"),1),keys,TEXTBEFORE(parts,":",1,0,0,""),vals,TRIM(TEXTAFTER(parts,":",1,0,0,"")),hits,FILTER(vals,keys=${labelCell},NA()),real,FILTER(hits,(hits<>"")*ISNA(XMATCH(UPPER(hits),${RELAY_PLACEHOLDER_FORMULA})),NA()),IFERROR(TAKE(real,-1),"待定"))`;
+  const cleaned = RELAY_PLACEHOLDERS.reduce(
+    (expression, placeholder) =>
+      `SUBSTITUTE(${expression},key&"${placeholder}"&"|","|")`,
+    "token"
+  );
+
+  return `=LET(token,${tokenizedCell}&"|",key,"|"&${labelCell}&":",clean,${cleaned},value,IFERROR(TRIM(TEXTBEFORE(TEXTAFTER(clean,key,-1,0,0,""),"|",1,0,0,"")),""),IF(value="","待定",value))`;
 }

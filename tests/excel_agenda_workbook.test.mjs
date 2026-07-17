@@ -10,6 +10,7 @@ import {
   RELAY_LABELS,
   SHEETS,
   buildRelayAgendaRows,
+  loadDefaultMeetingData,
   loadTemplateRows,
   normalizedRelayFormula,
   relayValueFormula,
@@ -313,7 +314,7 @@ test("relay value selection trims surrounding whitespace", () => {
 
 test("normalized relay formula tokenizes known labels in a bounded range", () => {
   const formula = normalizedRelayFormula();
-  for (const functionName of ["LET", "SUBSTITUTE", "REDUCE", "LAMBDA"]) {
+  for (const functionName of ["LET", "SUBSTITUTE"]) {
     assert.match(formula, new RegExp(`${functionName}\\(`));
   }
   assert.match(formula, /"：",":"/);
@@ -326,28 +327,194 @@ test("normalized relay formula tokenizes known labels in a bounded range", () =>
   assert.match(formula, /colon,SUBSTITUTE\(flat,"：",":"\)/);
   assert.match(formula, /tight,SUBSTITUTE\(SUBSTITUTE\(colon," :",":"\),": ",":"\)/);
   assert.ok(formula.indexOf("flat,TRIM(") < formula.indexOf("tight,SUBSTITUTE("));
-  assert.match(formula, /REDUCE\(tight,labels/);
-  assert.match(formula, /\$A\$5:\$A\$28/);
+  for (const label of RELAY_LABELS) assert.ok(formula.includes(`"${label}:"`));
+  assert.match(formula, /tokens,SUBSTITUTE\(/);
+  assert.doesNotMatch(formula, /REDUCE|LAMBDA/);
   assert.doesNotMatch(formula, /\$[A-Z]+:\$[A-Z]+/);
 });
 
 test("relay value formula chooses the last real value over placeholders", () => {
   const formula = relayValueFormula("A5", "$B$2");
-  for (const functionName of [
-    "TEXTSPLIT",
-    "TOCOL",
-    "FILTER",
-    "TEXTBEFORE",
-    "TEXTAFTER",
-    "XMATCH",
-    "TAKE",
-    "IFERROR"
-  ]) {
+  for (const functionName of ["LET", "SUBSTITUTE", "TEXTBEFORE", "TEXTAFTER"]) {
     assert.match(formula, new RegExp(`${functionName}\\(`));
   }
-  assert.match(formula, /parts,TOCOL\(TEXTSPLIT\(\$B\$2,"\|"\),1\)/);
-  assert.match(formula, /\{"\[玫瑰\]","\[烟花\]","待报名","空","TBD","待定"\}/);
-  assert.match(formula, /IFERROR\(TAKE\(real,-1\),"待定"\)/);
-  assert.equal((formula.match(/TAKE\(real,-1\)/g) || []).length, 1);
+  assert.match(formula, /token,\$B\$2&"\|"/);
+  assert.match(formula, /key,"\|"&A5&":"/);
+  for (const placeholder of ["[玫瑰]", "[烟花]", "待报名", "空", "TBD", "待定"]) {
+    assert.ok(formula.includes(`key&"${placeholder}"&"|"`));
+  }
+  assert.match(formula, /TEXTAFTER\(clean,key,-1/);
+  assert.match(formula, /value,IFERROR\(TRIM\(TEXTBEFORE/);
+  assert.match(formula, /IF\(value="","待定",value\)/);
+  assert.doesNotMatch(formula, /TEXTSPLIT|TOCOL|FILTER|XMATCH|TAKE/);
   assert.doesNotMatch(formula, /\$[A-Z]+:\$[A-Z]+/);
+});
+
+test("workbook seed contains current club assets and two templates", async () => {
+  const rows = loadTemplateRows();
+  assert.deepEqual([...new Set(rows.map((row) => row.templateName))], [
+    "常规例会模板",
+    "即兴马拉松模板"
+  ]);
+
+  for (const asset of [
+    "assets/toastmasters-logo-color-png.png",
+    "assets/quhuo-qr.png",
+    "assets/join-consult-qr.png",
+    "assets/vote-qr.png"
+  ]) {
+    const stat = await fs.stat(new URL(`../${asset}`, import.meta.url));
+    assert.ok(stat.isFile(), `missing workbook asset: ${asset}`);
+    assert.ok(stat.size > 0, `empty workbook asset: ${asset}`);
+  }
+});
+
+test("builder seeds template library, base data, and four embedded images", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/build.mjs", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /function writeTemplateLibrary\(/);
+  assert.match(source, /AgendaTemplatesTable/);
+  assert.match(source, /function writeBaseData\(/);
+  assert.match(source, /BaseInfoTable/);
+  assert.match(loadDefaultMeetingData().officers, /President会长：贾燕微/);
+  assert.match(source, /toastmasters-logo-color-png\.png/);
+  assert.match(source, /mime = "image\/jpeg"/);
+  const baseDataSource = source.slice(
+    source.indexOf("async function writeBaseData("),
+    source.indexOf("function writeCalculationSheet(")
+  );
+  assert.equal((baseDataSource.match(/await addImage\(/g) || []).length, 4);
+});
+
+test("operation dashboard defines source, template, relay, preview, and warning areas", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/build.mjs", import.meta.url),
+    "utf8"
+  );
+
+  for (const address of ["B4", "F4", "B18:J26", "L18:P26", "B30:P32"]) {
+    assert.ok(source.includes(address), `missing dashboard range: ${address}`);
+  }
+  for (const sourceName of ["接龙导入", "议程模板", "手工编辑"]) {
+    assert.ok(source.includes(sourceName), `missing agenda source: ${sourceName}`);
+  }
+  assert.match(source, /dataValidation/);
+  assert.match(source, /SORT\(UNIQUE\(FILTER/);
+  assert.match(source, /formula1: "\$Q\$2:\$Q\$64"/);
+  assert.match(source, /TEMPLATE_LIBRARY_MAX_ROW = 1000/);
+  assert.match(source, /未识别内容：完整原文保留在左侧/);
+  assert.match(source, /comments\.setSelf/);
+  assert.match(source, /comments\.addThread/);
+});
+
+test("builder writes bounded formula-driven relay parsing and preview", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/build.mjs", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /function writeCalculationSheet\(/);
+  assert.match(source, /A5:A28/);
+  assert.match(source, /B5:B28/);
+  assert.match(source, /F5:N25/);
+  assert.match(source, /TEXTBEFORE/);
+  assert.match(source, /TIME\(--TEXTBEFORE/);
+  assert.match(source, /YEAR\(TODAY\(\)\)/);
+  assert.match(source, /解析角色数/);
+});
+
+test("agenda formulas keep override precedence and numeric scheduling", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/build.mjs", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /AgendaEditTable/);
+  assert.match(source, /LET\(v,IFERROR\(INDEX\(FILTER/);
+  assert.match(source, /IF\(OR\(v="",v=0\),"",v\)/);
+  assert.match(source, /修正标题/);
+  assert.match(source, /修正排程分钟/);
+  assert.match(source, /1440/);
+  assert.match(source, /超过单页容量/);
+  assert.match(source, /超过60项/);
+  assert.match(source, /待定/);
+});
+
+test("A4 builder reserves first and overflow presentation sheets", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/build.mjs", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /function writeA4Page\(/);
+  assert.match(source, /A4议程/);
+  assert.match(source, /A4续页/);
+  assert.match(source, /rowBlue/);
+  assert.match(source, /rowGreen/);
+  assert.match(source, /rowGray/);
+  assert.match(source, /FIRST_PAGE_ITEMS/);
+  assert.match(source, /续页 · 仅在议程超过30项时打印/);
+});
+
+test("verifier inspects formulas, errors, sheets, and renders every sheet", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/verify.mjs", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /#REF!/);
+  assert.match(source, /#SPILL!/);
+  assert.match(source, /workbook\.render/);
+  assert.match(source, /for \(const sheetName of SHEETS\)/);
+});
+
+test("native Excel finalizer normalizes formulas and enforces print metadata", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/finalize-excel.vbs", import.meta.url),
+    "utf8"
+  );
+  const verifier = await fs.readFile(
+    new URL("../scripts/excel-agenda/verify-excel-native.vbs", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /cell\.Formula2 = formulaText/);
+  assert.match(source, /VarType\(cell\.Value\) = 10/);
+  assert.match(source, /PaperSize = xlPaperA4/);
+  assert.match(source, /FitToPagesWide = 1/);
+  assert.match(source, /ExportAsFixedFormat/);
+  assert.match(source, /calculation\.Visible = xlSheetHidden/);
+  assert.match(source, /sheet\.Protect "", False, True, True/);
+  assert.match(verifier, /formula errors after native save/);
+  assert.match(verifier, /pageSetup\.PrintArea <> "\$A\$1:\$P\$48"/);
+  assert.match(verifier, /calculation\.ProtectContents/);
+  assert.match(verifier, /ProtectDrawingObjects/);
+});
+
+test("native scenario verifier exercises relay, templates, corrections, and overflow", async () => {
+  const source = await fs.readFile(
+    new URL("../scripts/excel-agenda/verify-excel-scenarios.vbs", import.meta.url),
+    "utf8"
+  );
+
+  for (const expected of [
+    "接龙导入",
+    "即兴马拉松模板",
+    "修正标题验收",
+    "超过单页容量",
+    "手工项目 31",
+    "备稿演讲1:Alice",
+    "QA扩展模板"
+  ]) {
+    assert.ok(source.includes(expected));
+  }
+  assert.match(source, /relayItems=21/);
+  assert.match(source, /regularTemplateItems=27/);
+  assert.match(source, /impromptuTemplateItems=19/);
+  assert.match(source, /dynamicTemplateItems=1/);
+  assert.match(source, /manualOverflowItems=31/);
+  assert.match(source, /FormulaErrorCount\(\)/);
 });
