@@ -41,3 +41,18 @@ test("preview has one primary export location and three mobile tasks", () => {
   assert.equal((source.match(/id="exportPdfBtn"/g) || []).length, 1);
   assert.equal((source.match(/data-mobile-nav=/g) || []).length, 3);
 });
+
+test("workflow navigation updates the active step without changing agenda state", () => {
+  assert.match(source, /workflowNavLinks:\s*document\.querySelectorAll\("\[data-workflow-target\]"\)/);
+  assert.match(source, /function setActiveWorkflowStep\(targetId\)[\s\S]*?aria-current[\s\S]*?step/);
+  assert.match(source, /function scrollToWorkflowTarget\(targetId\)[\s\S]*?prefers-reduced-motion[\s\S]*?scrollIntoView/);
+  assert.doesNotMatch(block("function setActiveWorkflowStep", "function scrollToWorkflowTarget"), /state\s*=|saveData\(/);
+});
+
+test("low-frequency links open the settings drawer at their target", () => {
+  assert.match(source, /settingsSectionLinks:\s*document\.querySelectorAll\("\[data-settings-target\]"\)/);
+  assert.match(source, /openSettingsDrawer\(\{\s*targetId:/);
+  assert.match(source, /settingsDrawerBody[\s\S]*?querySelector[\s\S]*?scrollIntoView/);
+  assert.match(source, /function updateDataSettingsState\(status,\s*detail/);
+  assert.match(source, /data-settings-attention/);
+});

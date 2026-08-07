@@ -4924,7 +4924,7 @@
         </section>
 
         <details class="task-section" id="weeklyTaskSection" open>
-          <summary><span>每周必做</span><small>会议信息与本周议程</small></summary>
+          <summary><span>每周必做</span><small id="weeklyTaskState">会议信息与本周议程</small></summary>
           <div class="task-section-body">
         <section class="surface-panel raised" id="meetingInfoPanel" aria-labelledby="meetingInfoTitle">
           <div class="panel-title">
@@ -5464,6 +5464,12 @@
 
     const els = {
       printPage: document.querySelector("#printPage"),
+      editorScroll: document.querySelector(".editor-scroll"),
+      workflowNavLinks: document.querySelectorAll("[data-workflow-target]"),
+      continueDraftBtn: document.querySelector("#continueDraftBtn"),
+      settingsSectionLinks: document.querySelectorAll("[data-settings-target]"),
+      weeklyTaskState: document.querySelector("#weeklyTaskState"),
+      dataSettingsState: document.querySelector("#dataSettingsState"),
       previewChip: document.querySelector("#previewChip"),
       agendaList: document.querySelector("#agendaList"),
       agendaCount: document.querySelector("#agendaCount"),
@@ -5554,6 +5560,7 @@
     let undoDelete = null;
     let toastTimer = null;
     let lastAgendaTrigger = null;
+    let activeWorkflowStep = "meetingInfoPanel";
     let activeMobilePanel = "meetingInfoPanel";
     let lastExportUrl = null;
     let printOverflowWarningVisible = false;
@@ -6376,6 +6383,7 @@
     function renderAgendaList() {
       const sortModeActive = mobileSortMode && isMobileViewport();
       els.agendaCount.textContent = `${itemCount()} 个项目`;
+      if (els.weeklyTaskState) els.weeklyTaskState.textContent = `${itemCount()} 个项目`;
       els.agendaList.classList.toggle("sort-mode", sortModeActive);
       els.mobileSortToggleBtn?.setAttribute("aria-pressed", String(sortModeActive));
       els.mobileSortToggleBtn?.classList.toggle("selected", sortModeActive);
@@ -6775,8 +6783,18 @@
       }
     }
 
-    function openSettingsDrawer(options) {
-      setSettingsDrawerOpen(true, options);
+    function openSettingsDrawer({ targetId = "", restoreFocus = true } = {}) {
+      setSettingsDrawerOpen(true, { restoreFocus });
+      if (!targetId) return;
+      window.requestAnimationFrame(() => {
+        const target = els.settingsDrawerBody?.querySelector(`#${targetId}`)
+          || els.settingsDrawerBody?.querySelector(`[data-settings-section="${targetId}"]`);
+        if (!target) return;
+        const details = target.matches("details") ? target : target.closest("details");
+        if (details) details.open = true;
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      });
     }
 
     function closeSettingsDrawer(options) {
@@ -7105,6 +7123,22 @@
       toastTimer = window.setTimeout(() => els.toast.classList.remove("open"), actionText ? 6500 : 2800);
     }
 
+    function updateDataSettingsState(status, detail = "") {
+      if (!els.dataSettingsState) return;
+      const statusLabel = detail === "missing-config"
+        ? "同步配置待完善"
+        : detail === "version-conflict" || status === "conflict"
+          ? "同步冲突待处理"
+          : CLOUD_SYNC_STATUS_LABELS[status] || "本机草稿";
+      els.dataSettingsState.textContent = statusLabel;
+      const link = Array.from(els.settingsSectionLinks).find((button) => button.dataset.settingsTarget === "exportPanel");
+      if (link) {
+        const needsAttention = detail === "missing-config" || detail === "version-conflict" || status === "conflict" || status === "error";
+        if (needsAttention) link.setAttribute("data-settings-attention", statusLabel);
+        else link.removeAttribute("data-settings-attention");
+      }
+    }
+
     function setCloudSyncStatus(status, detail = "") {
       if (!els.cloudSyncStatus) return;
       const label = CLOUD_SYNC_STATUS_LABELS[status] || CLOUD_SYNC_STATUS_LABELS.local;
@@ -7115,6 +7149,7 @@
         const draftId = cloudSyncController?.getDraftId?.();
         els.cloudSyncVersion.textContent = draftId && version ? `v${version}` : "";
       }
+      updateDataSettingsState(status, detail);
       if (detail === "missing-config") {
         showToast("请先在 js/supabase-config.js 填入 Supabase URL 和 publishable key");
       } else if (detail === "version-conflict") {
@@ -7143,6 +7178,7 @@
 
     function showCloudSyncConflict() {
       renderCloudConflictActions(true);
+      updateDataSettingsState("conflict", "version-conflict");
       showToast("检测到云端与本机版本冲突，请选择保留方式");
     }
 
@@ -8007,6 +8043,54 @@
       }
     }
 
+    function setActiveWorkflowStep(targetId) {
+      activeWorkflowStep = targetId || activeWorkflowStep;
+      els.workflowNavLinks.forEach((button) => {
+        if (button.dataset.workflowTarget === activeWorkflowStep) button.setAttribute("aria-current", "step");
+        else button.removeAttribute("aria-current");
+      });
+    }
+
+    function scrollToWorkflowTarget(targetId) {
+      const target = document.querySelector(`#${targetId}`);
+      if (!target) return;
+      if ((targetId === "meetingInfoPanel" || targetId === "agendaPanel") && !document.querySelector("#weeklyTaskSection")?.open) {
+        document.querySelector("#weeklyTaskSection").open = true;
+      }
+      if (targetId === "previewPanel" && window.innerWidth <= 920) {
+        setActiveMobileNav("previewPanel");
+        window.location.hash = "previewPanel";
+        setActiveWorkflowStep(targetId);
+        return;
+      }
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      setActiveWorkflowStep(targetId);
+    }
+
+    function bindWorkflowNavigation() {
+      els.workflowNavLinks.forEach((button) => {
+        button.addEventListener("click", () => scrollToWorkflowTarget(button.dataset.workflowTarget));
+      });
+      els.continueDraftBtn?.addEventListener("click", () => scrollToWorkflowTarget("agendaPanel"));
+      els.settingsSectionLinks.forEach((button) => {
+        button.addEventListener("click", () => openSettingsDrawer({ targetId: button.dataset.settingsTarget }));
+      });
+      setActiveWorkflowStep(activeWorkflowStep);
+
+      if (!("IntersectionObserver" in window) || !els.editorScroll) return;
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target?.id) setActiveWorkflowStep(visible.target.id);
+      }, { root: els.editorScroll, rootMargin: "-15% 0px -65%", threshold: [0.1, 0.35] });
+      ["meetingInfoPanel", "agendaPanel"].forEach((id) => {
+        const panel = document.querySelector(`#${id}`);
+        if (panel) observer.observe(panel);
+      });
+    }
+
     function setActiveMobileNav(targetId) {
       activeMobilePanel = targetId || activeMobilePanel;
       document.body.dataset.mobilePanel = activeMobilePanel;
@@ -8064,6 +8148,7 @@
     }
 
     function bindEvents() {
+      bindWorkflowNavigation();
       document.querySelectorAll("[data-field]").forEach((input) => {
         input.addEventListener("input", () => {
           state[input.dataset.field] = input.value;
