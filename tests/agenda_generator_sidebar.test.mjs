@@ -86,16 +86,16 @@ function functionSource(name) {
   return match[1];
 }
 
-function functionBlock(name) {
-  const start = source.indexOf(`function ${name}`);
+function functionBlock(name, sourceText = source) {
+  const start = sourceText.indexOf(`function ${name}`);
   assert.notEqual(start, -1, `${name} function should exist`);
-  const open = source.indexOf("{", start);
+  const open = sourceText.indexOf("{", start);
   let depth = 0;
-  for (let index = open; index < source.length; index += 1) {
-    const char = source[index];
+  for (let index = open; index < sourceText.length; index += 1) {
+    const char = sourceText[index];
     if (char === "{") depth += 1;
     if (char === "}") depth -= 1;
-    if (depth === 0) return source.slice(start, index + 1);
+    if (depth === 0) return sourceText.slice(start, index + 1);
   }
   throw new Error(`${name} function block should close`);
 }
@@ -756,6 +756,13 @@ test("agenda generator warns when the A4 preview may overflow", () => {
   assert.match(checkOverflow, /scrollHeight > page\.clientHeight \+ 2/, "overflow check should compare rendered height with the A4 page height");
   assert.match(checkOverflow, /hasFlowOverlap\(\)/, "overflow check should also detect flow rows colliding with the vision bar");
   assert.match(source, /当前内容可能超出 A4 页面，已使用最紧凑版式；请减少文字或拆分议程/, "overflow warning should explain that compact fitting already ran");
+});
+
+test("modern A4 fitting detects the flow panel colliding with the footer", () => {
+  const overlapDetector = functionBlock("hasFlowOverlap", modernSource);
+
+  assert.match(overlapDetector, /querySelector\("\.template-footer"\)/, "fit detection should measure the footer boundary");
+  assert.match(overlapDetector, /panelBottom > footerTop \+ 1/, "flow panel overlap should force the next compact density tier");
 });
 
 test("A4 preview top line includes the editable meeting manager when present", () => {

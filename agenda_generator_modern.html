@@ -7630,13 +7630,15 @@
       const page = els.printPage;
       const flowPanel = page?.querySelector(".flow-panel");
       const vision = page?.querySelector(".vision-bar");
+      const footer = page?.querySelector(".template-footer");
       const flowNodes = page ? Array.from(page.querySelectorAll(".flow-table tbody tr, .flow-table tbody td, .flow-table tbody span")) : [];
-      if (!page || !flowPanel || !vision || !flowNodes.length) return false;
+      if (!page || !flowPanel || !vision || !footer || !flowNodes.length) return false;
       const maxFlowBottom = Math.max(...flowNodes.map((node) => node.getBoundingClientRect().bottom));
       const visionTop = vision.getBoundingClientRect().top;
       const panelBottom = flowPanel.getBoundingClientRect().bottom;
+      const footerTop = footer.getBoundingClientRect().top;
       const pageBottom = page.getBoundingClientRect().bottom;
-      return maxFlowBottom > visionTop + 1 || panelBottom > pageBottom + 1;
+      return maxFlowBottom > visionTop + 1 || panelBottom > footerTop + 1 || panelBottom > pageBottom + 1;
     }
 
     function flowLayoutFits() {
