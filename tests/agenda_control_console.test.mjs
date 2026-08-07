@@ -69,3 +69,19 @@ test("responsive styles preserve the three mobile tasks and reduced motion", () 
   assert.match(source, /@media \(max-width:\s*620px\)[\s\S]*?\.workflow-header/);
   assert.match(source, /@media \(prefers-reduced-motion:\s*reduce\)/);
 });
+
+test("mobile preview can expand and escape cleanly", () => {
+  assert.match(source, /id="previewFullscreenBtn"[^>]*aria-pressed="false"/);
+  assert.match(source, /function setPreviewFullscreen\(open\)[\s\S]*?mobile-preview-fullscreen[\s\S]*?aria-pressed/);
+  assert.match(source, /event\.key !== "Escape"[\s\S]*?mobile-preview-fullscreen/);
+});
+
+test("mobile agenda editor traps focus and restores its trigger", () => {
+  assert.match(source, /function trapMobileAgendaEditorTab\(event\)/);
+  assert.match(source, /mobile-agenda-editor-open[\s\S]*?querySelectorAll[\s\S]*?Tab/);
+  assert.match(source, /function clearAgendaForm\(\)[\s\S]*?restoreAgendaTriggerFocus\(\)/);
+});
+
+test("hidden JSON input is named and skipped by direct tabbing", () => {
+  assert.match(source, /id="jsonImportInput"[^>]*aria-label="导入 JSON 文件"[^>]*tabindex="-1"/);
+});

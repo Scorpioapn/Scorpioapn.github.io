@@ -5285,6 +5285,10 @@
     justify-content: flex-end;
   }
 
+  .preview-fullscreen-button {
+    display: none;
+  }
+
   @media (max-width: 1180px) {
     .workflow-header {
       grid-template-columns: minmax(170px, auto) minmax(300px, 1fr) auto;
@@ -5356,6 +5360,37 @@
 
     body[data-mobile-panel="previewPanel"] .editor-shell {
       display: none;
+    }
+
+    .preview-fullscreen-button {
+      display: inline-flex;
+    }
+
+    body.mobile-preview-fullscreen .workflow-header,
+    body.mobile-preview-fullscreen .mobile-taskbar,
+    body.mobile-preview-fullscreen .mobile-quick-add {
+      display: none !important;
+    }
+
+    body.mobile-preview-fullscreen .preview-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid !important;
+      grid-template-rows: auto minmax(0, 1fr);
+      width: 100vw;
+      height: 100dvh;
+      background: var(--bg);
+    }
+
+    body.mobile-preview-fullscreen .preview-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    body.mobile-preview-fullscreen .preview-viewport {
+      padding-bottom: env(safe-area-inset-bottom);
     }
   }
 
@@ -5768,7 +5803,7 @@
                 </div>
               </div>
             </div>
-            <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" aria-label="导入 JSON 备份" tabindex="-1" />
+            <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" aria-label="导入 JSON 文件" tabindex="-1" />
           </div>
         </section>
       </div>
@@ -5794,6 +5829,7 @@
             <option value="flow-fit-dense">极紧</option>
           </select>
           <span class="fit-status" id="previewFitStatus">✓ 一页放得下</span>
+          <button class="button tonal preview-fullscreen-button" id="previewFullscreenBtn" type="button" aria-pressed="false">放大预览</button>
         </div>
       </header>
       <div class="preview-viewport">
@@ -6074,6 +6110,7 @@
       previewZoomSelect: document.querySelector("#previewZoomSelect"),
       previewDensitySelect: document.querySelector("#previewDensitySelect"),
       previewFitStatus: document.querySelector("#previewFitStatus"),
+      previewFullscreenBtn: document.querySelector("#previewFullscreenBtn"),
       previewMoreBtn: document.querySelector("#previewMoreBtn"),
       previewOverflowMenu: document.querySelector("#previewOverflowMenu"),
       exportImagePdfBtn: document.querySelector("#exportImagePdfBtn"),
@@ -7085,7 +7122,7 @@
     }
 
     function overlayElements() {
-      return [els.templateModal, els.relayImportModal, els.guideOverlay];
+      return [els.templateModal, els.relayImportModal, els.guideOverlay, els.settingsDrawer];
     }
 
     // 弹层打开时把背景标记为 inert，键盘和读屏都无法落到被遮住的内容上。
@@ -7345,6 +7382,7 @@
       els.settingsDrawerScrim.hidden = !open;
       document.body.classList.toggle("settings-open", open);
       els.settingsToggleBtn?.setAttribute("aria-expanded", String(open));
+      syncBackgroundInert();
       if (open) {
         window.requestAnimationFrame(() => els.settingsCloseBtn?.focus());
       } else if (restoreFocus) {
@@ -7675,6 +7713,14 @@
       syncPreviewScale();
     }
 
+    function setPreviewFullscreen(open) {
+      const shouldOpen = Boolean(open) && window.innerWidth <= 920;
+      document.body.classList.toggle("mobile-preview-fullscreen", shouldOpen);
+      els.previewFullscreenBtn?.setAttribute("aria-pressed", String(shouldOpen));
+      if (els.previewFullscreenBtn) els.previewFullscreenBtn.textContent = shouldOpen ? "退出全屏" : "放大预览";
+      window.requestAnimationFrame(syncPreviewScale);
+    }
+
     function togglePreviewOverflowMenu(open = null) {
       if (!els.previewOverflowMenu || !els.previewMoreBtn) return;
       const shouldOpen = open === null ? els.previewOverflowMenu.hidden : open;
@@ -7888,6 +7934,24 @@
       }
       updateMobileQuickAddVisibility();
     }
+
+    function trapMobileAgendaEditorTab(event) {
+      if (!document.body.classList.contains("mobile-agenda-editor-open")) return;
+      const focusables = Array.from(
+        els.agendaFormCard.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      ).filter((element) => !element.disabled && element.getClientRects().length > 0);
+      if (event.key !== "Tab" || !focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", trapMobileAgendaEditorTab, true);
 
     function focusAgendaTitle() {
       window.requestAnimationFrame(() => {
@@ -8824,6 +8888,11 @@
       });
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
+        if (document.body.classList.contains("mobile-preview-fullscreen")) {
+          setPreviewFullscreen(false);
+          els.previewFullscreenBtn?.focus();
+          return;
+        }
         if (isGuideOpen()) {
           closeGuide({ markSeen: false });
           return;
@@ -8853,6 +8922,9 @@
       els.previewMoreBtn?.addEventListener("click", (event) => {
         event.stopPropagation();
         togglePreviewOverflowMenu();
+      });
+      els.previewFullscreenBtn?.addEventListener("click", () => {
+        setPreviewFullscreen(!document.body.classList.contains("mobile-preview-fullscreen"));
       });
       els.previewZoomSelect?.addEventListener("change", () => setPreviewZoom(els.previewZoomSelect.value));
       els.previewDensitySelect?.addEventListener("change", () => applyPreviewDensity(els.previewDensitySelect.value));
@@ -8890,6 +8962,9 @@
       els.forkLocalDraftBtn?.addEventListener("click", forkLocalConflictVersion);
       els.openTimekeeperBtn.addEventListener("click", openTimekeeper);
       window.addEventListener("resize", () => {
+        if (window.innerWidth > 920 && document.body.classList.contains("mobile-preview-fullscreen")) {
+          setPreviewFullscreen(false);
+        }
         if (!isMobileViewport() && mobileSortMode) {
           mobileSortMode = false;
           renderAgendaList();
