@@ -56,3 +56,16 @@ test("low-frequency links open the settings drawer at their target", () => {
   assert.match(source, /function updateDataSettingsState\(status,\s*detail/);
   assert.match(source, /data-settings-attention/);
 });
+
+test("control console uses the compact neutral visual system", () => {
+  assert.match(source, /--editor-width:\s*clamp\(470px,\s*38vw,\s*560px\)/);
+  assert.match(source, /\.app-shell\s*\{[\s\S]*?grid-template-rows:\s*64px minmax\(0,\s*1fr\)/);
+  assert.match(source, /\.surface-panel\s*\{[\s\S]*?box-shadow:\s*none/);
+  assert.match(source, /\.agenda-row:hover[\s\S]*?\.agenda-menu-actions[\s\S]*?opacity:\s*1/);
+});
+
+test("responsive styles preserve the three mobile tasks and reduced motion", () => {
+  assert.match(source, /@media \(max-width:\s*920px\)[\s\S]*?\.workflow-steps/);
+  assert.match(source, /@media \(max-width:\s*620px\)[\s\S]*?\.workflow-header/);
+  assert.match(source, /@media \(prefers-reduced-motion:\s*reduce\)/);
+});

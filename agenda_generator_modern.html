@@ -30,7 +30,7 @@
       --white: #ffffff;
       --shadow-1: 0 1px 2px rgba(22, 35, 46, .06);
       --shadow-2: 0 12px 32px rgba(22, 35, 46, .16);
-      --editor-width: 470px;
+      --editor-width: clamp(470px, 38vw, 560px);
       --template-sidebar-width: 232px;
       --sidebar-left-col: minmax(0, 1.15fr);
       --sidebar-right-col: minmax(0, 0.85fr);
@@ -87,7 +87,7 @@
       height: 100dvh;
       display: grid;
       grid-template-columns: var(--editor-width) minmax(0, 1fr);
-      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-rows: 64px minmax(0, 1fr);
       background: var(--bg);
     }
 
@@ -259,7 +259,7 @@
       margin-bottom: 18px;
       border-radius: var(--r-lg);
       background: var(--surface);
-      box-shadow: var(--shadow-2);
+      box-shadow: none;
     }
 
     .surface-panel.raised {
@@ -4854,6 +4854,575 @@
       display: none;
     }
   }
+
+  /* Compact control-console layout */
+  .workflow-header {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-height: 64px;
+    display: grid;
+    grid-template-columns: minmax(190px, auto) minmax(330px, 1fr) auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 0 14px 0 18px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, .97);
+    box-shadow: var(--shadow-1);
+    z-index: 70;
+  }
+
+  .workflow-brand,
+  .workflow-status,
+  .workflow-actions,
+  .workflow-steps {
+    display: flex;
+    align-items: center;
+  }
+
+  .workflow-brand {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .workflow-brand .brand-mark {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .workflow-brand .brand-copy {
+    min-width: 0;
+  }
+
+  .workflow-brand .eyebrow {
+    margin-bottom: 1px;
+    color: var(--ink-3);
+    font-size: 10px;
+    line-height: 1.1;
+    letter-spacing: .08em;
+  }
+
+  .workflow-brand h1 {
+    color: var(--tm-blue);
+    font-size: 19px;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .workflow-steps {
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .workflow-step {
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: var(--r-md);
+    color: var(--ink-2);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .workflow-step span {
+    width: 23px;
+    height: 23px;
+    margin-right: 6px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--ink-2);
+    background: var(--surface);
+    font-family: var(--font-number);
+    font-size: 12px;
+  }
+
+  .workflow-step:hover {
+    color: var(--tm-blue);
+    background: #F3F7F9;
+  }
+
+  .workflow-step[aria-current="step"] {
+    color: var(--tm-blue);
+    background: #EAF2F6;
+  }
+
+  .workflow-step[aria-current="step"] span {
+    color: #fff;
+    border-color: var(--tm-blue);
+    background: var(--tm-blue);
+  }
+
+  .workflow-status {
+    justify-content: flex-end;
+    gap: 9px;
+    color: var(--ink-2);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .workflow-status .status-chip {
+    min-height: 26px;
+    padding: 0 9px;
+  }
+
+  .workflow-actions {
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  .workflow-actions > .button,
+  .workflow-actions .nav-button {
+    min-height: 36px;
+    padding: 0 9px;
+    border-radius: 8px;
+    box-shadow: none;
+    font-size: 12px;
+  }
+
+  .workflow-actions > .export-pdf-button {
+    padding-inline: 14px;
+  }
+
+  .workflow-actions .nav-button {
+    color: var(--ink-2);
+    background: transparent;
+  }
+
+  .workflow-actions .nav-button:hover {
+    color: var(--tm-blue);
+    background: #F3F7F9;
+    transform: none;
+  }
+
+  .workflow-actions .nav-button svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .editor-shell,
+  .preview-shell {
+    min-height: 0;
+    height: auto;
+  }
+
+  .editor-shell {
+    grid-column: 1;
+    grid-row: 2;
+    display: block;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+    background: #FBFCFC;
+    box-shadow: none;
+  }
+
+  .preview-shell {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .editor-scroll {
+    height: 100%;
+    padding: 16px 18px 28px;
+    background: #FBFCFC;
+  }
+
+  .start-actions {
+    display: grid;
+    gap: 11px;
+    padding: 2px 2px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .start-actions h2 {
+    color: var(--ink);
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .start-action-buttons {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .start-action-buttons .button {
+    min-height: 40px;
+  }
+
+  .start-action-buttons #continueDraftBtn {
+    grid-column: 1 / -1;
+    justify-self: start;
+    min-height: 30px;
+    padding-inline: 0;
+    color: var(--ink-2);
+  }
+
+  .task-section {
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+  }
+
+  .task-section > summary {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    list-style: none;
+    color: var(--tm-blue);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .task-section > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .task-section > summary::after {
+    content: "＋";
+    color: var(--ink-3);
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  .task-section[open] > summary::after {
+    content: "－";
+  }
+
+  .task-section > summary small {
+    margin-left: auto;
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .task-section-body {
+    display: grid;
+    gap: 16px;
+    padding-bottom: 18px;
+  }
+
+  .surface-panel,
+  .surface-panel.raised {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .surface-panel + .surface-panel {
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .panel-title {
+    margin-bottom: 12px;
+  }
+
+  .panel-title h2 {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  .field-grid {
+    gap: 10px;
+  }
+
+  .field {
+    gap: 5px;
+  }
+
+  .field label {
+    color: var(--ink-2);
+    font-size: 12px;
+  }
+
+  .input,
+  .select,
+  .textarea {
+    min-height: 40px;
+    padding: 0 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: none;
+    font-size: 13px;
+  }
+
+  .textarea {
+    min-height: 88px;
+    padding-block: 10px;
+  }
+
+  .input:focus,
+  .select:focus,
+  .textarea:focus {
+    border-color: var(--tm-blue);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(0, 65, 101, .12);
+  }
+
+  .agenda-toolbar-note {
+    margin: 8px 0 12px;
+    font-size: 12px;
+  }
+
+  .agenda-list {
+    overflow: clip;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
+  }
+
+  .agenda-row,
+  .agenda-row.section {
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface);
+    box-shadow: none;
+  }
+
+  .agenda-row:last-child {
+    border-bottom: 0;
+  }
+
+  .agenda-row:hover,
+  .agenda-row:focus-within {
+    background: #F4F8FA;
+    box-shadow: none;
+  }
+
+  .agenda-menu-actions {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 140ms ease;
+  }
+
+  .agenda-row:hover .agenda-menu-actions,
+  .agenda-row:focus-within .agenda-menu-actions,
+  .agenda-row.actions-open .agenda-menu-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .agenda-row.section {
+    background: #EEF4F6;
+  }
+
+  .agenda-row-time {
+    color: var(--tm-blue);
+    font-weight: 700;
+  }
+
+  .settings-section-links {
+    display: grid;
+  }
+
+  .settings-section-link {
+    min-height: 54px;
+    padding: 0 2px;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--tm-blue);
+    background: transparent;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .settings-section-link::after {
+    content: "›";
+    grid-column: 3;
+    grid-row: 1;
+    color: var(--ink-3);
+    font-size: 22px;
+    font-weight: 400;
+  }
+
+  .settings-section-link small {
+    grid-column: 2;
+    color: var(--ink-2);
+    font-size: 11px;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .settings-section-links [data-settings-attention] small {
+    color: var(--err);
+    font-weight: 700;
+  }
+
+  .preview-toolbar {
+    min-height: 58px;
+    padding: 10px 16px;
+    grid-template-columns: minmax(160px, .8fr) minmax(360px, 1.4fr);
+    background: var(--surface);
+  }
+
+  .preview-title h2 {
+    font-size: 15px;
+  }
+
+  .preview-title p {
+    font-size: 11px;
+  }
+
+  .preview-controls {
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 1180px) {
+    .workflow-header {
+      grid-template-columns: minmax(170px, auto) minmax(300px, 1fr) auto;
+      gap: 10px;
+    }
+
+    .workflow-status {
+      display: none;
+    }
+
+    .workflow-actions .nav-button-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .workflow-actions .nav-button {
+      width: 36px;
+      padding: 0;
+    }
+  }
+
+  @media (max-width: 920px) {
+    .app-shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: 56px minmax(0, 1fr);
+    }
+
+    .workflow-header {
+      min-height: 56px;
+      grid-template-columns: minmax(150px, auto) minmax(280px, 1fr) auto;
+      gap: 8px;
+      padding-inline: 12px;
+    }
+
+    .workflow-brand h1 {
+      font-size: 17px;
+    }
+
+    .workflow-step {
+      min-height: 36px;
+      padding-inline: 8px;
+      font-size: 12px;
+    }
+
+    .workflow-step span {
+      display: none;
+    }
+
+    .workflow-actions #openTimekeeperBtn,
+    .workflow-actions #classicLayoutBtn,
+    .workflow-actions #guideReplayBtn {
+      display: none;
+    }
+
+    .editor-shell,
+    .preview-shell {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    body:not([data-mobile-panel="previewPanel"]) .preview-shell {
+      display: none;
+    }
+
+    body[data-mobile-panel="previewPanel"] .editor-shell {
+      display: none;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .workflow-header {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .workflow-brand .brand-mark {
+      width: 32px;
+      height: 32px;
+      flex-basis: 32px;
+    }
+
+    .workflow-brand .eyebrow,
+    .workflow-steps,
+    .workflow-status {
+      display: none;
+    }
+
+    .workflow-brand h1 {
+      white-space: normal;
+      font-size: 16px;
+      line-height: 1.15;
+    }
+
+    .workflow-actions > .export-pdf-button {
+      min-height: 34px;
+      padding-inline: 11px;
+    }
+
+    .editor-scroll {
+      padding: 14px 14px calc(96px + env(safe-area-inset-bottom));
+    }
+
+    .start-action-buttons {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .agenda-menu-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .settings-section-link {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .settings-section-link small {
+      display: none;
+    }
+
+    .settings-section-link::after {
+      grid-column: 2;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -8057,9 +8626,9 @@
       if ((targetId === "meetingInfoPanel" || targetId === "agendaPanel") && !document.querySelector("#weeklyTaskSection")?.open) {
         document.querySelector("#weeklyTaskSection").open = true;
       }
-      if (targetId === "previewPanel" && window.innerWidth <= 920) {
-        setActiveMobileNav("previewPanel");
-        window.location.hash = "previewPanel";
+      if (window.innerWidth <= 920) {
+        setActiveMobileNav(targetId);
+        window.location.hash = targetId;
         setActiveWorkflowStep(targetId);
         return;
       }
