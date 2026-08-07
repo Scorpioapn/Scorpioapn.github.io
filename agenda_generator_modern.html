@@ -87,7 +87,13 @@
       height: 100dvh;
       display: grid;
       grid-template-columns: var(--editor-width) minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
       background: var(--bg);
+    }
+
+    .workflow-header {
+      grid-column: 1 / -1;
+      min-height: 64px;
     }
 
     .editor-shell {
@@ -430,7 +436,7 @@
     }
 
     .export-actions.primary {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .export-actions.sync-actions {
@@ -4852,39 +4858,77 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="editor-shell" aria-label="议程编辑区">
-      <header class="editor-header">
-        <div class="brand-row">
-          <div class="brand-mark" aria-hidden="true"><img src="assets/toastmasters-logo-color-png.png" alt="" /></div>
-          <div class="brand-copy">
-            <h1>畅言中文议程生成器</h1>
-          </div>
-          <div class="header-actions">
-            <a class="nav-button" id="openTimekeeperBtn" href="index.html" title="打开时间官控制台" aria-label="打开时间官控制台">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 13l3-2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
-              <span class="nav-button-label">时间官</span>
-            </a>
-            <a class="nav-button" id="classicLayoutBtn" href="agenda_generator.html" title="切换到经典版式" aria-label="切换到经典版式">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16"/><path d="M9 10v9"/></svg>
-              <span class="nav-button-label">经典版式</span>
-            </a>
-            <button class="nav-button" id="guideReplayBtn" type="button" title="重新查看使用引导">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 0 1 4.4 1.4c0 1.8-2.2 2-2.2 3.4"/><path d="M12 17h.01"/></svg>
-              <span class="nav-button-label">重新查看引导</span>
-            </button>
-            <button class="nav-button icon-only" id="settingsToggleBtn" type="button" title="打开设置" aria-label="打开设置" aria-expanded="false" aria-controls="settingsDrawer">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.36a1.7 1.7 0 0 0-1 .58l-.08.08a2 2 0 0 1-3.84 0L10 19.94a1.7 1.7 0 0 0-1-.58 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.64 15a1.7 1.7 0 0 0-.58-1l-.08-.08a2 2 0 0 1 0-3.84l.08-.08a1.7 1.7 0 0 0 .58-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.64a1.7 1.7 0 0 0 1-.58l.08-.08a2 2 0 0 1 3.84 0l.08.08a1.7 1.7 0 0 0 1 .58 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.36 9c.09.36.29.7.58 1l.08.08a2 2 0 0 1 0 3.84l-.08.08a1.7 1.7 0 0 0-.54 1Z"/></svg>
-              <span class="nav-button-label">设置</span>
-            </button>
+    <header class="workflow-header">
+      <div class="workflow-brand">
+        <div class="brand-mark" aria-hidden="true"><img src="assets/toastmasters-logo-color-png.png" alt="" /></div>
+        <div class="brand-copy">
+          <p class="eyebrow">畅言中文</p>
+          <h1>议程生成器</h1>
+        </div>
+      </div>
+      <nav class="workflow-steps" aria-label="议程制作流程">
+        <button class="workflow-step" type="button" data-workflow-target="meetingInfoPanel" aria-current="step"><span>1</span>会议信息</button>
+        <button class="workflow-step" type="button" data-workflow-target="agendaPanel"><span>2</span>本周议程</button>
+        <button class="workflow-step" type="button" data-workflow-target="previewPanel"><span>3</span>检查预览</button>
+      </nav>
+      <div class="workflow-status" aria-live="polite">
+        <span class="status-chip" id="previewChip">第 739 期</span>
+        <span class="meta" id="saveStatus">已自动保存</span>
+      </div>
+      <div class="workflow-actions">
+        <button class="button filled export-pdf-button" id="exportPdfBtn" type="button">导出 PDF</button>
+        <div class="toolbar-more">
+          <button class="button subtle icon-only" id="previewMoreBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="previewOverflowMenu" title="更多导出操作" aria-label="更多导出操作">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+          </button>
+          <div class="preview-overflow-menu" id="previewOverflowMenu" role="menu" hidden>
+            <button class="button subtle" id="printBtn" type="button" role="menuitem">打印 A4</button>
+            <button class="button subtle" id="copyBtnTop" type="button" role="menuitem">复制文字版</button>
+            <button class="button subtle" id="exportImagePdfBtn" type="button" role="menuitem">图片版 PDF（手机分享）</button>
           </div>
         </div>
-      </header>
+        <a class="nav-button" id="openTimekeeperBtn" href="index.html" title="打开时间官控制台" aria-label="打开时间官控制台">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 13l3-2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+          <span class="nav-button-label">时间官</span>
+        </a>
+        <a class="nav-button" id="classicLayoutBtn" href="agenda_generator.html" title="切换到经典版式" aria-label="切换到经典版式">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16"/><path d="M9 10v9"/></svg>
+          <span class="nav-button-label">经典版式</span>
+        </a>
+        <button class="nav-button" id="guideReplayBtn" type="button" title="重新查看使用引导">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 0 1 4.4 1.4c0 1.8-2.2 2-2.2 3.4"/><path d="M12 17h.01"/></svg>
+          <span class="nav-button-label">使用引导</span>
+        </button>
+        <button class="nav-button icon-only" id="settingsToggleBtn" type="button" title="打开设置" aria-label="打开设置" aria-expanded="false" aria-controls="settingsDrawer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.36a1.7 1.7 0 0 0-1 .58l-.08.08a2 2 0 0 1-3.84 0L10 19.94a1.7 1.7 0 0 0-1-.58 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.64 15a1.7 1.7 0 0 0-.58-1l-.08-.08a2 2 0 0 1 0-3.84l.08-.08a1.7 1.7 0 0 0 .58-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.64a1.7 1.7 0 0 0 1-.58l.08-.08a2 2 0 0 1 3.84 0l.08.08a1.7 1.7 0 0 0 1 .58 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.36 9c.09.36.29.7.58 1l.08.08a2 2 0 0 1 0 3.84l-.08.08a1.7 1.7 0 0 0-.54 1Z"/></svg>
+          <span class="nav-button-label">设置</span>
+        </button>
+      </div>
+    </header>
 
+    <aside class="editor-shell" aria-label="议程编辑区">
       <div class="editor-scroll">
+        <section class="start-actions" id="startActions" aria-labelledby="startActionsTitle">
+          <div>
+            <p class="eyebrow">快捷开始</p>
+            <h2 id="startActionsTitle">本周从哪里开始？</h2>
+          </div>
+          <div class="start-action-buttons">
+            <button class="button filled" id="relayImportBtn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+              导入接龙
+            </button>
+            <button class="button tonal" id="changeTemplateBtn" type="button">更换模板</button>
+            <button class="button subtle" id="continueDraftBtn" type="button">继续编辑当前草稿</button>
+          </div>
+        </section>
+
+        <details class="task-section" id="weeklyTaskSection" open>
+          <summary><span>每周必做</span><small>会议信息与本周议程</small></summary>
+          <div class="task-section-body">
         <section class="surface-panel raised" id="meetingInfoPanel" aria-labelledby="meetingInfoTitle">
           <div class="panel-title">
             <h2 id="meetingInfoTitle">会议信息</h2>
-            <span class="meta" id="saveStatus">已自动保存</span>
           </div>
           <div class="field-grid">
             <div class="field">
@@ -4931,14 +4975,6 @@
             <h2 id="agendaListTitle">当前议程</h2>
             <span class="meta" id="agendaCount">0 个项目</span>
           </div>
-          <div class="agenda-source-actions" id="agendaSourceActions">
-            <button class="button filled" id="relayImportBtn" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-              导入接龙
-            </button>
-            <button class="button tonal" id="changeTemplateBtn" type="button">更换模板</button>
-          </div>
-          <p class="helper-text agenda-source-note">每周从这里开工：粘贴微信接龙一键生成本期议程，或先套用流程模板再手动调整。</p>
           <div class="agenda-toolbar">
             <button class="button subtle" id="addAgendaItemBtn" type="button">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
@@ -5013,7 +5049,12 @@
 
           <div class="agenda-list" id="agendaList"></div>
         </section>
+          </div>
+        </details>
 
+        <details class="task-section" id="nextTaskSection">
+          <summary><span>下期预告</span><small>提前补充下一次例会信息</small></summary>
+          <div class="task-section-body">
         <section class="surface-panel" id="fixedInfoPanel" aria-labelledby="sideInfoTitle">
           <div class="panel-title">
             <h2 id="sideInfoTitle">下期预告</h2>
@@ -5040,7 +5081,7 @@
               </div>
             </div>
           </details>
-          <details class="fixed-info">
+          <details class="fixed-info" id="imageSettingsSection">
             <summary>海报与标识：图片上传</summary>
             <div class="upload-grid fixed-info-fields">
               <section class="upload-card qr-upload-card">
@@ -5104,6 +5145,19 @@
             </div>
           </details>
         </section>
+          </div>
+        </details>
+
+        <nav class="settings-section-links" aria-label="低频设置">
+          <button class="settings-section-link" type="button" data-settings-target="imageSettingsSection">
+            <span>图片与固定信息</span>
+            <small>Logo、二维码、俱乐部介绍与会议守则</small>
+          </button>
+          <button class="settings-section-link" type="button" data-settings-target="exportPanel">
+            <span>数据管理</span>
+            <small id="dataSettingsState">备份、导入与多设备同步</small>
+          </button>
+        </nav>
 
         <section class="surface-panel export-panel" id="exportPanel" aria-labelledby="templateTitle">
           <div class="panel-title">
@@ -5112,11 +5166,9 @@
           </div>
           <p class="helper-text">编辑内容会自动保存在本机浏览器；需要换电脑或备份时，请导出 JSON。</p>
           <div class="export-action-groups">
-            <div class="export-action-group export-print-group" hidden>
+            <div class="export-action-group export-print-group">
               <span class="export-group-title">打印输出</span>
               <div class="export-actions primary">
-                <button class="button filled export-pdf-button" id="exportPdfBtnSide" type="button">导出 PDF</button>
-                <button class="button tonal print-button" id="printBtnSide" type="button">打印 A4</button>
                 <button class="button tonal" id="copyBtn" type="button">复制文字版</button>
               </div>
             </div>
@@ -5147,7 +5199,7 @@
                 </div>
               </div>
             </div>
-            <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" />
+            <input class="file-input" id="jsonImportInput" type="file" accept="application/json,.json" aria-label="导入 JSON 备份" tabindex="-1" />
           </div>
         </section>
       </div>
@@ -5173,20 +5225,6 @@
             <option value="flow-fit-dense">极紧</option>
           </select>
           <span class="fit-status" id="previewFitStatus">✓ 一页放得下</span>
-        </div>
-        <div class="toolbar-actions">
-          <span class="status-chip" id="previewChip">第 739 期</span>
-          <button class="button filled export-pdf-button" id="exportPdfBtn" type="button">导出 PDF</button>
-          <button class="button tonal print-button" id="printBtn" type="button">打印 A4</button>
-          <div class="toolbar-more">
-            <button class="button subtle icon-only" id="previewMoreBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="previewOverflowMenu" title="更多导出操作" aria-label="更多导出操作">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-            </button>
-            <div class="preview-overflow-menu" id="previewOverflowMenu" role="menu" hidden>
-              <button class="button subtle" id="copyBtnTop" type="button" role="menuitem">复制文字版</button>
-              <button class="button subtle" id="exportImagePdfBtn" type="button" role="menuitem">图片版 PDF（手机分享）</button>
-            </div>
-          </div>
         </div>
       </header>
       <div class="preview-viewport">
@@ -5393,7 +5431,7 @@
         description: "先填写期数、主题、日期、时间和地点；这些内容会同步更新到右侧 A4 预览。"
       },
       {
-        target: "#agendaSourceActions",
+        target: "#startActions",
         title: "导入接龙 / 更换模板",
         description: "每周开工推荐从这里开始：粘贴微信群接龙一键生成本期议程，或先套用流程模板再补充细节。"
       },
@@ -5466,9 +5504,7 @@
       exportImagePdfBtn: document.querySelector("#exportImagePdfBtn"),
       exportPanel: document.querySelector("#exportPanel"),
       exportPdfBtn: document.querySelector("#exportPdfBtn"),
-      exportPdfBtnSide: document.querySelector("#exportPdfBtnSide"),
       printBtn: document.querySelector("#printBtn"),
-      printBtnSide: document.querySelector("#printBtnSide"),
       copyBtn: document.querySelector("#copyBtn"),
       copyBtnTop: document.querySelector("#copyBtnTop"),
       exportJsonBtn: document.querySelector("#exportJsonBtn"),
@@ -7561,7 +7597,7 @@
     }
 
     function setPdfExportBusy(isBusy) {
-      [els.exportPdfBtn, els.exportPdfBtnSide, els.exportImagePdfBtn].filter(Boolean).forEach((button) => {
+      [els.exportPdfBtn, els.exportImagePdfBtn].filter(Boolean).forEach((button) => {
         if (!button.dataset.idleLabel) button.dataset.idleLabel = button.textContent.trim();
         button.disabled = isBusy;
         button.textContent = isBusy ? "生成中..." : button.dataset.idleLabel;
@@ -8156,8 +8192,8 @@
       });
       bindMobileNavState();
       updateMobileQuickAddVisibility();
-      [els.exportPdfBtn, els.exportPdfBtnSide].filter(Boolean).forEach((button) => button.addEventListener("click", exportAgendaPdf));
-      [els.printBtn, els.printBtnSide].forEach((button) => button.addEventListener("click", printAgenda));
+      els.exportPdfBtn?.addEventListener("click", exportAgendaPdf);
+      els.printBtn?.addEventListener("click", printAgenda);
       [els.copyBtn, els.copyBtnTop].forEach((button) => button.addEventListener("click", copyPlainText));
       els.exportImagePdfBtn?.addEventListener("click", exportImageAgendaPdf);
       els.previewMoreBtn?.addEventListener("click", (event) => {

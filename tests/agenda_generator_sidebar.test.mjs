@@ -5,6 +5,7 @@ import { test } from "node:test";
 
 const require = createRequire(import.meta.url);
 const source = readFileSync(new URL("../agenda_generator.html", import.meta.url), "utf8");
+const modernSource = readFileSync(new URL("../agenda_generator_modern.html", import.meta.url), "utf8");
 const storageSource = readFileSync(new URL("../js/storage.js", import.meta.url), "utf8");
 const schemaSource = readFileSync(new URL("../js/agenda-schema.js", import.meta.url), "utf8");
 const templatesSource = readFileSync(new URL("../js/agenda-templates.js", import.meta.url), "utf8");
@@ -36,10 +37,23 @@ function exportPanelTemplate() {
   return match[1];
 }
 
+function modernExportPanelTemplate() {
+  const match = modernSource.match(/<section class="surface-panel export-panel"[^>]*aria-labelledby="templateTitle"[^>]*>([\s\S]*?)<\/section>/);
+  assert.ok(match, "modern export panel should use the optimized export-panel layout");
+  return match[1];
+}
+
 function cssRule(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = source.match(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`));
   assert.ok(match, `${selector} CSS rule should exist`);
+  return match[1];
+}
+
+function modernCssRule(selector) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = modernSource.match(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`));
+  assert.ok(match, `${selector} modern CSS rule should exist`);
   return match[1];
 }
 
@@ -818,17 +832,17 @@ test("fixed info editor only exposes fields that still appear in the preview", (
 });
 
 test("export panel separates print actions from json backup actions", () => {
-  const panel = exportPanelTemplate();
-  const groupsRule = cssRule(".export-action-groups");
-  const actionsRule = cssRule(".export-actions");
-  const primaryActionsRule = cssRule(".export-actions.primary");
+  const panel = modernExportPanelTemplate();
+  const groupsRule = modernCssRule(".export-action-groups");
+  const actionsRule = modernCssRule(".export-actions");
+  const primaryActionsRule = modernCssRule(".export-actions.primary");
 
   assert.ok(panel.includes("导出与备份"), "export panel title should be clearer than only 导出");
   assert.ok(panel.includes("打印输出"), "print/copy actions should have their own group");
   assert.ok(panel.includes("数据备份"), "JSON actions should have their own group");
   assert.doesNotMatch(panel, /id="exportPdfBtnSide"|id="printBtnSide"/, "settings should not duplicate primary PDF and print actions");
-  assert.match(source, /class="workflow-header"[\s\S]*?id="exportPdfBtn"/, "the global header should own the single primary PDF action");
-  assert.equal((source.match(/id="exportPdfBtn"/g) || []).length, 1, "PDF export should have one primary location");
+  assert.match(modernSource, /class="workflow-header"[\s\S]*?id="exportPdfBtn"/, "the global header should own the single primary PDF action");
+  assert.equal((modernSource.match(/id="exportPdfBtn"/g) || []).length, 1, "PDF export should have one primary location");
   assert.match(panel, /<div class="export-actions backup">[\s\S]*?id="exportJsonBtn"[\s\S]*?id="importJsonBtn"[\s\S]*?<\/div>/, "JSON export/import should sit together");
   assert.match(groupsRule, /display:\s*grid;[\s\S]*?gap:\s*14px;/, "export groups should be visually separated");
   assert.match(actionsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "paired export buttons should align in two columns");
@@ -836,13 +850,13 @@ test("export panel separates print actions from json backup actions", () => {
 });
 
 test("agenda generator exposes a WeChat relay text import modal", () => {
-  const panel = exportPanelTemplate();
+  const panel = modernExportPanelTemplate();
   const applyRelayImportSource = functionBlock("applyRelayImport");
   const renderRelayImportPreviewSource = functionBlock("renderRelayImportPreview");
 
   assert.match(source, /<script src="js\/agenda-relay-importer\.js"><\/script>[\s\S]*?<script src="js\/agenda-data\.js"><\/script>/, "relay importer should load before agenda app initialization");
   assert.match(
-    source,
+    modernSource,
     /id="startActions"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"[\s\S]*?id="continueDraftBtn"[\s\S]*?id="addAgendaItemBtn"/,
     "relay import and template switching should lead the editor ahead of manual agenda actions"
   );
@@ -890,7 +904,7 @@ test("template picker confirms before overwriting agenda state", () => {
   const applyTemplateSource = functionBlock("applyAgendaTemplate");
 
   assert.equal(panel.includes('id="changeTemplateBtn"'), false, "template switch should live in the agenda panel, not among backup actions");
-  assert.match(source, /id="agendaSourceActions"[\s\S]*?id="changeTemplateBtn"/, "agenda panel should expose the template switch button");
+  assert.match(modernSource, /id="startActions"[\s\S]*?id="changeTemplateBtn"/, "the weekly start strip should expose the template switch button");
   assert.ok(source.includes('id="templateModal"'), "template picker modal should be present");
   assert.match(applyTemplateSource, /AgendaTemplates\.getTemplateSkeleton\(templateId\)/, "template application should use the people-free skeleton from the shared template module");
   assert.match(applyTemplateSource, /window\.confirm\(`更换模板会用「\$\{skeleton\.name\}」的流程结构替换当前议程列表（人员留空，等待接龙导入或手动填写）；会议信息、图片和固定信息保持不变。是否继续？`\)[\s\S]*?return;/, "template switch should confirm with an accurate description of skeleton-only replacement");
