@@ -78,7 +78,7 @@ test("editor chrome, settings drawer, and mobile taskbar match the redesign shel
   assert.notEqual(mobileCssStart, -1, "mobile media query should exist");
   const mobileCss = source.slice(mobileCssStart);
 
-  assert.match(source, /\.editor-header\s*\{[\s\S]*?height:\s*56px;/, "editor top bar should be 56px");
+  assert.match(source, /\.workflow-header\s*\{[\s\S]*?min-height:\s*64px;/, "global workflow header should use the compact 64px desktop rhythm");
   assert.doesNotMatch(source, /TOASTMASTERS AGENDA BUILDER/, "old eyebrow should be removed");
   assert.match(source, /id="settingsDrawer"/, "fixed info, backup, and sync controls should live in a settings drawer");
   assert.match(source, /id="settingsToggleBtn"/, "top bar should expose a settings button");

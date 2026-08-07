@@ -826,12 +826,13 @@ test("export panel separates print actions from json backup actions", () => {
   assert.ok(panel.includes("导出与备份"), "export panel title should be clearer than only 导出");
   assert.ok(panel.includes("打印输出"), "print/copy actions should have their own group");
   assert.ok(panel.includes("数据备份"), "JSON actions should have their own group");
-  assert.match(panel, /<div class="export-actions primary">[\s\S]*?id="exportPdfBtnSide"[\s\S]*?id="printBtnSide"[\s\S]*?id="copyBtn"[\s\S]*?<\/div>/, "PDF, print, and copy should sit together");
-  assert.match(source, /id="exportPdfBtn"/, "preview toolbar should include a PDF export action beside print");
+  assert.doesNotMatch(panel, /id="exportPdfBtnSide"|id="printBtnSide"/, "settings should not duplicate primary PDF and print actions");
+  assert.match(source, /class="workflow-header"[\s\S]*?id="exportPdfBtn"/, "the global header should own the single primary PDF action");
+  assert.equal((source.match(/id="exportPdfBtn"/g) || []).length, 1, "PDF export should have one primary location");
   assert.match(panel, /<div class="export-actions backup">[\s\S]*?id="exportJsonBtn"[\s\S]*?id="importJsonBtn"[\s\S]*?<\/div>/, "JSON export/import should sit together");
   assert.match(groupsRule, /display:\s*grid;[\s\S]*?gap:\s*14px;/, "export groups should be visually separated");
   assert.match(actionsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "paired export buttons should align in two columns");
-  assert.match(primaryActionsRule, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/, "primary export buttons should align in three columns on desktop");
+  assert.match(primaryActionsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "secondary export tools should align in two columns on desktop");
 });
 
 test("agenda generator exposes a WeChat relay text import modal", () => {
@@ -842,8 +843,8 @@ test("agenda generator exposes a WeChat relay text import modal", () => {
   assert.match(source, /<script src="js\/agenda-relay-importer\.js"><\/script>[\s\S]*?<script src="js\/agenda-data\.js"><\/script>/, "relay importer should load before agenda app initialization");
   assert.match(
     source,
-    /id="agendaPanel"[\s\S]*?id="agendaSourceActions"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"[\s\S]*?id="addAgendaItemBtn"/,
-    "relay import and template switching should lead the agenda panel, ahead of manual add buttons"
+    /id="startActions"[\s\S]*?id="relayImportBtn"[\s\S]*?id="changeTemplateBtn"[\s\S]*?id="continueDraftBtn"[\s\S]*?id="addAgendaItemBtn"/,
+    "relay import and template switching should lead the editor ahead of manual agenda actions"
   );
   assert.equal(panel.includes('id="relayImportBtn"'), false, "relay import should no longer hide among JSON backup controls");
   assert.ok(source.includes('id="relayImportModal"'), "relay import modal should exist");
