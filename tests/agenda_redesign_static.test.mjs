@@ -11,6 +11,14 @@ function cssRule(selector) {
   return matches.at(-1)[1];
 }
 
+function cssRuleContaining(selector, marker) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matches = Array.from(source.matchAll(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`, "g")));
+  const match = matches.find((entry) => entry[1].includes(marker));
+  assert.ok(match, `${selector} CSS rule should contain ${marker}`);
+  return match[1];
+}
+
 function functionBlock(name) {
   const start = source.indexOf(`function ${name}`);
   assert.notEqual(start, -1, `${name} function should exist`);
@@ -44,7 +52,7 @@ test("redesign tokens replace the old warm material palette", () => {
   assert.doesNotMatch(cssRule(".app-shell"), /radial-gradient|linear-gradient/, "app shell should use a flat background");
 });
 
-test("paper layout uses the compact A4 spec and timing legend table", () => {
+test("paper layout uses the compact A4 spec without the redundant row legend", () => {
   const sheet = source;
   const renderPreview = functionBlock("renderPreview");
 
@@ -54,8 +62,17 @@ test("paper layout uses the compact A4 spec and timing legend table", () => {
   assert.match(source, /\.template-header\s*\{[\s\S]*?background:\s*var\(--surface\);[\s\S]*?border-bottom:\s*2\.5px solid var\(--tm-blue\);/, "paper header should be white with a blue rule");
   assert.match(renderPreview, /class="timing-legend-table"/, "timing rules should render as one legend table");
   assert.match(renderPreview, /≤3 分[\s\S]*?3–10 分[\s\S]*?＞10 分/, "timing table should expose all duration columns");
-  assert.match(renderPreview, /class="flow-row-legend"/, "flow table should include a row color legend");
+  assert.doesNotMatch(renderPreview, /class="flow-row-legend"/, "flow table should not spend A4 height on the row color legend");
   assert.equal(sheet.includes("--flow-td-font: 12px"), true, "standard density should use the 12px body tier");
+});
+
+test("paper header scales its identity into the available whitespace", () => {
+  assert.match(cssRuleContaining(".template-sheet", "--template-sidebar-width: 232px"), /--template-header-min:\s*76px;/, "paper header should use a modestly taller identity row");
+  assert.match(cssRuleContaining(".template-header", "grid-template-columns: 78px"), /grid-template-columns:\s*78px minmax\(0,\s*1fr\) 182px;/, "header columns should make room for the larger logo and metadata");
+  assert.match(cssRule(".tm-logo-print"), /width:\s*72px;[\s\S]*?height:\s*58px;/, "print logo should use the available header space");
+  assert.match(cssRule(".template-title-block h2"), /font-size:\s*24px;/, "club name should lead the header more confidently");
+  assert.match(cssRule(".template-theme-line"), /font-size:\s*12\.5px;/, "theme metadata should remain readable under the larger title");
+  assert.match(cssRule(".template-meta-stack"), /font-size:\s*13px;/, "date and issue metadata should balance the title block");
 });
 
 test("primary PDF and print actions use vector browser print while image PDF remains secondary", () => {

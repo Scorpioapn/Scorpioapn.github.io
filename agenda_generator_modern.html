@@ -4203,7 +4203,7 @@
     --sidebar-card-y: 8px;
     --sidebar-pair-grid-width: 190px;
     --sidebar-pair-gap: 10px;
-    --template-header-min: 64px;
+    --template-header-min: 76px;
     --template-header-padding: 0 0 8px;
     --template-main-padding: 8px 0 8px;
     --template-main-gap: 10px;
@@ -4251,7 +4251,7 @@
   .template-header {
     min-height: var(--template-header-min);
     padding: var(--template-header-padding);
-    grid-template-columns: 62px minmax(0, 1fr) 170px;
+    grid-template-columns: 78px minmax(0, 1fr) 182px;
     gap: 12px;
     color: var(--ink);
     background: var(--surface);
@@ -4260,8 +4260,8 @@
   }
 
   .tm-logo-print {
-    width: 58px;
-    height: 46px;
+    width: 72px;
+    height: 58px;
   }
 
   .template-title-block {
@@ -4274,7 +4274,7 @@
 
   .template-title-block h2 {
     color: var(--tm-blue);
-    font-size: 20px;
+    font-size: 24px;
     line-height: 1.25;
     font-weight: 700;
   }
@@ -4284,7 +4284,7 @@
     justify-content: flex-start;
     gap: 8px;
     color: var(--ink-2);
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 500;
   }
 
@@ -4292,7 +4292,7 @@
     gap: 3px;
     justify-content: stretch;
     color: var(--ink);
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.35;
     font-weight: 500;
     text-align: right;
@@ -4484,37 +4484,6 @@
   .flow-table tr.break-row .flow-content {
     border-left: 3px solid var(--tm-blue);
   }
-
-  .flow-row-legend {
-    min-height: 18px;
-    padding: 2px 8px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 12px;
-    border-inline: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    color: var(--ink-2);
-    font-size: 10px;
-    line-height: 1;
-  }
-
-  .flow-row-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .flow-row-legend i {
-    width: 12px;
-    height: 8px;
-    display: inline-block;
-    border: 1px solid var(--border);
-  }
-
-  .legend-blue { background: var(--row-blue); }
-  .legend-green { background: var(--row-green); }
-  .legend-gray { background: var(--row-gray); border-left: 3px solid var(--tm-blue) !important; }
 
   .vision-bar {
     font-size: 11px;
@@ -6955,11 +6924,6 @@
               </thead>
               <tbody>${itemRows}</tbody>
             </table>
-            <div class="flow-row-legend" aria-label="行底色图例">
-              <span><i class="legend-blue"></i>即兴</span>
-              <span><i class="legend-green"></i>备稿</span>
-              <span><i class="legend-gray"></i>茶歇</span>
-            </div>
             <div class="vision-bar">${escapeHtml(state.meetingVision || "")}</div>
           </section>
         </section>

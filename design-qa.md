@@ -48,7 +48,7 @@ No actionable P0, P1, or P2 fidelity findings remain.
 - Mobile: task navigation; agenda editor open/close; forward and backward focus wrapping; regenerated-trigger focus restoration; preview switch; fullscreen open; Escape close; focus restoration.
 - Breakpoints: 1440 × 1024, 393 × 852, and 412 × 915.
 - Browser console: zero warnings or errors after the exercised desktop workflow; no interaction exception or page failure during the mobile workflow.
-- Automated regression: `npm test` — 149 passed, 0 failed.
+- Automated regression: `npm test` — 151 passed, 0 failed.
 
 ## Comparison history
 
@@ -81,5 +81,56 @@ No actionable P0, P1, or P2 fidelity findings remain.
 ## Follow-up Polish
 
 - No P3 item is required before handoff.
+
+## Iteration 3 — annotated A4 header and legend refinement
+
+### Comparison target
+
+- Source visual truth (legend annotation): `C:/Users/77075/AppData/Roaming/Claude/tmp/codex-clipboard-8353ca0c-6969-431a-aa0c-ebffb59309a8.png`
+- Source visual truth (header annotation): `C:/Users/77075/AppData/Roaming/Claude/tmp/codex-clipboard-4f1d3a00-a52d-475a-81dc-39aa16b52f15.png`
+- Browser-rendered implementation: `http://localhost:4173/agenda_generator_modern.html`
+- Full implementation evidence: `agenda-control-console-header-update.png`, `agenda-control-console-legend-removed.png`
+- Focused implementation evidence: `agenda-control-console-header-focus.png`, `agenda-control-console-bottom-focus.png`
+- State: saved 27-item agenda, A4 preview in `flow-fit-micro`, top-header and bottom-of-agenda scroll positions.
+
+### Viewport and normalization
+
+| Evidence | CSS viewport | Pixel dimensions | Density | Normalization |
+| --- | ---: | ---: | ---: | --- |
+| Legend annotation | focused source crop | 884 × 163 | supplied raster | Compared by content region; red annotation identifies the element to remove |
+| Header annotation | focused source crop | 1140 × 377 | supplied raster | Compared by header proportions and hierarchy; surrounding page scale differs |
+| Full browser implementation | 1125 × 801 | 1125 × 800 | DPR 1.3 | Browser viewport capture; the one-pixel height difference is browser chrome rounding |
+| Header focused implementation | 585 × 88 CSS px on screen | 585 × 88 | DPR-normalized browser capture | Cropped from the full implementation at the measured header bounds |
+| Bottom focused implementation | visible A4 bottom region | 365 × 472 | DPR-normalized browser capture | Cropped from the same browser viewport and agenda state |
+
+### Full-view and focused comparison evidence
+
+The two source annotations and the two browser captures were opened together in one comparison input. The full view confirms that the A4 remains the dominant proof surface and still fits on one page. The focused header comparison confirms that the existing Toastmasters asset is larger and sharper without changing the established three-column relationship. The focused bottom comparison confirms that the “即兴 / 备稿 / 茶歇” legend is absent and that the vision bar now follows the final agenda row directly, with the lower cards still clear of the printable footer.
+
+### Findings
+
+No actionable P0, P1, or P2 findings remain.
+
+- Fonts and typography: the club title is now 24 px, the theme line 12.5 px, and the right metadata 13 px. Their weights, wrapping, and alignment remain balanced in the 76 px header.
+- Spacing and layout rhythm: the logo column is 78 px, metadata column 182 px, and the header minimum height 76 px. Removing the 18 px legend reclaims more height than the 12 px header increase consumes. Browser geometry shows a 0.31 px non-overlapping final-row/vision boundary and positive 5.71 px flow-to-footer and 6.34 px vision-to-footer gaps.
+- Colors and visual tokens: the existing navy, maroon, white, and semantic row fills are unchanged; the removed legend did not remove any row-color treatment.
+- Image quality and asset fidelity: the existing Toastmasters logo asset is preserved at 72 × 58 CSS px with no stretching, placeholder, or code-drawn substitute.
+- Copy and content: only the redundant legend labels were removed. Meeting identity, date, time, issue, theme, word, manager, vision, and agenda content remain intact.
+- Responsiveness and accessibility: at the checked 1125 × 801 viewport the page has no horizontal or vertical document overflow, the A4 status remains “一页放得下”, and the browser console contains zero warnings or errors.
+
+### Comparison history
+
+- Initial annotated state: the legend consumed a dedicated strip above the vision bar and the header identity was visually undersized within its available area.
+- Fix applied: removed the legend from the rendered A4 DOM and deleted its CSS; increased the header minimum height, grid tracks, logo, title, supporting copy, and right metadata.
+- Post-fix evidence: `agenda-control-console-header-focus.png` and `agenda-control-console-bottom-focus.png` show the revised regions in the same agenda state. No further P0/P1/P2 visual fix was identified.
+
+### Implementation checklist
+
+- [x] Remove the A4 row-color legend from markup and styles
+- [x] Scale the existing logo and all three header text tiers
+- [x] Preserve A4 one-page fit and footer clearance
+- [x] Compare both annotated regions with browser-rendered focused captures
+- [x] Check browser warnings and errors
+- [x] Add static regression coverage for the approved measurements
 
 final result: passed
