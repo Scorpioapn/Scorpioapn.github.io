@@ -80,6 +80,10 @@ test("mobile agenda editor traps focus and restores its trigger", () => {
   assert.match(source, /function trapMobileAgendaEditorTab\(event\)/);
   assert.match(source, /mobile-agenda-editor-open[\s\S]*?querySelectorAll[\s\S]*?Tab/);
   assert.match(source, /function clearAgendaForm\(\)[\s\S]*?restoreAgendaTriggerFocus\(\)/);
+  const restoreBlock = block("function rememberAgendaTrigger()", "function syncMobileEditorState()");
+  assert.match(restoreBlock, /dataset\.action/);
+  assert.match(restoreBlock, /dataset\.id/);
+  assert.match(restoreBlock, /querySelectorAll\("\[data-action\]\[data-id\]\"\)/);
 });
 
 test("hidden JSON input is named and skipped by direct tabbing", () => {

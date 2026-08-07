@@ -7902,18 +7902,37 @@
     }
 
     function rememberAgendaTrigger() {
-      lastAgendaTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const element = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      lastAgendaTrigger = element
+        ? {
+            element,
+            action: element.dataset.action || "",
+            id: element.dataset.id || ""
+          }
+        : null;
     }
 
     function restoreAgendaTriggerFocus() {
-      if (!isMobileViewport() || !lastAgendaTrigger || !document.contains(lastAgendaTrigger)) {
+      if (!isMobileViewport() || !lastAgendaTrigger) {
+        lastAgendaTrigger = null;
+        return;
+      }
+      let target = lastAgendaTrigger.element;
+      if (!document.contains(target) && lastAgendaTrigger.action && lastAgendaTrigger.id) {
+        target = Array.from(els.agendaList.querySelectorAll("[data-action][data-id]"))
+          .find((element) => (
+            element.dataset.action === lastAgendaTrigger.action
+            && element.dataset.id === lastAgendaTrigger.id
+          ));
+      }
+      if (!target) {
         lastAgendaTrigger = null;
         return;
       }
       try {
-        lastAgendaTrigger.focus({ preventScroll: true });
+        target.focus({ preventScroll: true });
       } catch (error) {
-        lastAgendaTrigger.focus();
+        target.focus();
       }
       lastAgendaTrigger = null;
     }
