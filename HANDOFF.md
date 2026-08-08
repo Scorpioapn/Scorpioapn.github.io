@@ -551,6 +551,14 @@ git show <commit>
 
 ## 18. 每次交接时更新本文件
 
+日期：2026-08-08  
+分支/提交：`codex/agenda-modern-control-console` @ `b6ca7fb`（发布合并前）  
+目标：完成 Modern 议程生成器控制台重设计，并按标注移除 A4 行底色图例、强化页眉识别度、修复页脚遮挡。  
+修改文件：`agenda_generator_modern.html`、相关静态/行为测试、设计说明、视觉 QA 报告与对照截图。  
+验证：`npm test` 159 项通过；`git diff --check` 待发布前复核；桌面/移动端与 A4 预览已做浏览器验证。  
+部署：用户已授权直接推送 `main`；Pages 与 Supabase workflow 状态在推送后检查。  
+遗留：发布后确认 GitHub Pages 构建、Supabase workflow，并强制刷新线上 Modern 页面。
+
 完成一轮工作后，在本节顶部追加简短记录：
 
 ```text
