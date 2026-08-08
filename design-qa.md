@@ -134,3 +134,66 @@ No actionable P0, P1, or P2 findings remain.
 - [x] Add static regression coverage for the approved measurements
 
 final result: passed
+
+## Modern agenda PDF preview parity QA
+
+- Source visual truth: C:\Users\77075\AppData\Roaming\Claude\tmp\codex-clipboard-5a53e0b7-bb68-4a6e-b086-10912965d704.png
+- Implementation PDF: C:\Users\77075\.codex\visualizations\2026\08\07\019fdb90-bf47-7eb0-9758-da0f61bda1e6\pdf-review\preview-parity.pdf
+- Implementation render: C:\Users\77075\.codex\visualizations\2026\08\07\019fdb90-bf47-7eb0-9758-da0f61bda1e6\pdf-review\preview-parity-page-1.png
+- State: modern agenda A4 preview / browser vector print, standard density, full single-page document
+- Browser viewport used for screen regression: 875 x 955 CSS px at device density 1
+- PDF page: A4 portrait, 594.96 x 841.92 pt
+- Source pixels: 875 x 955; detected A4 page crop: 633 x 896
+- Implementation pixels: 893 x 1263 at 1.5x PDF rendering density
+- Density normalization: the source A4 crop was resampled to 893 x 1263 before comparison
+- Content caveat: the source contains issue 779 while the local regression fixture contains issue 782. Layout, type, color, assets, spacing, and document chrome were compared; agenda copy and row count were not treated as fidelity differences.
+
+### Full-view comparison evidence
+
+- Side-by-side normalized comparison: C:\Users\77075\.codex\visualizations\2026\08\07\019fdb90-bf47-7eb0-9758-da0f61bda1e6\pdf-review\design-qa\full-comparison.png
+- Reference content margins (left / top / right / bottom): 4.90% / 3.68% / 4.74% / 4.24%
+- Implementation content margins: 4.70% / 3.72% / 4.70% / 4.20%
+- Composition result: the A4 inset, two-column body, header rule, sidebar width, agenda-table proportion, vision bar, and three-card footer align with the reference.
+
+### Focused comparison evidence
+
+- Header and first-row structure: C:\Users\77075\.codex\visualizations\2026\08\07\019fdb90-bf47-7eb0-9758-da0f61bda1e6\pdf-review\design-qa\header-comparison.png
+- Dense agenda table: C:\Users\77075\.codex\visualizations\2026\08\07\019fdb90-bf47-7eb0-9758-da0f61bda1e6\pdf-review\design-qa\agenda-comparison.png
+
+### Required fidelity surfaces
+
+- Fonts and typography: the same application font stack, weights, hierarchy, line height, numeric face, and wrapping are inherited by print. The normalized source is softer because it began as a scaled browser screenshot; this is not an implementation mismatch.
+- Spacing and layout rhythm: the print sheet now uses the same 210 x 297mm artboard and 10mm inset as preview. Card gaps, columns, table density, footer height, borders, and square page corners align.
+- Colors and visual tokens: print now inherits the preview's maroon card headers, deep-blue table header and section rail, pale row fills, blue rule, and white paper instead of applying a printer-only palette.
+- Image quality and asset fidelity: the supplied Toastmasters logo and QR assets remain the same source assets. The generated PDF keeps vector text and sharp raster assets without substitutes.
+- Copy and content: all application-specific labels and document sections remain present. Issue-specific agenda copy differs only because the local fixture is issue 782 rather than the reference's issue 779.
+
+### Comparison history
+
+#### Iteration 1 - blocked
+
+- P1: the prior PDF used a legacy 980 x 1386px poster sheet scaled to the page with zero padding. Evidence: old PDF content margins were 0.00% / 0.32% / 0.00% / 0.71% versus the reference's approximately 5% inset.
+- P1: print-only color overrides changed maroon card titles, the deep-blue table header, and the blue section rail to white, so export did not match the visible preview.
+- Fix: replaced the legacy scaled sheet with the modern 210 x 297mm artboard, restored the 10mm inset, removed print-only recoloring, and retained only structural print isolation plus exact color adjustment.
+
+#### Iteration 2 - passed
+
+- Post-fix evidence: full-comparison.png, header-comparison.png, and agenda-comparison.png show the restored inset, palette, proportions, and dense-table treatment.
+- PDF verification: one A4 page, selectable text, 1,369 extracted characters, with the full footer on the same page.
+- Browser regression: preview interaction opened successfully and browser console reported no warnings or errors.
+
+### Findings
+
+- No actionable P0, P1, or P2 visual differences remain after density normalization.
+- P3 accepted: the reference screenshot contains different meeting content and browser-scale antialiasing, so text rasterization is not pixel-identical even though the document styles match.
+
+### Implementation checklist
+
+- [x] Preserve one authoritative A4 print rule.
+- [x] Match preview artboard dimensions and 10mm inset.
+- [x] Preserve preview colors, typography, supplied logo, and QR assets.
+- [x] Keep browser chrome out of print.
+- [x] Verify one-page PDF output and selectable text.
+- [x] Verify the rendered PDF against the normalized reference at full view and focused regions.
+
+final result: passed

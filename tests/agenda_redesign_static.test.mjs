@@ -104,7 +104,7 @@ test("primary PDF and print actions use vector browser print while image PDF rem
   assert.match(bindEvents, /exportImagePdfBtn[\s\S]*?exportImageAgendaPdf/, "overflow image PDF action should use the retained raster exporter");
 });
 
-test("browser PDF print isolates exactly one fixed A4 sheet", () => {
+test("browser PDF print matches the modern preview artboard on one A4 sheet", () => {
   const pageRules = Array.from(source.matchAll(/@page\s*\{([\s\S]*?)\}/g));
   const printMediaRules = Array.from(source.matchAll(/@media print\s*\{/g));
   const printCss = atRuleBlock("@media print");
@@ -112,11 +112,12 @@ test("browser PDF print isolates exactly one fixed A4 sheet", () => {
 
   assert.equal(pageRules.length, 1, "one authoritative @page rule should control PDF pagination");
   assert.match(pageRules[0][1], /size:\s*A4 portrait;[\s\S]*?margin:\s*0;/, "browser PDF should use a borderless A4 canvas");
-  assert.equal(printMediaRules.length, 1, "duplicate print media blocks must not override the fixed A4 model");
+  assert.equal(printMediaRules.length, 1, "duplicate print media blocks must not override the modern A4 model");
   assert.match(printCss, /\.workflow-header,[\s\S]*?\.settings-drawer-scrim\s*\{\s*display:\s*none !important;/, "browser chrome and drawers should be absent from the PDF");
   assert.match(printCss, /\.preview-frame\s*\{[\s\S]*?width:\s*210mm !important;[\s\S]*?height:\s*297mm !important;[\s\S]*?margin:\s*0 !important;[\s\S]*?overflow:\s*hidden !important;/, "print frame should occupy exactly one physical A4 page despite later screen rules");
-  assert.match(printCss, /\.preview-frame \.template-sheet\s*\{[\s\S]*?width:\s*980px !important;[\s\S]*?height:\s*1386px !important;[\s\S]*?transform:\s*scale\(0\.8099\) !important;/, "print sheet should retain the fixed artboard scale that fits A4");
-  assert.doesNotMatch(printSheetRule, /height:\s*auto !important|transform:\s*none !important|min-height:\s*calc\(297mm - 24mm\)/, "print rules must not expand or unscale the sheet");
+  assert.match(printSheetRule, /width:\s*210mm !important;[\s\S]*?height:\s*297mm !important;[\s\S]*?padding:\s*10mm !important;[\s\S]*?border-radius:\s*0 !important;[\s\S]*?transform:\s*none !important;/, "print sheet should preserve the same physical artboard, inset, and scale as the modern preview");
+  assert.doesNotMatch(printSheetRule, /980px|1386px|scale\(0\.8099\)|--template-sidebar-width:\s*316px/, "legacy poster dimensions must not replace the modern preview layout when printing");
+  assert.doesNotMatch(printCss, /\.template-header\s*\{[\s\S]*?background(?:-color)?:[\s\S]*?!important|\.flow-table th\s*\{[\s\S]*?background:[\s\S]*?!important/, "print should inherit the preview palette instead of recoloring the document");
 });
 
 test("editor chrome, settings drawer, and mobile taskbar match the redesign shell", () => {
