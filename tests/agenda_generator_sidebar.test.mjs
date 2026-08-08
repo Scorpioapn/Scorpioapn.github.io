@@ -297,6 +297,21 @@ test("image upload editor omits obsolete current poster upload", () => {
   assert.equal(uploadDetails.includes('data-image-preview="posterData"'), false, "current poster preview upload card should be removed");
   assert.equal(uploadDetails.includes("当期海报"), false, "current poster editing copy should be removed from the upload editor");
 });
+
+test("image uploads reject oversized files before decoding and use object URLs", () => {
+  const validateUpload = functionBlock("validateUploadImageFile");
+  const loadImage = functionBlock("loadImageFromFile");
+  const imageUpload = functionBlock("imageFileToDataUrl");
+
+  assert.match(source, /const MAX_UPLOAD_IMAGE_BYTES\s*=\s*10 \* 1024 \* 1024;/, "image upload should define a 10MB preflight limit");
+  assert.match(validateUpload, /file\.size > MAX_UPLOAD_IMAGE_BYTES/, "image upload should reject oversized files before reading them");
+  assert.match(validateUpload, /10MB 以内的图片/, "oversized image uploads should show a user-friendly Chinese message");
+  assert.match(loadImage, /URL\.createObjectURL\(file\)/, "image upload should load the original file through an object URL instead of base64");
+  assert.match(loadImage + imageUpload, /URL\.revokeObjectURL\(objectUrl\)/, "object URLs should be revoked after use or load failure");
+  assert.match(imageUpload, /validateUploadImageFile\(file\)[\s\S]*loadImageFromFile\(file\)/, "validation should happen before image decoding");
+  assert.doesNotMatch(imageUpload, /readAsDataURL\(file\)/, "image upload should not base64-read the whole original file before resizing");
+});
+
 test("printable sidebar keeps a single aligned four-card grid", () => {
   assert.match(source, /--template-sidebar-width:\s*316px;/, "sidebar should gain a little width for a calmer left column");
   assert.match(
@@ -438,13 +453,15 @@ test("agenda generator adds task-oriented mobile navigation and bottom sheet edi
   }
   assert.match(source, /class="mobile-taskbar"/, "mobile taskbar should be rendered outside the desktop editor flow");
   assert.match(source, /id="mobileQuickAddBtn"/, "mobile quick add button should exist");
+  assert.match(source, /id="mobileQuickAddBtn"[^>]*aria-label="添加项目"/, "compact mobile quick add should retain an accessible label");
   assert.match(source, /id="mobileQuickAddBtn"[^>]*hidden/, "mobile quick add should start hidden until the agenda tab is active");
   assert.match(source, /id="mobileEditorScrim"/, "mobile bottom sheet should have a dismiss scrim");
   assert.match(source, /id="cancelAgendaBtn"/, "mobile editor should expose an explicit cancel button");
 
   assert.match(mobileCss, /\.mobile-taskbar\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/, "mobile taskbar should be fixed with four task entries");
-  assert.match(mobileCss, /\.toast\s*\{[\s\S]*?bottom:\s*calc\(88px \+ env\(safe-area-inset-bottom\)\);[\s\S]*?z-index:\s*90;/, "mobile toast should sit above the fixed taskbar so undo remains tappable");
-  assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*calc\(82px/, "quick add should sit above the taskbar");
+  assert.match(mobileCss, /\.toast\s*\{[\s\S]*?bottom:\s*calc\(76px \+ env\(safe-area-inset-bottom\)\);[\s\S]*?z-index:\s*90;/, "mobile toast should sit above the lighter fixed taskbar so undo remains tappable");
+  assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*calc\(72px/, "quick add should sit above the compact taskbar");
+  assert.match(mobileCss, /\.mobile-quick-add\s*\{[\s\S]*?width:\s*46px;[\s\S]*?font-size:\s*0;/, "mobile quick add should collapse to an icon button instead of covering agenda rows");
   assert.match(mobileCss, /body\.mobile-agenda-editor-open \.mobile-taskbar\s*\{[\s\S]*?display:\s*none;/, "taskbar should not cover mobile sheet save/cancel actions");
   assert.match(mobileCss, /\.agenda-form-card\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*0;[\s\S]*?max-height:\s*min\(88dvh,\s*720px\);/, "agenda form should become a mobile bottom sheet");
   assert.match(mobileCss, /\.agenda-form-card \.actions-row\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?bottom:\s*0;/, "mobile save/cancel actions should stay fixed at the bottom of the sheet");
@@ -473,16 +490,21 @@ test("agenda generator mobile list hides risky actions behind a menu and adds so
   assert.match(mobileCss, /\.agenda-direct-actions\s*\{[\s\S]*?display:\s*none;/, "mobile should hide direct duplicate/delete actions");
   assert.match(mobileCss, /\.agenda-menu-actions\s*\{[\s\S]*?display:\s*flex;/, "mobile should show the compact menu action");
   assert.match(mobileCss, /\.agenda-list\.sort-mode \.agenda-mobile-sort\s*\{[\s\S]*?display:\s*grid;/, "sort mode should reveal explicit up/down controls");
+  assert.match(mobileCss, /\.agenda-source-note,\s*\.agenda-toolbar-note\s*\{[\s\S]*?display:\s*none;/, "mobile agenda should hide explanatory copy so rows appear earlier");
+  assert.match(mobileCss, /\.agenda-row\s*\{[\s\S]*?min-height:\s*48px;[\s\S]*?padding:\s*7px 8px;/, "mobile agenda rows should stay compact enough for scanning");
 });
 
 test("agenda generator mobile preview shows a confident thumbnail and export-first actions", () => {
   const mobileCss = cssMediaBlock("max-width: 620px");
 
-  assert.match(mobileCss, /\.preview-viewport\s*\{[\s\S]*?min-height:\s*min\(560px,\s*calc\(100dvh - 300px\)\);/, "mobile preview should reserve a visible A4 thumbnail area instead of feeling blank");
+  assert.match(mobileCss, /\.preview-title p,\s*#previewChip,\s*#copyBtnTop\s*\{[\s\S]*?display:\s*none;/, "mobile preview should remove secondary toolbar content so the poster appears sooner");
+  assert.match(mobileCss, /\.preview-viewport\s*\{[\s\S]*?min-height:\s*min\(660px,\s*calc\(100dvh - 170px\)\);/, "mobile preview should prioritize a tall visible A4 thumbnail area");
   assert.match(mobileCss, /\.preview-frame\s*\{[\s\S]*?background:\s*#fffdf8;[\s\S]*?box-shadow:\s*var\(--shadow-2\);/, "mobile preview frame should read as a loaded document card");
-  assert.match(mobileCss, /\.toolbar-actions\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(0,\s*0\.82fr\) minmax\(0,\s*1\.18fr\);/, "mobile toolbar should use a stable grid that gives export the stronger slot");
-  assert.match(mobileCss, /\.toolbar-actions \.export-pdf-button\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?min-height:\s*56px;/, "mobile PDF export should be the dominant preview action");
-  assert.match(mobileCss, /\.toolbar-actions \.print-button\s*\{[\s\S]*?min-height:\s*48px;/, "mobile print should remain available but secondary to PDF export");
+  assert.match(mobileCss, /\.toolbar-actions\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1\.12fr\) minmax\(0,\s*0\.88fr\);/, "mobile toolbar should keep export stronger while fitting one compact row");
+  assert.match(mobileCss, /\.toolbar-actions \.export-pdf-button\s*\{[\s\S]*?min-height:\s*46px;/, "mobile PDF export should remain thumb-friendly without delaying the preview");
+  assert.match(mobileCss, /\.toolbar-actions \.print-button\s*\{[\s\S]*?min-height:\s*44px;/, "mobile print should remain available but secondary to PDF export");
+  assert.match(mobileCss, /\.nav-button-label\s*\{[\s\S]*?position:\s*static;[\s\S]*?clip-path:\s*none;/, "mobile header icon buttons should expose visible labels");
+  assert.match(mobileCss, /#meetingInfoPanel \.field-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/, "mobile meeting info should use two columns for short editable fields");
 });
 
 test("agenda generator gives the mobile editor dialog semantics and scoped quick add", () => {
@@ -741,6 +763,19 @@ test("timekeeper agenda matching avoids ambiguous duplicate names", () => {
   );
   assert.equal(ambiguous[0].id, "x1", "duplicate names without stronger keys should not inherit a possibly wrong existing item");
   assert.equal(ambiguous[1].id, "x2", "duplicate names without stronger keys should remain independent");
+});
+
+test("timekeeper agenda schema assigns unique fallback ids to idless incoming items", () => {
+  const merged = schema.mergeTimekeeperAgendaItems(
+    [
+      { name: "无 ID 环节 A", plannedMinutes: 2 },
+      { name: "无 ID 环节 B", plannedMinutes: 3 }
+    ],
+    []
+  );
+
+  assert.deepEqual(merged.map((item) => item.id), ["agenda-item-1", "agenda-item-2"]);
+  assert.deepEqual(merged.map((item) => item.name), ["无 ID 环节 A", "无 ID 环节 B"]);
 });
 
 test("agenda generator warns when the A4 preview may overflow", () => {

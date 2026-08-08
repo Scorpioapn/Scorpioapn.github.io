@@ -98,6 +98,7 @@ function createController({
   initialDraftId = "draft_12345678901234567890",
   payload = { meetingNo: "739" },
   rpcHandler,
+  requestTimeoutMs,
   online = () => true,
   onError = () => {},
   onConflict = () => {}
@@ -122,6 +123,7 @@ function createController({
     renderLink: (url, draftId) => links.push({ url, draftId }),
     nowHref: () => "https://scorpioapn.github.io/agenda_generator.html",
     setBrowserUrl: (url) => urls.push(url),
+    requestTimeoutMs,
     setTimeout: (fn) => {
       const id = nextTimerId;
       nextTimerId += 1;
@@ -230,6 +232,34 @@ test("cloud sync rejects stale saves without broadcasting success", async () => 
   assert.equal(fake.calls.some((call) => call[0] === "send"), false, "stale saves should not broadcast a successful update");
   assert.equal(controller.hasConflict(), true);
   assert.deepEqual(conflicts, [{ remoteVersion: 7, reason: "version-conflict" }]);
+});
+
+test("cloud sync reads Edge Function error bodies from non-2xx function responses", async () => {
+  const conflicts = [];
+  const edgeError = new Error("Edge Function returned a non-2xx status code");
+  edgeError.context = new Response(JSON.stringify({
+    error: { code: "version_conflict", message: "version_conflict" }
+  }), {
+    status: 409,
+    headers: { "content-type": "application/json" }
+  });
+  const { controller, statuses } = createController({
+    payload: { meetingNo: "stale-local" },
+    rpcHandler(name) {
+      if (name === "save_agenda_draft") {
+        return Promise.resolve({ data: null, error: edgeError });
+      }
+      return Promise.resolve({ data: { payload: { meetingNo: "remote" }, version: 4 }, error: null });
+    },
+    onConflict: (conflict) => conflicts.push(conflict)
+  });
+
+  await controller.init();
+  await assert.rejects(() => controller.saveNow(), /version_conflict/);
+
+  assert.equal(controller.hasConflict(), true);
+  assert.ok(statuses.some(([status, detail]) => status === CloudSync.SYNC_STATUS.error && detail === "version-conflict"));
+  assert.deepEqual(conflicts, [{ remoteVersion: 4, reason: "version-conflict" }]);
 });
 
 test("existing drafts cannot save before the first remote load succeeds", async () => {
@@ -388,6 +418,70 @@ test("cloud sync keeps online save failures pending so reconnect can retry", asy
   assert.equal(saveAttempts, 2);
   assert.equal(controller.getVersion(), 2);
   assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.synced), "retry should be able to return to synced");
+  assert.ok(fake.calls.some((call) => call[0] === "send" && call[1].event === "agenda-updated"));
+});
+
+test("cloud sync reconciles a timed-out save before retrying", async () => {
+  const localPayload = { meetingNo: "late-success" };
+  let remotePayload = { meetingNo: "remote-before-save" };
+  let remoteVersion = 1;
+  let saveAttempts = 0;
+  const { controller, statuses, fake, runScheduled } = createController({
+    payload: localPayload,
+    requestTimeoutMs: 10,
+    rpcHandler(name) {
+      if (name === "get_agenda_draft") {
+        return Promise.resolve({ data: { payload: remotePayload, version: remoteVersion, updated_at: "2026-06-10" }, error: null });
+      }
+      if (name === "save_agenda_draft") {
+        saveAttempts += 1;
+        return new Promise(() => {});
+      }
+      return Promise.resolve({ data: null, error: null });
+    }
+  });
+
+  await controller.init();
+  const savePromise = controller.saveNow();
+  remotePayload = localPayload;
+  remoteVersion = 2;
+  runScheduled();
+  const result = await savePromise;
+
+  assert.equal(saveAttempts, 1);
+  assert.equal(result.version, 2);
+  assert.equal(controller.getVersion(), 2);
+  assert.equal(controller.hasConflict(), false);
+  assert.equal(controller.isDirty(), false);
+  assert.ok(statuses.some(([status]) => status === CloudSync.SYNC_STATUS.synced), "reconciled timeout should end as synced");
+  assert.ok(fake.calls.some((call) => call[0] === "send" && call[1].event === "agenda-updated"), "reconciled saves should still notify other clients");
+});
+
+test("cloud sync treats a version conflict as synced when remote already has this payload", async () => {
+  const localPayload = { meetingNo: "already-saved" };
+  const conflicts = [];
+  const { controller, fake } = createController({
+    payload: localPayload,
+    rpcHandler(name) {
+      if (name === "get_agenda_draft") {
+        return Promise.resolve({ data: { payload: localPayload, version: 2, updated_at: "2026-06-10" }, error: null });
+      }
+      if (name === "save_agenda_draft") {
+        const error = new Error("version_conflict");
+        error.code = "version_conflict";
+        return Promise.resolve({ data: null, error });
+      }
+      return Promise.resolve({ data: null, error: null });
+    },
+    onConflict: (conflict) => conflicts.push(conflict)
+  });
+
+  await controller.init();
+  const result = await controller.saveNow();
+
+  assert.equal(result.version, 2);
+  assert.equal(controller.hasConflict(), false);
+  assert.deepEqual(conflicts, []);
   assert.ok(fake.calls.some((call) => call[0] === "send" && call[1].event === "agenda-updated"));
 });
 

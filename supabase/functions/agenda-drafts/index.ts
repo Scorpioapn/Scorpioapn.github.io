@@ -140,6 +140,8 @@ async function saveDraft(body: ReturnType<typeof validateAgendaRequest>) {
   });
   if (error) throw error;
   const row = firstRow(data);
+  if (row?.status === "version_conflict") throw new PolicyError("version_conflict", 409);
+  if (row?.status === "not_found") throw new PolicyError("draft_not_found", 404);
   if (!row) throw new PolicyError("draft_save_failed", 500);
   return row;
 }
@@ -147,7 +149,10 @@ async function saveDraft(body: ReturnType<typeof validateAgendaRequest>) {
 function mapSafeError(request: Request, error: unknown) {
   if (error instanceof PolicyError) return jsonError(request, error.code, error.status);
   const code = String((error as { code?: string })?.code || "");
-  if (code === "40001") return jsonError(request, "version_conflict", 409);
+  const message = String((error as { message?: string })?.message || "");
+  if (code === "40001" || message.includes("agenda draft version conflict")) {
+    return jsonError(request, "version_conflict", 409);
+  }
   if (code === "P0002") return jsonError(request, "draft_not_found", 404);
   if (code === "23514" || code === "22023") return jsonError(request, "invalid_payload", 400);
   console.error("agenda-drafts failed", code || "unknown_database_error");
