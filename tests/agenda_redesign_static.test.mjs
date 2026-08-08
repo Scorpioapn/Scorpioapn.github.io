@@ -33,6 +33,20 @@ function functionBlock(name) {
   throw new Error(`${name} should close`);
 }
 
+function atRuleBlock(name) {
+  const start = source.indexOf(name);
+  assert.notEqual(start, -1, `${name} at-rule should exist`);
+  const open = source.indexOf("{", start);
+  let depth = 0;
+  for (let index = open; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth === 0) return source.slice(start, index + 1);
+  }
+  throw new Error(`${name} should close`);
+}
+
 test("redesign tokens replace the old warm material palette", () => {
   for (const token of [
     "--tm-blue:#004165",
@@ -88,6 +102,21 @@ test("primary PDF and print actions use vector browser print while image PDF rem
   assert.match(printAgenda, /window\.print\(\)/, "print path should call window.print for selectable text");
   assert.match(printAgenda, /document\.title\s*=/, "print path should set a meaningful default PDF filename title");
   assert.match(bindEvents, /exportImagePdfBtn[\s\S]*?exportImageAgendaPdf/, "overflow image PDF action should use the retained raster exporter");
+});
+
+test("browser PDF print isolates exactly one fixed A4 sheet", () => {
+  const pageRules = Array.from(source.matchAll(/@page\s*\{([\s\S]*?)\}/g));
+  const printMediaRules = Array.from(source.matchAll(/@media print\s*\{/g));
+  const printCss = atRuleBlock("@media print");
+  const printSheetRule = printCss.match(/\.preview-frame \.template-sheet\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? "";
+
+  assert.equal(pageRules.length, 1, "one authoritative @page rule should control PDF pagination");
+  assert.match(pageRules[0][1], /size:\s*A4 portrait;[\s\S]*?margin:\s*0;/, "browser PDF should use a borderless A4 canvas");
+  assert.equal(printMediaRules.length, 1, "duplicate print media blocks must not override the fixed A4 model");
+  assert.match(printCss, /\.workflow-header,[\s\S]*?\.settings-drawer-scrim\s*\{\s*display:\s*none !important;/, "browser chrome and drawers should be absent from the PDF");
+  assert.match(printCss, /\.preview-frame\s*\{[\s\S]*?width:\s*210mm !important;[\s\S]*?height:\s*297mm !important;[\s\S]*?margin:\s*0 !important;[\s\S]*?overflow:\s*hidden !important;/, "print frame should occupy exactly one physical A4 page despite later screen rules");
+  assert.match(printCss, /\.preview-frame \.template-sheet\s*\{[\s\S]*?width:\s*980px !important;[\s\S]*?height:\s*1386px !important;[\s\S]*?transform:\s*scale\(0\.8099\) !important;/, "print sheet should retain the fixed artboard scale that fits A4");
+  assert.doesNotMatch(printSheetRule, /height:\s*auto !important|transform:\s*none !important|min-height:\s*calc\(297mm - 24mm\)/, "print rules must not expand or unscale the sheet");
 });
 
 test("editor chrome, settings drawer, and mobile taskbar match the redesign shell", () => {

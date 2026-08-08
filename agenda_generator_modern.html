@@ -3515,46 +3515,49 @@
     @media print {
       html,
       body {
-        width: 210mm;
-        height: 297mm;
-        min-height: 0;
-        margin: 0;
-        background: #fff;
-        overflow: visible;
+        width: 210mm !important;
+        height: 297mm !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+        overflow: visible !important;
       }
 
+      .workflow-header,
       .editor-shell,
       .preview-toolbar,
       .toast,
       .guide-overlay,
       .mobile-taskbar,
       .mobile-quick-add,
-      .mobile-editor-scrim {
+      .mobile-editor-scrim,
+      .settings-drawer,
+      .settings-drawer-scrim {
         display: none !important;
       }
 
       .app-shell,
       .preview-shell,
       .preview-viewport {
-        display: block;
-        width: auto;
-        height: auto;
-        padding: 0;
-        margin: 0;
-        aspect-ratio: auto;
-        background: #fff;
-        overflow: visible;
+        display: block !important;
+        width: auto !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        aspect-ratio: auto !important;
+        background: #fff !important;
+        overflow: visible !important;
       }
 
       .preview-frame {
-        display: block;
-        width: 210mm;
-        height: 297mm;
-        padding: 0;
-        margin: 0;
-        aspect-ratio: auto;
-        background: #fff;
-        overflow: hidden;
+        display: block !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        aspect-ratio: auto !important;
+        background: #fff !important;
+        overflow: hidden !important;
       }
 
       .preview-frame .template-sheet {
@@ -3562,18 +3565,19 @@
         --sidebar-left-col: minmax(0, 1.15fr);
         --sidebar-right-col: minmax(0, 0.85fr);
         --sidebar-gap: 12px;
-        width: 980px;
-        height: 1386px;
-        min-height: 0;
-        aspect-ratio: auto;
-        margin: 0;
-        padding: 0;
-        border-radius: 14px;
-        box-shadow: none;
-        overflow: hidden;
-        page-break-inside: avoid;
+        width: 980px !important;
+        height: 1386px !important;
+        min-height: 0 !important;
+        aspect-ratio: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 14px !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        break-inside: avoid-page !important;
+        page-break-inside: avoid !important;
         transform: scale(0.8099) !important;
-        transform-origin: top left;
+        transform-origin: top left !important;
       }
 
       .preview-frame .template-sheet,
@@ -3718,6 +3722,44 @@
       .vision-bar {
         color: #fff !important;
         background: #8f1f34 !important;
+      }
+
+      .template-header {
+        color: var(--ink) !important;
+        background: #fff !important;
+        border-bottom: 2.5px solid #004165 !important;
+      }
+
+      .template-info-card h3,
+      .flow-title {
+        color: #16232E !important;
+        background: #fff !important;
+        border-bottom: 1px solid #004165 !important;
+      }
+
+      .flow-table th {
+        color: #16232E !important;
+        background: #fff !important;
+        border: 1px solid #16232E !important;
+      }
+
+      .section-index {
+        color: #16232E !important;
+        background: #fff !important;
+        border-right: 1px solid #16232E !important;
+      }
+
+      .section-label,
+      .flow-table td,
+      .flow-table tr.highlight td:not(.section-band),
+      .flow-table tr.speech-row .flow-content,
+      .flow-table tr.break-row td:not(.section-band) {
+        color: #16232E !important;
+        background: #fff !important;
+      }
+
+      .flow-table tr.break-row .flow-content {
+        border-left: 3px solid #004165 !important;
       }
 
     }
@@ -4603,104 +4645,6 @@
   .sync-status-chip[data-status="synced"] { color: var(--ok); background: #E8F4ED; }
   .sync-status-chip[data-status="error"],
   .sync-status-chip[data-status="offline"] { color: var(--err); background: #FCEBE9; }
-
-  @page {
-    size: A4;
-    margin: 12mm;
-  }
-
-  @media print {
-    html,
-    body {
-      width: auto;
-      height: auto;
-      margin: 0;
-      background: #fff !important;
-      overflow: visible;
-    }
-
-    .editor-shell,
-    .preview-toolbar,
-    .toast,
-    .guide-overlay,
-    .mobile-taskbar,
-    .mobile-quick-add,
-    .mobile-editor-scrim,
-    .settings-drawer,
-    .settings-drawer-scrim {
-      display: none !important;
-    }
-
-    .app-shell,
-    .preview-shell,
-    .preview-viewport,
-    .preview-frame {
-      display: block !important;
-      width: auto !important;
-      height: auto !important;
-      min-height: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      background: #fff !important;
-      overflow: visible !important;
-    }
-
-    .preview-frame .template-sheet {
-      width: 100% !important;
-      height: auto !important;
-      min-height: calc(297mm - 24mm);
-      padding: 0 !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      transform: none !important;
-      page-break-inside: avoid;
-    }
-
-    .preview-frame .template-sheet,
-    .preview-frame .template-sheet * {
-      print-color-adjust: exact;
-      -webkit-print-color-adjust: exact;
-    }
-
-    .template-header {
-      color: var(--ink) !important;
-      background: #fff !important;
-      border-bottom: 2.5px solid #004165 !important;
-    }
-
-    .template-info-card h3,
-    .flow-title {
-      color: #16232E !important;
-      background: #fff !important;
-      border-bottom: 1px solid #004165 !important;
-    }
-
-    .flow-table th {
-      color: #16232E !important;
-      background: #fff !important;
-      border: 1px solid #16232E !important;
-    }
-
-    .section-index {
-      color: #16232E !important;
-      background: #fff !important;
-      border-right: 1px solid #16232E !important;
-    }
-
-    .section-label,
-    .flow-table td,
-    .flow-table tr.highlight td:not(.section-band),
-    .flow-table tr.speech-row .flow-content,
-    .flow-table tr.break-row td:not(.section-band) {
-      color: #16232E !important;
-      background: #fff !important;
-    }
-
-    .flow-table tr.break-row .flow-content {
-      border-left: 3px solid #004165 !important;
-    }
-  }
 
   @media (max-width: 920px) {
     .app-shell {
