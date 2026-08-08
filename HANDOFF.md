@@ -92,8 +92,8 @@ git rev-list --left-right --count HEAD...origin/main
 
 截至 2026-08-08 的最近一次核对：
 
-- `main` 已发布到 `f9c3c30`，GitHub Pages 构建成功，线上来源仍为分支根目录 `/`。
-- 同一提交的 Supabase workflow 在 `supabase link` 阶段因现有 `SUPABASE_ACCESS_TOKEN` 返回 `Unauthorized` 而失败；本轮没有修改 Supabase 代码或数据。
+- `main` 的审计与交接内容提交 `6019197` 已发布，最近应用代码基线仍为 `f9c3c30`；GitHub Pages 构建成功，线上来源仍为分支根目录 `/`。
+- `6019197` 的 Supabase workflow 在 `supabase link` 阶段因现有 `SUPABASE_ACCESS_TOKEN` 返回 `Unauthorized` 而失败；本轮没有修改 Supabase 代码或数据。
 - 下一次确需部署后端前，应先更新 GitHub Actions 中的 Supabase access token，再重跑 workflow 与生产 smoke test。
 
 这些状态会变化。开始工作前应重新运行 `git fetch` 和本文中的状态检查命令，不要只依赖这段快照。
@@ -550,11 +550,11 @@ git show <commit>
 ## 18. 每次交接时更新本文件
 
 - 日期：2026-08-08（最终收口）
-- 分支/提交：`main`，应用代码基线 `f9c3c30`；本条记录与 `agenda-audit/` 证据随本次文档提交纳入
+- 分支/提交：`main @ 6019197`（审计与交接内容）；应用代码基线 `f9c3c30`
 - 目标：完整收口 Modern 控制台重设计、A4 页脚/页眉/图例调整与单页 PDF 导出，并把此前未跟踪的产品审计证据纳入版本库。
 - 修改文件：`agenda_generator_modern.html`、`tests/agenda_redesign_static.test.mjs`、`design-qa.md`、`HANDOFF.md`、`agenda-audit/review.md` 及 23 张审计截图。
 - 验证：`npm test` 160/160 通过；`git diff --check` 通过；桌面/移动端、A4 预览和用户实际导出 PDF 已核对。
-- 部署：`main @ f9c3c30` 的 Pages 已成功；Supabase workflow 因现有 access token 返回 `Unauthorized` 而失败，本轮无后端变更。
+- 部署：`main @ 6019197` 的 Pages 已成功；Supabase workflow 因现有 access token 返回 `Unauthorized` 而失败，本轮无后端变更。
 - 遗留：更新 GitHub Actions 的 Supabase token 后重跑后端部署与 smoke test；按需补真实 iOS Safari、屏幕阅读器和打印机验证。
 
 - 日期：2026-08-08
