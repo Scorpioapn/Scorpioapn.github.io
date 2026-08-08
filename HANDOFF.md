@@ -1,9 +1,9 @@
 # Toastmasters Agenda Builder：AI 项目上下文与交接协议
 
 > 主要读者：AI coding agent。人类开发者也可将其作为项目地图使用。
-> 最后人工核对：2026-07-13（Asia/Shanghai）。
+> 最后人工核对：2026-08-08（Asia/Shanghai）。
 > 唯一远端事实来源：`origin/main`。每次任务开始必须重新 fetch，不得把本文记录的 commit 当成永久最新状态。
-> 最近一次应用代码基线：`cc5537c`；之后可能存在仅修改文档的提交。
+> 最近一次应用代码基线：`f9c3c30`；之后可能存在仅修改文档或审计证据的提交。
 
 ## 0. AI 必读：开始任务前的强制协议
 
@@ -32,7 +32,7 @@ git rev-list --left-right --count HEAD...origin/main
 - 当前优先方向是议程生成器，尤其是 `agenda_generator_modern.html` 的跨端视觉与编辑效率。
 - 时间官 `index.html` 已具备独立现场副本、计时和记录能力；除非用户明确要求，不要顺手重构时间官。
 - 经典版 `agenda_generator.html` 是稳定生产基线；Modern 版是正在优化的替代布局。
-- 2026-07-10 至 2026-07-13 的 Modern 视觉审查只产出了问题清单，尚未实施修复。具体见第 15 节。
+- Modern 控制台重设计与 A4/PDF 修复已于 2026-08-08 发布；仍需跟进的经典版审计项和部署问题见第 15 节。
 
 ### 0.3 不可破坏的数据与行为约束
 
@@ -90,11 +90,11 @@ git rev-list --left-right --count HEAD...origin/main
 | 测试命令 | `npm test` |
 | 线上 Supabase smoke test | `npm run smoke:supabase` |
 
-截至 2026-07-13 的最近一次核对：
+截至 2026-08-08 的最近一次核对：
 
-- GitHub Pages 已成功发布包含 `HANDOFF.md` 的文档提交。
-- 最近一次应用代码提交 `cc5537c` 的 Pages 与 Supabase workflow 均成功。
-- 线上 Pages 来源为 `main` 分支根目录 `/`。
+- `main` 已发布到 `f9c3c30`，GitHub Pages 构建成功，线上来源仍为分支根目录 `/`。
+- 同一提交的 Supabase workflow 在 `supabase link` 阶段因现有 `SUPABASE_ACCESS_TOKEN` 返回 `Unauthorized` 而失败；本轮没有修改 Supabase 代码或数据。
+- 下一次确需部署后端前，应先更新 GitHub Actions 中的 Supabase access token，再重跑 workflow 与生产 smoke test。
 
 这些状态会变化。开始工作前应重新运行 `git fetch` 和本文中的状态检查命令，不要只依赖这段快照。
 
@@ -147,7 +147,7 @@ python -m http.server 8000
 | 文件 | 职责 | 维护提示 |
 | --- | --- | --- |
 | `agenda_generator.html` | 经典议程编辑器、A4 预览、打印/保存 PDF、模板、接龙导入、云同步、同步到时间官 | 当前稳定版；2026-07-06 完成打印可读性与移动端密度修复 |
-| `agenda_generator_modern.html` | Modern 编辑器，功能与经典版基本一致，使用另一套响应式工作台布局 | 视觉替代版；仍有移动端待修问题，见“当前待办” |
+| `agenda_generator_modern.html` | Modern 编辑器，功能与经典版基本一致，使用任务导向的响应式控制台布局 | 2026-08-08 已完成桌面/移动端控制台、A4 预览与单页 PDF 修复 |
 | `index.html` | 时间官现场计时、议程副本、记录、报告和现场调整 | 不得回写议程生成器原始数据 |
 
 两个议程生成器共享 `js/` 下的数据、模板、同步和规则模块，但页面 DOM、CSS 和大量页面级控制代码仍分别存在于两个大型 HTML 文件中。
@@ -165,6 +165,7 @@ python -m http.server 8000
 |-- agenda_generator.html             # 经典议程生成器
 |-- agenda_generator_modern.html      # Modern 议程生成器
 |-- index.html                        # 时间官
+|-- agenda-audit/                     # 经典版产品审计报告与跨视口证据截图
 |-- assets/                           # Logo、二维码、字体等静态资源
 |-- js/                               # 浏览器/CommonJS 共享模块
 |   |-- agenda-data.js                # 议程 payload 校验与归一化
@@ -448,6 +449,12 @@ gh api repos/Scorpioapn/Scorpioapn.github.io/pages/builds/latest
 
 | 提交 | 日期 | 影响 |
 | --- | --- | --- |
+| `f9c3c30` | 2026-08-08 | Modern 浏览器 PDF 导出改为与实时预览一致，并保持单页 A4 |
+| `e634237` | 2026-08-08 | 收紧 Modern PDF 打印样式，避免导出为两页 |
+| `3731359`、`da2684b` | 2026-08-08 | 记录并整理 Modern 控制台重设计交接信息 |
+| `bde4d3e`、`81c0c79` | 2026-08-08 | 修复 A4 页脚遮挡，移除行底色图例并放大页眉品牌信息 |
+| `470a6e7`..`fac48dd` | 2026-08-08 | 按每周任务重组 Modern 控制台，打通三步导航，完善移动预览、编辑和验证 |
+| `461358e`..`11291fe` | 2026-08-08 | 形成控制台设计、实施计划与静态契约测试 |
 | `cc5537c` | 2026-07-06 | 经典版 A4 可读性、浏览器打印 PDF、移动端密度与持续溢出提示 |
 | `ddf6c34` | 2026-07-06 | 云保存超时对账、schema 缺失 ID 修复、图片上传限制与移动端密度 |
 | `4aa2f94` | 2026-07-06 | Supabase version conflict 迁移、Edge 错误映射、smoke test 强化 |
@@ -475,34 +482,25 @@ git show <commit>
 
 ## 15. 当前待办与已知问题
 
-### Modern 议程生成器视觉审查（尚未实施修复）
+### Modern 控制台状态（2026-08-08 已实施）
 
-2026-07-10 至 2026-07-13 已对线上 `agenda_generator_modern.html` 做 PC、390px iOS 参考视口和 412px Android 参考视口审查。审查本身没有产生代码提交。
+- 编辑器已按“本期信息 → 调整议程 → 检查并导出”三步工作流重组，低频维护内容收纳到设置抽屉。
+- 移动端保留信息、议程、预览、导出四个任务入口；项目编辑支持焦点圈定与关闭后焦点恢复，A4 预览可放大。
+- A4 成稿已移除“即兴/备稿/茶歇”图例，放大页眉 Logo 与会议识别信息，并解决流程表与底部愿景条遮挡。
+- 主 PDF 操作使用浏览器打印路径，打印样式与 Modern 预览保持一致并固定为一张 A4；原位图 PDF 路径降为次级能力。
+- 静态与行为测试现为 160 项；桌面、移动参考视口和用户提供的 PDF 结果均已验证。
 
-优先问题：
+### 仍需跟进
 
-1. 手机底部导航跳转后，面板标题会被 56px 固定顶部栏遮住。建议对目标面板增加约 68px `scroll-margin-top`。
-2. 顶部图标约 36px、输入框约 38px、行更多按钮约 34px，低于 44px 推荐触控尺寸。
-3. 浮动“+ 项目”覆盖议程列表内容，并与底部导航争夺空间。
-4. 议程首屏有两段常驻说明和多组操作，第一条议程出现过晚。
-5. 手机标题换成两行并同时容纳四个顶部图标，视觉拥挤。
-6. 分组行重复显示“分组 · 不占时间”，且 98px 高，明显高于普通 56px 行。
-7. 390px 预览工具栏中的“缩放/密度”发生竖向换行；A4 缩略图缺少明确的点击放大入口。
-8. 日期和时间显示格式受浏览器 locale 影响，可能出现中文 UI 配 `06/30/2026`、`07:20 PM`。
-
-已确认的优点：
-
-- PC 双栏布局健康。
-- 三个参考视口均无横向滚动。
-- 手机 A4 成稿能较早出现。
-- 底部导航本身约 46px 高，触控尺寸基本合格。
-- 审查时浏览器控制台未发现错误。
+- `agenda-audit/review.md` 保存了 2026-07-16 对经典版的完整产品审计与 23 张跨视口证据截图。审计中的流程重组、移动编辑焦点、reduced-motion、JSON 输入命名等重点已在 Modern 版落实；经典版是否同步改造需按后续产品方向决定。
+- 真实 iOS Safari/WebKit、屏幕阅读器朗读时序和真实打印机输出仍未完整验证；Chromium 的 iPhone 尺寸模拟不能替代真机。
+- 2026-08-08 的 Supabase workflow 因 GitHub secret 中的 access token 未获授权而失败。Pages 发布不受影响；修复需要更新 secret 后重新部署与 smoke test。
 
 ### 结构性技术债
 
 - 三个 HTML 都是大型单文件应用，页面级代码重复；改动应保持小范围并由测试保护。
-- 经典版和 Modern 版功能大致相同但视觉/导出路径存在差异。经典版主“保存 PDF”走浏览器打印；Modern 版仍保留 html2canvas + jsPDF 位图导出路径。
-- 本地浏览器无法直接完整模拟真实 iOS Safari 和 Android Chrome 的原生控件；发布前仍需真机 smoke test。
+- 经典版和 Modern 版功能大致相同但视觉/导出路径仍有差异；共享数据行为应继续放在 `js/` 模块中维护。
+- 本地浏览器无法完整模拟真实 iOS Safari 和 Android Chrome 的原生控件；高风险发布仍需真机 smoke test。
 
 ## 16. 常见故障排查
 
@@ -550,6 +548,14 @@ git show <commit>
 - 保留纯静态 HTML/CSS/JS 架构，除非明确批准技术迁移。
 
 ## 18. 每次交接时更新本文件
+
+- 日期：2026-08-08（最终收口）
+- 分支/提交：`main`，应用代码基线 `f9c3c30`；本条记录与 `agenda-audit/` 证据随本次文档提交纳入
+- 目标：完整收口 Modern 控制台重设计、A4 页脚/页眉/图例调整与单页 PDF 导出，并把此前未跟踪的产品审计证据纳入版本库。
+- 修改文件：`agenda_generator_modern.html`、`tests/agenda_redesign_static.test.mjs`、`design-qa.md`、`HANDOFF.md`、`agenda-audit/review.md` 及 23 张审计截图。
+- 验证：`npm test` 160/160 通过；`git diff --check` 通过；桌面/移动端、A4 预览和用户实际导出 PDF 已核对。
+- 部署：`main @ f9c3c30` 的 Pages 已成功；Supabase workflow 因现有 access token 返回 `Unauthorized` 而失败，本轮无后端变更。
+- 遗留：更新 GitHub Actions 的 Supabase token 后重跑后端部署与 smoke test；按需补真实 iOS Safari、屏幕阅读器和打印机验证。
 
 - 日期：2026-08-08
 - 分支/提交：`codex/agenda-modern-control-console` @ `b6ca7fb`（发布合并前）
