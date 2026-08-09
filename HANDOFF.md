@@ -1,9 +1,9 @@
 # Toastmasters Agenda Builder：AI 项目上下文与交接协议
 
 > 主要读者：AI coding agent。人类开发者也可将其作为项目地图使用。
-> 最后人工核对：2026-08-08（Asia/Shanghai）。
+> 最后人工核对：2026-08-10（Asia/Shanghai）。
 > 唯一远端事实来源：`origin/main`。每次任务开始必须重新 fetch，不得把本文记录的 commit 当成永久最新状态。
-> 最近一次应用代码基线：`f9c3c30`；之后可能存在仅修改文档或审计证据的提交。
+> 最近一次应用代码基线：`49647d6`；之后可能存在仅修改文档或审计证据的提交。
 
 ## 0. AI 必读：开始任务前的强制协议
 
@@ -30,9 +30,9 @@ git rev-list --left-right --count HEAD...origin/main
 ### 0.2 当前产品重点
 
 - 当前优先方向是议程生成器，尤其是 `agenda_generator_modern.html` 的跨端视觉与编辑效率。
-- 时间官 `index.html` 已具备独立现场副本、计时和记录能力；除非用户明确要求，不要顺手重构时间官。
+- 时间官 `index.html` 已具备独立现场副本、计时和记录能力，并于 2026-08-10 完成与两版议程生成器协调的产品外壳；除非用户明确要求，不要顺手重构时间官。
 - 经典版 `agenda_generator.html` 是稳定生产基线；Modern 版是正在优化的替代布局。
-- Modern 控制台重设计与 A4/PDF 修复已于 2026-08-08 发布；仍需跟进的经典版审计项和部署问题见第 15 节。
+- Modern 控制台重设计与 A4/PDF 修复已于 2026-08-08 发布，时间官产品协调改版已于 2026-08-10 发布；仍需跟进的经典版审计项、真机验证和部署问题见第 15 节。
 
 ### 0.3 不可破坏的数据与行为约束
 
@@ -90,10 +90,10 @@ git rev-list --left-right --count HEAD...origin/main
 | 测试命令 | `npm test` |
 | 线上 Supabase smoke test | `npm run smoke:supabase` |
 
-截至 2026-08-08 的最近一次核对：
+截至 2026-08-10 的最近一次核对：
 
-- `main` 的审计与交接内容提交 `6019197` 已发布，最近应用代码基线仍为 `f9c3c30`；GitHub Pages 构建成功，线上来源仍为分支根目录 `/`。
-- `6019197` 的 Supabase workflow 在 `supabase link` 阶段因现有 `SUPABASE_ACCESS_TOKEN` 返回 `Unauthorized` 而失败；本轮没有修改 Supabase 代码或数据。
+- 时间官产品协调改版 `49647d6` 已发布到 `main`；Pages run `31327560567` 成功，线上 `index.html` 已返回新版产品外壳，来源仍为分支根目录 `/`。
+- `49647d6` 的 Supabase run `31327561107` 在 `supabase link` 阶段因现有 `SUPABASE_ACCESS_TOKEN` 返回 `Unauthorized` 而失败；本轮没有修改 Supabase 代码或数据。
 - 下一次确需部署后端前，应先更新 GitHub Actions 中的 Supabase access token，再重跑 workflow 与生产 smoke test。
 
 这些状态会变化。开始工作前应重新运行 `git fetch` 和本文中的状态检查命令，不要只依赖这段快照。
@@ -148,7 +148,7 @@ python -m http.server 8000
 | --- | --- | --- |
 | `agenda_generator.html` | 经典议程编辑器、A4 预览、打印/保存 PDF、模板、接龙导入、云同步、同步到时间官 | 当前稳定版；2026-07-06 完成打印可读性与移动端密度修复 |
 | `agenda_generator_modern.html` | Modern 编辑器，功能与经典版基本一致，使用任务导向的响应式控制台布局 | 2026-08-08 已完成桌面/移动端控制台、A4 预览与单页 PDF 修复 |
-| `index.html` | 时间官现场计时、议程副本、记录、报告和现场调整 | 不得回写议程生成器原始数据 |
+| `index.html` | 时间官现场计时、议程副本、记录、报告和现场调整 | 2026-08-10 已与两版议程生成器统一产品页头、品牌 token 和跨端控制体验；不得回写议程生成器原始数据 |
 
 两个议程生成器共享 `js/` 下的数据、模板、同步和规则模块，但页面 DOM、CSS 和大量页面级控制代码仍分别存在于两个大型 HTML 文件中。
 
@@ -400,6 +400,7 @@ npm run smoke:supabase
 - `agenda_user_guide.test.mjs`：首次引导与重播。
 - `timekeeper_state.test.mjs`：计时器切换、状态与记录持久化。
 - `timekeeper_mobile_layout.test.mjs`：时间官移动端布局。
+- `timekeeper_visual_cohesion.test.mjs`：时间官品牌页头、视觉 token、桌面控制台与移动端布局契约。
 - `agenda_edge_policy.test.mjs`：Edge Function 与迁移安全契约。
 - `export_safety.test.mjs`：CSV/导出公式注入防护。
 - `code_health.test.mjs`：已移除旧 key/旧路径等健康约束。
@@ -449,6 +450,7 @@ gh api repos/Scorpioapn/Scorpioapn.github.io/pages/builds/latest
 
 | 提交 | 日期 | 影响 |
 | --- | --- | --- |
+| `49647d6` | 2026-08-10 | 时间官与 Classic/Modern 议程生成器统一产品页头、品牌 token、桌面控制台和移动控制坞，并补齐设计 QA 与回归测试 |
 | `f9c3c30` | 2026-08-08 | Modern 浏览器 PDF 导出改为与实时预览一致，并保持单页 A4 |
 | `e634237` | 2026-08-08 | 收紧 Modern PDF 打印样式，避免导出为两页 |
 | `3731359`、`da2684b` | 2026-08-08 | 记录并整理 Modern 控制台重设计交接信息 |
@@ -482,19 +484,26 @@ git show <commit>
 
 ## 15. 当前待办与已知问题
 
+### 时间官产品协调状态（2026-08-10 已实施）
+
+- 时间官已复用 Toastmasters 品牌标志与深蓝/酒红 token，增加产品级页头以及 Classic/Modern 议程生成器入口，桌面议程栏和移动端控制坞已按同一密度体系整理。
+- 计时、暂停、继续、记录、详情、更多菜单和议程检查器保持原有数据语义；桌面“议程”操作已修复为打开现有检查器，不再调用屏外移动抽屉。
+- 1440 × 1000、390 × 844、412 × 915 浏览器验证通过；视觉证据和同屏比较位于 `timekeeper-redesign/`，最终 QA 见 `design-qa.md`。
+- 完整测试现为 164 项，新增 `tests/timekeeper_visual_cohesion.test.mjs` 保护品牌、布局和桌面议程入口。
+
 ### Modern 控制台状态（2026-08-08 已实施）
 
 - 编辑器已按“本期信息 → 调整议程 → 检查并导出”三步工作流重组，低频维护内容收纳到设置抽屉。
 - 移动端保留信息、议程、预览、导出四个任务入口；项目编辑支持焦点圈定与关闭后焦点恢复，A4 预览可放大。
 - A4 成稿已移除“即兴/备稿/茶歇”图例，放大页眉 Logo 与会议识别信息，并解决流程表与底部愿景条遮挡。
 - 主 PDF 操作使用浏览器打印路径，打印样式与 Modern 预览保持一致并固定为一张 A4；原位图 PDF 路径降为次级能力。
-- 静态与行为测试现为 160 项；桌面、移动参考视口和用户提供的 PDF 结果均已验证。
+- 该轮完成时静态与行为测试为 160 项；当前项目总测试数为 164，桌面、移动参考视口和用户提供的 PDF 结果均已验证。
 
 ### 仍需跟进
 
 - `agenda-audit/review.md` 保存了 2026-07-16 对经典版的完整产品审计与 23 张跨视口证据截图。审计中的流程重组、移动编辑焦点、reduced-motion、JSON 输入命名等重点已在 Modern 版落实；经典版是否同步改造需按后续产品方向决定。
 - 真实 iOS Safari/WebKit、屏幕阅读器朗读时序和真实打印机输出仍未完整验证；Chromium 的 iPhone 尺寸模拟不能替代真机。
-- 2026-08-08 的 Supabase workflow 因 GitHub secret 中的 access token 未获授权而失败。Pages 发布不受影响；修复需要更新 secret 后重新部署与 smoke test。
+- 2026-08-10 的 Supabase run `31327561107` 再次确认 GitHub secret 中的 access token 未获授权。Pages 发布不受影响；修复需要更新 secret 后重新部署与 smoke test。
 
 ### 结构性技术债
 
@@ -548,6 +557,14 @@ git show <commit>
 - 保留纯静态 HTML/CSS/JS 架构，除非明确批准技术迁移。
 
 ## 18. 每次交接时更新本文件
+
+- 日期：2026-08-10（时间官改版直接发布）
+- 分支/提交：`main @ 49647d6`（应用、测试、设计说明与视觉证据）；本条发布状态由后续交接提交记录。
+- 目标：将时间官产品协调改版直接落地到生产，使其与 Classic/Modern 两版议程生成器保持一致，同时保留既有计时、同步和记录行为。
+- 修改文件：`index.html`、`tests/timekeeper_visual_cohesion.test.mjs`、`design-qa.md`、`timekeeper-redesign/`、`docs/superpowers/specs/2026-08-10-timekeeper-product-cohesion-design.md`、`docs/superpowers/plans/2026-08-10-timekeeper-product-cohesion.md`、`HANDOFF.md`。
+- 验证：合入 `main` 后 `npm test` 164/164 通过，`git diff --check` 通过；1440 × 1000、390 × 844、412 × 915 与桌面/移动核心交互通过；生产 `index.html` 返回 HTTP 200，并包含新版 cohesion layer 与产品标题。
+- 部署：`main @ 49647d6` 已推送；Pages run `31327560567` 成功，最新 Pages build 状态为 `built`。Supabase run `31327561107` 在 `supabase link` 因现有 `SUPABASE_ACCESS_TOKEN` 返回 `Unauthorized` 而失败；本轮无后端变更，静态页面发布不受影响。
+- 遗留：更新 GitHub Actions 的 Supabase access token 后重跑后端部署与 smoke test；按需补真实 iOS Safari、屏幕阅读器和现场大屏设备验证。
 
 - 日期：2026-08-10
 - 分支/提交：`codex/timekeeper-product-cohesion`（独立工作树，发布提交待生成）
