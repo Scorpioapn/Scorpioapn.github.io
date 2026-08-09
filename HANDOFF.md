@@ -549,6 +549,14 @@ git show <commit>
 
 ## 18. 每次交接时更新本文件
 
+- 日期：2026-08-10
+- 分支/提交：`codex/timekeeper-product-cohesion`（独立工作树，发布提交待生成）
+- 目标：让时间官与 Classic/Modern 两版议程生成器共享一致的产品页头、品牌色、排版密度和响应式控制体验，同时保留现有计时、同步和记录行为。
+- 修改文件：`index.html`、`tests/timekeeper_visual_cohesion.test.mjs`、`design-qa.md`、`timekeeper-redesign/`、`docs/superpowers/specs/2026-08-10-timekeeper-product-cohesion-design.md`、`docs/superpowers/plans/2026-08-10-timekeeper-product-cohesion.md`、`HANDOFF.md`。
+- 验证：`npm test` 164/164 通过；`git diff --check` 通过；1440 × 1000、390 × 844、412 × 915 浏览器验证通过；桌面/移动核心计时交互通过，控制台 0 error。
+- 部署：用户已授权直接合入并推送 `main`；Pages 状态在推送后检查，本地预览为 `http://127.0.0.2:8000/index.html`。
+- 遗留：发布后确认 Pages 构建及线上强制刷新；按需补真实 iOS Safari、屏幕阅读器和现场大屏设备验证。
+
 - 日期：2026-08-08（最终收口）
 - 分支/提交：`main @ 6019197`（审计与交接内容）；应用代码基线 `f9c3c30`
 - 目标：完整收口 Modern 控制台重设计、A4 页脚/页眉/图例调整与单页 PDF 导出，并把此前未跟踪的产品审计证据纳入版本库。
