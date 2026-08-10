@@ -1,2 +1,4 @@
 supabase/.temp/
 .worktrees/
+scripts/excel-agenda/node_modules/
+outputs/agenda-excel-20260717/qa/
