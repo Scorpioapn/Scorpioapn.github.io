@@ -186,6 +186,34 @@ test("cloud sync loads remote draft when URL contains draft", async () => {
   assert.ok(fake.calls.some((call) => call[0] === "channel" && call[1] === "agenda-draft:draft_12345678901234567890"));
 });
 
+test("cloud sync preserves local edits made while the remote draft is loading", async () => {
+  let resolveRemoteLoad;
+  const pendingRemoteLoad = new Promise((resolve) => {
+    resolveRemoteLoad = resolve;
+  });
+  const conflicts = [];
+  const { controller, applied, statuses } = createController({
+    rpcHandler(name) {
+      assert.equal(name, "get_agenda_draft");
+      return pendingRemoteLoad;
+    },
+    onConflict: (conflict) => conflicts.push(conflict)
+  });
+
+  const initializing = controller.init();
+  controller.scheduleSave();
+  resolveRemoteLoad({
+    data: { payload: { meetingNo: "remote-version" }, version: 7 },
+    error: null
+  });
+  await initializing;
+
+  assert.deepEqual(applied, [], "a delayed remote load must not overwrite a newer local edit");
+  assert.equal(controller.hasConflict(), true);
+  assert.ok(statuses.some(([status, detail]) => status === CloudSync.SYNC_STATUS.error && detail === "version-conflict"));
+  assert.deepEqual(conflicts, [{ remoteVersion: 7, reason: "local-dirty" }]);
+});
+
 test("cloud sync debounces local edits before saving to Supabase RPC", async () => {
   const saveCalls = [];
   const { controller, runScheduled, fake } = createController({
